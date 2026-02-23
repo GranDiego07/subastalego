@@ -27,7 +27,7 @@ class CategoriaLegoModel
         //Ejecutar la consulta
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         // Retornar el objeto
-        return $vResultado[0];
+        return (!empty($vResultado)) ? $vResultado[0] : null;
     }
 
     public function getLegoUsuarioCategoria($idusuario)

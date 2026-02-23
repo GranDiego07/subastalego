@@ -16,20 +16,34 @@ class LegoModel
     public function all()
     {
         $imagenM = new ImageModel();
-        $categoriaM = new CategoriaLegoModel();
-        //Consulta SQL
-        $vSQL = "SELECT * FROM lego order by id desc;";
-        //Ejecutar la consulta
+
+        // Consulta SQL con JOINs para traer los nombres
+        $vSQL = "
+        SELECT 
+            l.*,
+            c.nombre AS categoria_nombre,
+            cond.nombre AS condicion_nombre,
+            e.nombre AS estado_nombre,
+            i.url AS imagen_url
+        FROM lego l
+        LEFT JOIN categorias c ON l.id_categoria = c.id
+        LEFT JOIN condiciones_lego cond ON l.id_condicion = cond.id
+        LEFT JOIN estados_lego e ON l.id_estado = e.id
+        LEFT JOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  -- solo imagen principal si existe
+        ORDER BY l.id DESC;
+    ";
+
+        // Ejecutar consulta
         $vResultado = $this->enlace->ExecuteSQL($vSQL);
+
+        // Opcional: mantener el populate de imagen si lo necesitas como objeto
         if (!empty($vResultado) && is_array($vResultado)) {
             for ($i = 0; $i < count($vResultado); $i++) {
-                //Imagen
+                // Si quieres mantener la estructura anterior de imagen como objeto
                 $vResultado[$i]->imagen = $imagenM->getImageMovie($vResultado[$i]->id);
-                //Generos - genres
-                $vResultado[$i]->genres = $categoriaM->getLegoCategoria($vResultado[$i]->id);
             }
         }
-        //Retornar la respuesta
+
         return $vResultado;
     }
     /**

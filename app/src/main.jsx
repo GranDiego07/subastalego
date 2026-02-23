@@ -5,9 +5,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Layout } from './components/Layout/Layout'
 import { Home } from './components/Home/Home'
 import { PageNotFound } from './components/Home/PageNotFound'
-import TableMovies from './components/Movie/TableMovies'
-import { ListMovies } from './components/Movie/ListMovies'
-import { DetailMovie } from './components/Movie/DetailMovie'
+import TableMovies from './components/Lego/TableLegos'
+import { ListLegos } from './components/Lego/ListLegos'
+import { DetailMovie } from './components/Lego/DetailLegos'
 
 const rutas = createBrowserRouter([
   {
@@ -19,9 +19,9 @@ const rutas = createBrowserRouter([
       // Ruta comodín (404)
       { path: "*", element: <PageNotFound /> },
        //Rutas componentes
-      {path:"movie/table", element: <TableMovies/>},
-      {path:"movie", element: <ListMovies/>},
-      {path:"movie/detail/:id", element: <DetailMovie />}
+      {path:"lego/table", element: <TableMovies/>},
+      {path:"lego", element: <ListLegos/>},
+      {path:"lego/detail/:id", element: <DetailMovie />}
     ]
   }
 ])

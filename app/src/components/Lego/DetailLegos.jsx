@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import MovieService from '../../services/MovieService';
+import MovieService from '../../services/LegoService';
 import { ErrorAlert } from "../ui/custom/ErrorAlert";
 // Shadcn UI Components
 import { Card, CardContent } from "@/components/ui/card";
