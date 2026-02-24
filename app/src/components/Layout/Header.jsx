@@ -177,7 +177,7 @@ const userItems = [
               <nav className="mt-8 px-4 space-y-6">
                 <div>
                   <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
-                    <Clapperboard /> LegosApp
+                    <Clapperboard /> LegoPuja
                   </Link>
                 </div>
 

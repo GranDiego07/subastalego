@@ -29,7 +29,7 @@ class LegoModel
         LEFT JOIN categorias c ON l.id_categoria = c.id
         LEFT JOIN condiciones_lego cond ON l.id_condicion = cond.id
         LEFT JOIN estados_lego e ON l.id_estado = e.id
-        LEFT JOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  -- solo imagen principal si existe
+        LEFT JOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  
         ORDER BY l.id DESC;
     ";
 
@@ -113,6 +113,31 @@ class LegoModel
         $vSQL = "SELECT l.* 
                 FROM lego l, estados_lego el
                 where l.id_estado=$idActor";
+        //Ejecutar la consulta
+        $vResultado = $this->enlace->ExecuteSQL($vSQL);
+        //Retornar la respuesta
+
+        return $vResultado;
+    }
+    public function legoByDetalle($idActor)
+    {
+        $imagenM = new ImageModel();
+        //Consulta SQL
+        $vSQL = "SELECT 
+    l.id, 
+    l.nombre, 
+    l.descripcion, 
+    cl.nombre AS condicion,
+    c.nombre AS categoria, 
+    v.nombre_completo AS vendedor, 
+    e.nombre AS estado,
+    (SELECT GROUP_CONCAT(url) FROM imagenes WHERE id_lego = l.id) AS imagenes_urls
+FROM lego l
+LEFT JOIN categorias c ON l.id_categoria = c.id
+LEFT JOIN usuarios v ON l.id_vendedor = v.id
+LEFT JOIN estados_lego e ON l.id_estado = e.id
+LEFT JOIN condiciones_lego cl ON l.id_condicion = cl.id
+WHERE l.id = $idActor;";
         //Ejecutar la consulta
         $vResultado = $this->enlace->ExecuteSQL($vSQL);
         //Retornar la respuesta

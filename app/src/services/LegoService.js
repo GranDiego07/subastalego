@@ -26,7 +26,9 @@ class LegoService {
     getByVendedor(vendedorId) {
         return axios.get(`${BASE_URL}/legosByVendedor/${vendedorId}`);
     }
-
+    getByDetalle(vendedorId) {
+        return axios.get(`${BASE_URL}/legosByDetalle/${vendedorId}`);
+    }
     /**
      * Obtener Legos por Estado
      * GET /lego/legosByEstado/1

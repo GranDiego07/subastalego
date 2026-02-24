@@ -67,6 +67,21 @@ class lego
             handleException($e);
         }
     }
+    public function legosByDetalle($idVendedor)
+    {
+        try {
+            $response = new Response();
+            //Instancia del modelo
+            $lego = new LegoModel();
+            //Acción del modelo a ejecutar
+            $result = $lego->legoByDetalle($idVendedor);
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+        }
+    }
     //Obtener cantidad de peliculas por genero
     public function getCountByGenre($param)
     {

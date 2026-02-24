@@ -15,7 +15,7 @@ class MySqlConnect {
 	public function __construct() {
 		// Parametros de conexión
 		$this->username = Config::get('DB_USERNAME');
-		$this->password = Config::get('DB_PASSWORD');
+		$this->password = '';
 		$this->host = Config::get('DB_HOST');
 		$this->dbname = Config::get('DB_DBNAME');
 		//Instancia Log
