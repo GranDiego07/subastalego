@@ -8,6 +8,7 @@ import { PageNotFound } from './components/Home/PageNotFound'
 import { ListLegos } from './components/Lego/ListLegos'
 import { DetailMovie } from './components/Lego/DetailLegos'
 import TableLegos from './components/Lego/TableLegos'
+import TableUsuarios from './components/Usuarios/TableUsuario'
 
 const rutas = createBrowserRouter([
   {
@@ -21,7 +22,8 @@ const rutas = createBrowserRouter([
        //Rutas componentes
       {path:"lego/table", element: <TableLegos/>},
       {path:"lego", element: <ListLegos/>},
-      {path:"lego/detail/:id", element: <DetailMovie />}
+      {path:"lego/detail/:id", element: <DetailMovie />},
+      {path:"lego/usuarios", element: <TableUsuarios/>}
     ]
   }
 ])

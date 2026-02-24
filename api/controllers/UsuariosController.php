@@ -13,7 +13,6 @@ class usuarios
         } catch (Exception $e) {
             $response->toJSON($result);
             handleException($e);
-            
         }
     }
     public function get($param)
@@ -27,7 +26,6 @@ class usuarios
         } catch (Exception $e) {
             $response->toJSON($result);
             handleException($e);
-            
         }
     }
     public function getUsuariosLego($id)
@@ -41,36 +39,35 @@ class usuarios
         } catch (Exception $e) {
             $response->toJSON($result);
             handleException($e);
-            
         }
     }
-    
+
     public function getUsuarioDetalleId($param)
     {
         try {
             $response = new Response();
             $usuarios = new UsuariosModel();
             $result = $usuarios->getUsuarioDetallexId($param);
-            //Dar respuesta
             $response->toJSON($result);
         } catch (Exception $e) {
-            $response->toJSON($result);
+            // Elimina $response->toJSON($result); 
+            $response->toJSON(["error" => $e->getMessage()]);
             handleException($e);
-            
         }
     }
+    // UsuariosController.php
+
+    // En UsuariosController.php
     public function getUsuarioDetalle()
     {
         try {
             $response = new Response();
             $usuarios = new UsuariosModel();
             $result = $usuarios->getUsuarioDetalle();
-            //Dar respuesta
             $response->toJSON($result);
         } catch (Exception $e) {
-            $response->toJSON($result);
-            handleException($e);
-            
+            // Devolver un objeto de error claro
+            $response->toJSON(["error" => $e->getMessage()]);
         }
     }
 }

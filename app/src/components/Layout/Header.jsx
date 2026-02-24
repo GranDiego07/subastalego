@@ -33,7 +33,7 @@ import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const userEmail = "Invitado";
+  const userEmail = "Usuarios";
 
 const navItems = [
   { title: "Legos", href: "/lego", icon: <Film className="h-4 w-4" /> },
@@ -51,8 +51,8 @@ const mantItems = [
       icon: <Wrench className="h-4 w-4" />,
     },
     {
-      title: "Alquileres",
-      href: "rental",
+      title: "Usuarios",
+      href: "lego/usuarios",
       icon: <ShoppingBasket className="h-4 w-4" />,
     },
     {

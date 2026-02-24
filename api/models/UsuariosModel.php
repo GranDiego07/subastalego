@@ -43,43 +43,41 @@ class UsuariosModel
         //Retornar el resultado
         return $vResultado;
     }
-    
+
 
     public function getUsuarioDetalle()
     {
-        $estadoU = new EstadoUsuarioModel();
-        $rolM=new RolModel();
-        //Consulta sql
-        $vSql = "SELECT u.correo, u.nombre_completo, u.fecha_registro, r.nombre, es.nombre 
-        FROM usuarios u, roles r, estados_usuario es 
-        where u.id_estado = es.id and u.id_rol=r.id order by u.id";
-        //Ejecutar la consulta
+        $vSql = "SELECT u.id, u.correo, u.nombre_completo, u.fecha_registro, 
+                        r.nombre AS rol_nombre, 
+                        es.nombre AS estado_nombre
+                    FROM usuarios u
+                    inner join roles r on u.id_rol=r.id
+                    inner join estados_usuario es on u.id_estado=es.id
+                    ORDER BY u.id desc";
+
         $vResultado = $this->enlace->ExecuteSQL($vSql);
-        if (!empty($vResultado)) {
-            $vResultado = $vResultado[0];
-            $vResultado->estado = $estadoU->getUsuariosEstado();
-            $vResultado->rol=$rolM->getRolUsuario();
-        }
-        // Retornar el objeto
         return $vResultado;
-    } 
+    }
     //Obtener información de un usuarios específico, incluyendo las películas en las que participa y los roles
-    public function getUsuarioDetallexId ($id)
+    public function getUsuarioDetallexId($id)
     {
         $estadoU = new EstadoUsuarioModel();
-        $rolM=new RolModel();
-        //Consulta sql
-        $vSql = "SELECT u.correo, u.nombre_completo, u.fecha_registro, r.nombre, es.nombre 
-        FROM usuarios u, roles r, estados_usuario es 
-        where u.id_estado = es.id and u.id_rol=r.id and u.id=$id";
-        //Ejecutar la consulta
+        $rolM = new RolModel();
+        
+        $vSql = "SELECT u.id, u.correo, u.nombre_completo, u.fecha_registro, 
+                        r.nombre AS rol_nombre, 
+                        es.nombre AS estado_nombre 
+                    FROM usuarios u
+                    INNER JOIN roles r ON u.id_rol = r.id
+                    INNER JOIN estados_usuario es ON u.id_estado = es.id
+                    WHERE u.id = $id";
+
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         if (!empty($vResultado)) {
             $vResultado = $vResultado[0];
-            $vResultado->estado = $estadoU->getUsuariosEstado($id);
-            $vResultado->rol=$rolM->getRolUsuarioId($id);
+            $vResultado->lista_estados = $estadoU->all();
+            $vResultado->lista_roles = $rolM->all();
         }
-        // Retornar el objeto
         return $vResultado;
-    } 
+    }
 }

@@ -26,7 +26,20 @@ class UsuariosService {
   getUsuariosLego(legoId) {
     return axios.get(`${BASE_URL}/getUsuariosLego/${legoId}`);
   }
-
+  /**
+   * Obtener usuarios detallado por el id
+   * GET /usuarios/getUsuariosId/1
+   */
+  getUsuarioDetalleId(id) {
+    return axios.get(`${BASE_URL}/getUsuariosId/${id}`);
+  }
+  /**
+ * Obtener todos usuarios detallado
+ * GET /usuarios/getUsuarios/
+ */
+  getUsuarioDetalle() {
+    return axios.get(`${BASE_URL}/getUsuarioDetalle`);
+  }
   /**
    * Crear nuevo usuario
    * POST /usuarios
