@@ -9,6 +9,7 @@ import { ListLegos } from './components/Lego/ListLegos'
 import { DetailMovie } from './components/Lego/DetailLegos'
 import TableLegos from './components/Lego/TableLegos'
 import TableUsuarios from './components/Usuarios/TableUsuario'
+import TablePujas from './components/Pujas/TablePujas'
 
 const rutas = createBrowserRouter([
   {
@@ -23,7 +24,8 @@ const rutas = createBrowserRouter([
       {path:"lego/table", element: <TableLegos/>},
       {path:"lego", element: <ListLegos/>},
       {path:"lego/detail/:id", element: <DetailMovie />},
-      {path:"lego/usuarios", element: <TableUsuarios/>}
+      {path:"lego/usuarios", element: <TableUsuarios/>},
+      {path:"lego/pujas", element: <TablePujas/>}
     ]
   }
 ])

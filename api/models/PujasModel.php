@@ -30,7 +30,7 @@ class PujasModel
     }
     public function getPujasDetalle()
     {
-        $vSql = "Select s.id, u.nombre_completo, p.monto, p.fecha_hora
+        $vSql = "Select s.id, u.nombre_completo AS Nombre, p.monto, p.fecha_hora
                 from pujas p 
                 inner join subastas s on p.id_subasta=s.id
                 inner join usuarios u on p.id_usuario=u.id

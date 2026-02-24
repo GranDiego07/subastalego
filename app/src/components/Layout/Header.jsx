@@ -56,8 +56,8 @@ const mantItems = [
       icon: <ShoppingBasket className="h-4 w-4" />,
     },
     {
-      title: "Gráfico de Alquileres",
-      href: "/rental/graph",
+      title: "Pujas",
+      href: "lego/pujas",
       icon: <ChartArea className="h-4 w-4" />,
     },
 ];
