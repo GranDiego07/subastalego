@@ -43,20 +43,43 @@ class UsuariosModel
         //Retornar el resultado
         return $vResultado;
     }
-    /*
-    //Obtener información de un usuarios específico, incluyendo las películas en las que participa y los roles
-    public function getUsuariosMoviesRol($id)
+    
+
+    public function getUsuarioDetalle()
     {
-        $movieM = new MovieModel();
+        $estadoU = new EstadoUsuarioModel();
+        $rolM=new RolModel();
         //Consulta sql
-        $vSql = "SELECT * FROM usuarios where id=$id";
+        $vSql = "SELECT u.correo, u.nombre_completo, u.fecha_registro, r.nombre, es.nombre 
+        FROM usuarios u, roles r, estados_usuario es 
+        where u.id_estado = es.id and u.id_rol=r.id order by u.id";
         //Ejecutar la consulta
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         if (!empty($vResultado)) {
             $vResultado = $vResultado[0];
-            $vResultado->movies = $movieM->moviesByUsuarios($id);
+            $vResultado->estado = $estadoU->getUsuariosEstado();
+            $vResultado->rol=$rolM->getRolUsuario();
         }
         // Retornar el objeto
         return $vResultado;
-    } */
+    } 
+    //Obtener información de un usuarios específico, incluyendo las películas en las que participa y los roles
+    public function getUsuarioDetallexId ($id)
+    {
+        $estadoU = new EstadoUsuarioModel();
+        $rolM=new RolModel();
+        //Consulta sql
+        $vSql = "SELECT u.correo, u.nombre_completo, u.fecha_registro, r.nombre, es.nombre 
+        FROM usuarios u, roles r, estados_usuario es 
+        where u.id_estado = es.id and u.id_rol=r.id and u.id=$id";
+        //Ejecutar la consulta
+        $vResultado = $this->enlace->ExecuteSQL($vSql);
+        if (!empty($vResultado)) {
+            $vResultado = $vResultado[0];
+            $vResultado->estado = $estadoU->getUsuariosEstado($id);
+            $vResultado->rol=$rolM->getRolUsuarioId($id);
+        }
+        // Retornar el objeto
+        return $vResultado;
+    } 
 }

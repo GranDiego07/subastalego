@@ -44,13 +44,13 @@ class usuarios
             
         }
     }
-    /*
-    public function getActorMoviesRol($param)
+    
+    public function getUsuarioDetalleId($param)
     {
         try {
             $response = new Response();
             $usuarios = new UsuariosModel();
-            $result = $usuarios->getUsuarioMoviesRol($param);
+            $result = $usuarios->getUsuarioDetallexId($param);
             //Dar respuesta
             $response->toJSON($result);
         } catch (Exception $e) {
@@ -58,5 +58,19 @@ class usuarios
             handleException($e);
             
         }
-    }*/
+    }
+    public function getUsuarioDetalle()
+    {
+        try {
+            $response = new Response();
+            $usuarios = new UsuariosModel();
+            $result = $usuarios->getUsuarioDetalle();
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+            
+        }
+    }
 }

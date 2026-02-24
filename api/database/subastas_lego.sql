@@ -166,7 +166,18 @@ CREATE TABLE `imagenes` (
 
 LOCK TABLES `imagenes` WRITE;
 /*!40000 ALTER TABLE `imagenes` DISABLE KEYS */;
-INSERT INTO `imagenes` VALUES (1,'uploads/millennium-falcon/1.png',1,1),(2,'uploads/millennium-falcon/2.jpg',0,1),(3,'uploads/millennium-falcon/3.jpg',0,1),(4,'uploads/millennium-falcon/4.jpg',0,1),(5,'uploads/bugatti-chiron/1.jpg',1,2),(6,'uploads/bugatti-chiron/2.jpg',0,2),(7,'uploads/bugatti-chiron/3.jpg',0,2),(8,'uploads/bugatti-chiron/4.jpg',0,2),(9,'uploads/bugatti-chiron/5.jpg',0,2),(10,'uploads/estacion-policia/1.png',1,3),(11,'uploads/estacion-policia/2.png',0,3),(12,'uploads/estacion-policia/3.png',0,3),(13,'uploads/estacion-policia/3.png',0,3),(14,'uploads/ninjago-dragon-de-hielo/1.png',1,4),(15,'uploads/ninjago-dragon-de-hielo/2.png',0,4),(16,'uploads/ninjago-dragon-de-hielo/3.png',0,4),(17,'uploads/ninjago-dragon-de-hielo/4.png',0,4);
+INSERT INTO `imagenes` VALUES (1,'uploads/millennium-falcon/1.png',1,1),
+(2,'uploads/millennium-falcon/2.jpg',0,1),
+(3,'uploads/millennium-falcon/3.jpg',0,1),
+(4,'uploads/millennium-falcon/4.jpg',0,1),
+(5,'uploads/bugatti-chiron/1.jpg',1,2),(
+6,'uploads/bugatti-chiron/2.jpg',0,2),
+(7,'uploads/bugatti-chiron/3.jpg',0,2),
+(8,'uploads/bugatti-chiron/4.jpg',0,2),(9,'uploads/bugatti-chiron/5.jpg',0,2),
+(10,'uploads/estacion-policia/1.png',1,3),(11,'uploads/estacion-policia/2.png',0,3),
+(12,'uploads/estacion-policia/3.png',0,3),(13,'uploads/estacion-policia/3.png',0,3),
+(14,'uploads/ninjago-dragon-de-hielo/1.png',1,4),(15,'uploads/ninjago-dragon-de-hielo/2.png',0,4),
+(16,'uploads/ninjago-dragon-de-hielo/3.png',0,4),(17,'uploads/ninjago-dragon-de-hielo/4.png',0,4);
 /*!40000 ALTER TABLE `imagenes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -204,7 +215,11 @@ CREATE TABLE `lego` (
 
 LOCK TABLES `lego` WRITE;
 /*!40000 ALTER TABLE `lego` DISABLE KEYS */;
-INSERT INTO `lego` VALUES (1,'Millennium Falcon UCS 75192','Set completo, 7541 piezas, caja sellada',1,1,2,'2026-02-21 15:12:52',23),(2,'Estación de Policía LEGO City 60316','Muy buen estado, con 5 minifiguras',2,1,2,'2026-02-21 15:12:52',3),(3,'Ninjago Dragón de Hielo 71766','Nuevo en caja original',1,1,2,'2026-02-21 15:12:52',17),(4,'LEGO Technic Bugatti Chiron 42083','Usado pero completo',2,1,2,'2026-02-21 15:12:52',25);
+INSERT INTO `lego` VALUES (1,'Millennium Falcon UCS 75192','Set completo, 7541 piezas, caja sellada',1,1,2,'2026-02-21 15:12:52',23)
+,(2,'LEGO Technic Bugatti Chiron 42083','Usado pero completo',2,1,2,'2026-02-21 15:12:52',25)
+,(3,'Estación de Policía LEGO City 60316','Muy buen estado, con 5 minifiguras',2,1,2,'2026-02-21 15:12:52',3)
+,(4,'Ninjago Dragón de Hielo 71766','Nuevo en caja original',1,1,2,'2026-02-21 15:12:52',17);
+
 /*!40000 ALTER TABLE `lego` ENABLE KEYS */;
 UNLOCK TABLES;
 
