@@ -15,7 +15,8 @@ import PujasService from "@/services/PujasService";
 // 1. Columnas alineadas con tu SQL
 const pujaColumns = [
     { key: "id", label: "ID" },
-    { key: "nombre_completo", label: "Nombre" },
+    { key: "NombreUsuario", label: "Usuario" },
+    { key: "NombreLego", label: "Lego" }, // Nueva columna
     { key: "monto", label: "Monto Ofertado" },
     { key: "fecha_hora", label: "Fecha y Hora" },
     { key: "acciones", label: "Acciones" },
@@ -79,23 +80,22 @@ export default function TablePujas() {
                             pujas.map((puja, index) => (
                                 <TableRow key={index} className="border-gray-700 hover:bg-gray-800">
                                     {/* ID */}
-                                    <TableCell className="text-gray-300">{puja.id}</TableCell>
-
-                                    {/* Postor */}
-                                    <TableCell className="font-semibold text-white">
-                                        {puja.Nombre} {/* 'Nombre' con N mayúscula, según tu SQL en PujasModel.php */}
+                                    <TableCell className="font-medium text-white">
+                                        {puja.id}
                                     </TableCell>
-
-                                    {/* Monto - Formateado como moneda */}
-                                    <TableCell className="text-green-400 font-bold">
-                                        ${parseFloat(puja.monto).toLocaleString()}
+                                    <TableCell className="text-gray-300">
+                                        {puja.NombreUsuario}
                                     </TableCell>
-
-                                    {/* Fecha */}
+                                    {/* Nueva celda para el nombre del Lego */}
+                                    <TableCell className="text-yellow-400">
+                                        {puja.NombreLego}
+                                    </TableCell>
+                                    <TableCell className="text-gray-300">
+                                        ${puja.monto}
+                                    </TableCell>
                                     <TableCell className="text-gray-300">
                                         {puja.fecha_hora}
                                     </TableCell>
-
                                     {/* Acciones */}
                                     <TableCell className="flex gap-2">
                                         <Link to={`/lego/pujas/edit/${puja.id}`}>

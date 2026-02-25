@@ -17,7 +17,7 @@ class PujasModel
         return $vResultado;
     }
 
-    
+
     public function get($id)
     {
         //Consulta sql
@@ -30,11 +30,17 @@ class PujasModel
     }
     public function getPujasDetalle()
     {
-        $vSql = "Select s.id, u.nombre_completo AS Nombre, p.monto, p.fecha_hora
-                from pujas p 
-                inner join subastas s on p.id_subasta=s.id
-                inner join usuarios u on p.id_usuario=u.id
-                order by p.id desc";
+        $vSql = "SELECT 
+                p.id, 
+                u.nombre_completo AS NombreUsuario, 
+                l.nombre AS NombreLego, 
+                p.monto, 
+                p.fecha_hora
+            FROM pujas p 
+            INNER JOIN subastas s ON p.id_subasta = s.id
+            INNER JOIN usuarios u ON p.id_usuario = u.id
+            INNER JOIN lego l ON s.id_lego = l.id
+            ORDER BY p.id DESC";
 
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         return $vResultado;
