@@ -11,7 +11,7 @@ class PujasController
             //Dar respuesta
             $response->toJSON($result);
         } catch (Exception $e) {
-            $response->toJSON($result);
+            
             handleException($e);
         }
     }

@@ -36,6 +36,7 @@ require_once "models/ImageModel.php";
 require_once "models/LegoModel.php";
 require_once "models/RolModel.php";
 require_once "models/UsuariosModel.php";
+require_once "models/PujasModel.php";
 
 /***--- Controladores ---*/
 require_once "controllers/CategoriaLegoController.php";
@@ -44,6 +45,7 @@ require_once "controllers/EstadoLegoController.php";
 require_once "controllers/ImageController.php";
 require_once "controllers/LegoController.php";
 require_once "controllers/UsuariosController.php";
+require_once "controllers/PujasController.php";
 
 // Enrutador
 require_once "routes/RoutesController.php";

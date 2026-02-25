@@ -15,7 +15,7 @@ import PujasService from "@/services/PujasService";
 // 1. Columnas alineadas con tu SQL
 const pujaColumns = [
     { key: "id", label: "ID" },
-    { key: "nombre_completo", label: "Usuario" },
+    { key: "nombre_completo", label: "Nombre" },
     { key: "monto", label: "Monto Ofertado" },
     { key: "fecha_hora", label: "Fecha y Hora" },
     { key: "acciones", label: "Acciones" },

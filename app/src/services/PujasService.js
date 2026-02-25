@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Asegúrate de que en tu .env VITE_BASE_URL termine en /
-const BASE_URL = import.meta.env.VITE_BASE_URL + 'pujas';
+const BASE_URL = import.meta.env.VITE_BASE_URL + 'PujasController';
 
 class PujasService {
     /**
