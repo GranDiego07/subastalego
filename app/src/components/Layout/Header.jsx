@@ -37,8 +37,8 @@ export default function Header() {
   const navItems = [
     { title: "Legos", href: "/lego", icon: <Film className="h-4 w-4" /> },
     {
-      title: "Filtrar Lego",
-      href: "/lego/filter",
+      title: "Subastas Activas",
+      href: "lego/subasta/activas",
       icon: <Filter className="h-4 w-4" />,
     },
   ];
