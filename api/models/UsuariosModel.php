@@ -1,4 +1,8 @@
 <?php
+// UsuariosModel.php
+require_once "models/EstadoUsuarioModel.php"; // Ajusta la ruta según tu estructura
+require_once "models/RolModel.php";
+
 class UsuariosModel
 {
     public $enlace;
@@ -72,24 +76,31 @@ class UsuariosModel
     }
     //Obtener información de un usuarios específico, incluyendo las películas en las que participa y los roles
     public function getUsuarioDetallexId($id)
-    {
+{
+    // 1. Consulta con subconsultas para campos calculados
+    $vSql = "SELECT u.id, u.correo, u.nombre_completo, u.fecha_registro, 
+                    r.nombre AS rol_nombre, 
+                    es.nombre AS estado_nombre,
+                    (SELECT COUNT(*) FROM subastas s WHERE s.id_creador = u.id) AS cantidad_subastas,
+                    (SELECT COUNT(*) FROM pujas p WHERE p.id_usuario = u.id) AS cantidad_pujas
+                FROM usuarios u
+                INNER JOIN roles r ON u.id_rol = r.id
+                INNER JOIN estados_usuario es ON u.id_estado = es.id
+                WHERE u.id = $id";
+
+    $vResultado = $this->enlace->ExecuteSQL($vSql);
+    
+    if (!empty($vResultado)) {
+        $vResultado = $vResultado[0];
+        
+        // 2. Cargar listas adicionales si el componente las requiere (opcional)
         $estadoU = new EstadoUsuarioModel();
         $rolM = new RolModel();
-
-        $vSql = "SELECT u.id, u.correo, u.nombre_completo, u.fecha_registro, 
-                        r.nombre AS rol_nombre, 
-                        es.nombre AS estado_nombre 
-                    FROM usuarios u
-                    INNER JOIN roles r ON u.id_rol = r.id
-                    INNER JOIN estados_usuario es ON u.id_estado = es.id
-                    WHERE u.id = $id";
-
-        $vResultado = $this->enlace->ExecuteSQL($vSql);
-        if (!empty($vResultado)) {
-            $vResultado = $vResultado[0];
-            $vResultado->lista_estados = $estadoU->all();
-            $vResultado->lista_roles = $rolM->all();
-        }
+        $vResultado->lista_estados = $estadoU->all();
+        $vResultado->lista_roles = $rolM->all();
+        
         return $vResultado;
     }
+    return null;
+}
 }

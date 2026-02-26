@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Importar useNavigate
 import {
     Table,
     TableHeader,
@@ -18,7 +18,6 @@ import {
 import { Edit, Plus, Trash2, ArrowLeft, UserCircle } from "lucide-react";
 import UsuariosService from "@/services/UsuariosService";
 
-// Columnas ajustadas a lo solicitado: Nombre, Rol, Estado + Acciones
 const userColumns = [
     { key: "nombre_completo", label: "Nombre Completo" },
     { key: "rol", label: "Rol" },
@@ -30,15 +29,13 @@ export default function TableUsers() {
     const [users, setUsers] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate(); // Hook para redireccionar
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Se utiliza el servicio para obtener la lista de usuarios
                 const response = await UsuariosService.getUsuarioDetalle();
                 let data = response.data?.data || response.data || [];
-                
-                // Asegurar que data sea un array
                 setUsers(Array.isArray(data) ? data : [data]);
             } catch (err) {
                 console.error("Error al cargar usuarios:", err);
@@ -49,6 +46,11 @@ export default function TableUsers() {
         };
         fetchData();
     }, []);
+
+    // Función para manejar el clic en la fila
+    const handleRowClick = (id) => {
+        navigate(`/lego/usuarios/detail/${id}`); 
+    };
 
     if (loading) {
         return <div className="p-10 text-center text-white mt-16">⏳ Cargando listado de usuarios...</div>;
@@ -85,8 +87,12 @@ export default function TableUsers() {
                     <TableBody>
                         {users.length > 0 ? (
                             users.map((user) => (
-                                <TableRow key={user.id} className="border-gray-700 hover:bg-gray-800/50 transition">
-                                    
+                                <TableRow 
+                                    key={user.id} 
+                                    // Evento de clic en la fila
+                                    onClick={() => handleRowClick(user.id)}
+                                    className="border-gray-700 hover:bg-gray-800/50 transition cursor-pointer"
+                                >
                                     {/* 1. Nombre Completo */}
                                     <TableCell className="text-white font-medium py-4">
                                         <div className="flex items-center gap-3">
@@ -95,14 +101,14 @@ export default function TableUsers() {
                                         </div>
                                     </TableCell>
 
-                                    {/* 2. Rol (comprador, vendedor, administrador) */}
+                                    {/* 2. Rol */}
                                     <TableCell>
                                         <span className="px-2 py-1 rounded-md bg-blue-900/30 text-blue-300 text-xs font-semibold uppercase border border-blue-800">
                                             {user.rol_nombre || user.rol || "Usuario"}
                                         </span>
                                     </TableCell>
 
-                                    {/* 3. Estado (activo o bloqueado) */}
+                                    {/* 3. Estado */}
                                     <TableCell>
                                         <div className="flex items-center gap-2">
                                             <div className={`h-2 w-2 rounded-full ${
@@ -121,7 +127,7 @@ export default function TableUsers() {
                                     </TableCell>
 
                                     {/* Acciones */}
-                                    <TableCell>
+                                    <TableCell onClick={(e) => e.stopPropagation()}>
                                         <div className="flex items-center gap-2">
                                             <TooltipProvider>
                                                 <Tooltip>

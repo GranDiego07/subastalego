@@ -41,18 +41,27 @@ class usuarios
             handleException($e);
         }
     }
-
     public function getUsuarioDetalleId($param)
     {
         try {
             $response = new Response();
             $usuarios = new UsuariosModel();
-            $result = $usuarios->getUsuarioDetallexId($param);
+
+            // Forzamos entero para evitar caracteres extraños como ":1"
+            $id = intval($param);
+
+            $result = $usuarios->getUsuarioDetallexId($id);
+
+            if (!$result) {
+                // Si el ID no existe en la BD
+                http_response_code(404);
+                $response->toJSON(["error" => "Usuario no encontrado"]);
+                return;
+            }
+
             $response->toJSON($result);
         } catch (Exception $e) {
-            // Elimina $response->toJSON($result); 
             $response->toJSON(["error" => $e->getMessage()]);
-            handleException($e);
         }
     }
     // UsuariosController.php

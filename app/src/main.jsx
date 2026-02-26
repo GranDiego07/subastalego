@@ -10,6 +10,7 @@ import { DetailLego } from './components/Lego/DetailLegos'
 import TableLegos from './components/Lego/TableLegos'
 import TableUsuarios from './components/Usuarios/TableUsuario'
 import TablePujas from './components/Pujas/TablePujas'
+import { DetailUsuario } from './components/Usuarios/DetailUsuario'
 
 const rutas = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ const rutas = createBrowserRouter([
       { path: "lego/table", element: <TableLegos /> },
       { path: "lego/detail/:id", element: <DetailLego /> },
       { path: "lego/usuarios", element: <TableUsuarios /> },
+      { path: "lego/usuarios/detail/:id", element: <DetailUsuario /> },
       { path: "lego/pujas", element: <TablePujas /> }
     ]
   }
