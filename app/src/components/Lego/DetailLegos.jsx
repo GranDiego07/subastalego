@@ -28,7 +28,7 @@ export function DetailLego() {
                 const response = await LegoService.getByDetalle(id);
                 // Extraemos el objeto de la respuesta
                 const item = response.data.data?.[0] || response.data.data || response.data;
-                
+
                 setData(item);
 
                 // Procesamos las imágenes relacionadas
@@ -66,9 +66,8 @@ export function DetailLego() {
                     <div className="grid grid-cols-4 gap-3">
                         {imagesList.map((url, index) => (
                             <div key={index} onClick={() => setMainImage(url)}
-                                className={`cursor-pointer bg-white p-2 rounded-lg border-2 transition-all aspect-square flex items-center justify-center ${
-                                    mainImage === url ? 'border-blue-500 scale-95' : 'border-transparent'
-                                }`}>
+                                className={`cursor-pointer bg-white p-2 rounded-lg border-2 transition-all aspect-square flex items-center justify-center ${mainImage === url ? 'border-blue-500 scale-95' : 'border-transparent'
+                                    }`}>
                                 <img src={`${BASE_URL}${url}`} className="max-h-full object-contain" alt="Miniatura" />
                             </div>
                         ))}
@@ -79,7 +78,7 @@ export function DetailLego() {
                 <div className="flex-1 space-y-6">
                     <div>
                         <Badge className="bg-blue-600 mb-2 uppercase text-[10px] px-3 py-1">
-                            {formatValue(lego.categoria)} 
+                            {formatValue(lego.categoria)}
                         </Badge>
                         <h1 className="text-4xl font-extrabold">{formatValue(lego.nombre)}</h1>
                     </div>
@@ -117,7 +116,35 @@ export function DetailLego() {
                             <p className="text-zinc-300 text-sm">{formatValue(lego.descripcion)}</p>
                         </div>
                     </div>
+                    {/* SECCIÓN DE HISTORIAL DE SUBASTAS */}
+                    <div className="mt-10 space-y-4">
+                        <div className="flex items-center gap-2 text-zinc-400">
+                            <h3 className="font-bold uppercase text-sm border-b border-zinc-700 pb-2 w-full">
+                                Historial de subastas donde ha participado
+                            </h3>
+                        </div>
 
+                        {lego.historial_subastas && lego.historial_subastas.length > 0 ? (
+                            <div className="grid gap-4">
+                                {lego.historial_subastas.map((subasta) => (
+                                    <div key={subasta.subasta_id} className="bg-zinc-900/30 border border-zinc-800 p-4 rounded-lg flex justify-between items-center">
+                                        <div>
+                                            <span className="text-blue-500 font-mono text-xs">ID: #{subasta.subasta_id}</span>
+                                            <div className="flex gap-4 mt-1 text-sm text-zinc-300">
+                                                <span><strong className="text-zinc-500">Inicio:</strong> {subasta.fecha_inicio}</span>
+                                                <span><strong className="text-zinc-500">Cierre:</strong> {subasta.fecha_cierre}</span>
+                                            </div>
+                                        </div>
+                                        <Badge variant="outline" className="border-blue-500 text-blue-400">
+                                            {subasta.estado_subasta}
+                                        </Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-zinc-500 italic text-sm">Este objeto aún no ha participado en ninguna subasta.</p>
+                        )}
+                    </div>
                     <Button onClick={() => navigate(-1)} variant="outline" className="text-white border-zinc-700 hover:bg-zinc-800">
                         <ArrowLeft className="mr-2 w-4 h-4" /> Volver al catálogo
                     </Button>

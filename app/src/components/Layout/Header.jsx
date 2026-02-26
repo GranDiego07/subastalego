@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { href, Link } from "react-router-dom";
 import {
   Layers,
   Film,
@@ -39,6 +39,11 @@ export default function Header() {
     {
       title: "Subastas Activas",
       href: "lego/subasta/activas",
+      icon: <Filter className="h-4 w-4" />,
+    },
+    {
+      title:"Subastas No activas",
+      href:"lego/subasta/noactivas",
       icon: <Filter className="h-4 w-4" />,
     },
   ];

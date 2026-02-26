@@ -32,10 +32,12 @@ require_once "middleware/AuthMiddleware.php";
 require_once "models/CategoriaLegoModel.php";
 require_once "models/CondicionLegoModel.php";
 require_once "models/EstadoLegoModel.php";
+/* require_once "models/EstadoUsuarioModel.php"; */
 require_once "models/ImageModel.php";
 require_once "models/LegoModel.php";
 require_once "models/RolModel.php";
 require_once "models/UsuariosModel.php";
+require_once "models/SubastaModel.php";
 require_once "models/PujasModel.php";
 
 /***--- Controladores ---*/
@@ -45,7 +47,10 @@ require_once "controllers/EstadoLegoController.php";
 require_once "controllers/ImageController.php";
 require_once "controllers/LegoController.php";
 require_once "controllers/UsuariosController.php";
+require_once "controllers/SubastaController.php";  // ← Así está el archivo real
 require_once "controllers/PujasController.php";
+
+
 
 // Enrutador
 require_once "routes/RoutesController.php";

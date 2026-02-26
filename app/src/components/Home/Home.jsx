@@ -28,10 +28,10 @@ export function Home() {
         </p>
         <div className="flex justify-center gap-4">
           <a
-            href="/movies"
+            href="/lego"
             className="px-6 py-3 bg-primary text-white rounded-lg font-semibold shadow-lg hover:bg-primary/90 transition"
           >
-            Ver Catálogo
+            Ver Legos en Subasta
           </a> 
           <a
             href="/user/login"
