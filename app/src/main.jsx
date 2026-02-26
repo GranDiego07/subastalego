@@ -13,6 +13,7 @@ import TablePujas from './components/Pujas/TablePujas'
 import { DetailUsuario } from './components/Usuarios/DetailUsuario'
 import { ListSubastasActi } from './components/Subastas/ListSubastasActi'
 import { ListSubastasDesa } from './components/Subastas/ListSubastasDesa'
+import { DetailSubasta } from './components/Subastas/DetailSubasta'
 
 const rutas = createBrowserRouter([
   {
@@ -31,7 +32,8 @@ const rutas = createBrowserRouter([
       { path: "lego/usuarios/detail/:id", element: <DetailUsuario /> },
       { path: "lego/pujas", element: <TablePujas /> },
       { path: "lego/subasta/activas", element: <ListSubastasActi /> },
-      { path: "lego/subasta/noactivas", element: <ListSubastasDesa /> }
+      { path: "lego/subasta/noactivas", element: <ListSubastasDesa /> },
+      { path: "lego/subasta/detalle/:id", element: <DetailSubasta /> }
     ]
   }
 ])

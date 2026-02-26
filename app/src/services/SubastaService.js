@@ -26,5 +26,11 @@ class SubastaService {
         // Esto llamará a la función getSubastasCanFin en el controlador
         return axios.get(`${BASE_URL}/getSubastasCanFin`);
     }
+    getDetalleSubasta(id) {
+        return axios.get(`${BASE_URL}/getDetalleSubasta/${id}`);
+    }
+    getHistorialPujas(subastaId) {
+        return axios.get(`${BASE_URL}/getHistorialPujas/${subastaId}`);
+    }
 }
 export default new SubastaService();

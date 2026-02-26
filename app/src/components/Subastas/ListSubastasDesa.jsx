@@ -4,7 +4,7 @@ import SubastaService from "../../services/SubastaService";
 import { LoadingGrid } from "../ui/custom/LoadingGrid";
 import { EmptyState } from "../ui/custom/EmptyState";
 import { ErrorAlert } from "../ui/custom/ErrorAlert";
-import { Badge } from "@/components/ui/badge"; // Si usas shadcn/ui
+import { Badge } from "@/components/ui/badge";
 import { Gavel, Calendar, ArrowRight } from "lucide-react";
 
 export function ListSubastasDesa() {
@@ -15,17 +15,31 @@ export function ListSubastasDesa() {
 
     const BASE_URL = import.meta.env.VITE_BASE_URL;
 
+    // Función para manejar el clic en la subasta
+    const handleRowClick = (id) => {
+        navigate(`/lego/subasta/${id}`);
+    };
+
+    // Función para obtener estilos del badge según estado
+    const getEstadoStyles = (estado) => {
+        const estilos = {
+            'activa': 'bg-green-600',
+            'finalizada': 'bg-red-600',
+            'cancelada': 'bg-gray-600'
+        };
+        return estilos[estado?.toLowerCase()] || 'bg-gray-600';
+    };
+
     useEffect(() => {
         const fetchSubasta = async () => {
             setLoading(true);
             try {
                 const response = await SubastaService.getSubastasCanFin();
-                // Tu SQL devuelve directamente un array de objetos planos
                 const data = response.data?.data || response.data || [];
                 setSubastas(data);
             } catch (err) {
-                console.error("Error al cargar Subasta:", err);
-                setError("No se pudo conectar con el servicio de Subasta.");
+                console.error("Error al cargar Subastas:", err);
+                setError("No se pudo conectar con el servicio de Subastas.");
             } finally {
                 setLoading(false);
             }
@@ -35,23 +49,22 @@ export function ListSubastasDesa() {
 
     if (loading) return <LoadingGrid type="grid" />;
     if (error) return <ErrorAlert title="Error al cargar" message={error} />;
-    if (subastas.length === 0) return <EmptyState message="No hay subastas activas en este momento." />;
+    if (subastas.length === 0) return <EmptyState message="No hay subastas finalizadas o canceladas en este momento." />;
 
     return (
         <div className="mx-auto max-w-7xl p-6">
             <h2 className="text-3xl font-extrabold mb-8 text-white flex items-center gap-3">
-                <Gavel className="text-blue-500" /> Catálogo de Subastas Finalizadas
+                <Gavel className="text-blue-500" /> Subastas Finalizadas y Canceladas
             </h2>
-
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {subastas.map((item, index) => {
-                    // item.imagen viene directamente del SELECT (ej: "public/img/lego1.jpg")
                     const fullUrl = item.imagen ? `${BASE_URL}${item.imagen}` : null;
 
                     return (
-                        <div
-                            key={index}
-                            onClick={() => navigate(`/lego/detail/${item.id}`)}
+                        <div 
+                            key={index} 
+                            onClick={() => handleRowClick(item.id)}
                             className="bg-zinc-900 border border-zinc-800 p-0 rounded-2xl shadow-xl hover:shadow-blue-900/20 transition-all cursor-pointer hover:scale-[1.03] group overflow-hidden"
                         >
                             {/* CONTENEDOR DE IMAGEN */}
@@ -61,16 +74,7 @@ export function ListSubastasDesa() {
                                 ) : (
                                     <span className="text-xs text-gray-400">Sin Imagen</span>
                                 )}
-                                <Badge
-                                    className={`absolute top-3 right-3 ${item.estado_final === 'Activa'
-                                            ? 'bg-green-600'
-                                            : item.estado_final === 'Cancelada'
-                                                ? 'bg-blue-600'
-                                                : item.estado_final === 'Finalizada'
-                                                    ? 'bg-red-600'
-                                                    : 'bg-gray-600'
-                                        }`}
-                                >
+                                <Badge className={`absolute top-3 right-3 ${getEstadoStyles(item.estado_final)}`}>
                                     {item.estado_final}
                                 </Badge>
                             </div>
@@ -84,7 +88,7 @@ export function ListSubastasDesa() {
                                 <div className="space-y-2 text-zinc-400 text-sm">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-4 h-4 text-blue-500" />
-                                        <span>Cierra: {item.fecha_cierre}</span>
+                                        <span>Cierre: {item.fecha_cierre}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Gavel className="w-4 h-4 text-blue-500" />

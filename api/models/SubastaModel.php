@@ -59,42 +59,47 @@ class SubastaModel
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         return $vResultado;
     }
-    public function getDetalleSubasta($id)
+
+    public function getDetalleSubasta()
     {
-        $vSql = "SELECT 
-        s.id AS subasta_id,
-        l.id AS lego_id,
-        l.nombre AS nombre_lego,
-        (SELECT url FROM imagenes WHERE id_lego = l.id LIMIT 1) AS imagen,
-        GROUP_CONCAT(DISTINCT c.nombre SEPARATOR ', ') AS categorias,
-        cl.nombre AS condicion,
-        
-        s.fecha_inicio,
-        s.fecha_cierre,
-        s.precio_base,
-        s.incremento_minimo,
-        es.nombre AS estado_actual,
-        (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas,
-        
-        l.descripcion,
-        u.nombre AS usuario_propietario,
-        (SELECT MAX(monto) FROM pujas WHERE id_subasta = s.id) AS puja_maxima,
-        (SELECT u2.nombre FROM pujas p 
-        INNER JOIN usuarios u2 ON p.id_usuario = u2.id 
-        WHERE p.id_subasta = s.id 
-        ORDER BY p.monto DESC LIMIT 1) AS usuario_puja_maxima
-        
+        $vSql = "
+        SELECT 
+            s.id AS subasta_id,
+            l.nombre AS Lego,
+            s.precio_base AS Precio,
+            s.fecha_cierre,
+            s.incremento_minimo,
+            es.nombre AS estado_final,
+            COUNT(p.id) AS cantidad_pujas,
+            MIN(i.url) AS imagen
+
         FROM subastas s
         INNER JOIN lego l ON s.id_lego = l.id
-        INNER JOIN categorias_lego cl ON l.id_condicion = cl.id
-        LEFT JOIN lego_categorias lc ON l.id = lc.id_lego
-        LEFT JOIN categorias c ON lc.id_categoria = c.id
         INNER JOIN estados_subasta es ON s.id_estado = es.id
-        INNER JOIN usuarios u ON l.id_usuario = u.id
-        WHERE s.id = $id
-        GROUP BY s.id";
+        LEFT JOIN pujas p ON p.id_subasta = s.id
+        LEFT JOIN imagenes i ON i.id_lego = l.id
+
+        WHERE es.nombre = 'activa'
+        GROUP BY s.id
+    ";
+
+        return $this->enlace->ExecuteSQL($vSql);
+    }
+
+    /*Obtener historial de pujas de una subasta */
+    public function getHistorialPujas($id)
+    {
+        $vSql = "SELECT 
+            p.id AS puja_id,
+            p.monto,
+            p.fecha_hora,
+            u.nombre_completo AS usuario_pujador
+        FROM pujas p
+        INNER JOIN usuarios u ON p.id_usuario = u.id
+        WHERE p.id_subasta = $id
+        ORDER BY p.monto DESC, p.fecha_hora DESC";
 
         $vResultado = $this->enlace->ExecuteSQL($vSql);
-        return $vResultado[0] ?? null;
+        return $vResultado;
     }
 }
