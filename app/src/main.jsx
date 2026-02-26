@@ -6,26 +6,26 @@ import { Layout } from './components/Layout/Layout'
 import { Home } from './components/Home/Home'
 import { PageNotFound } from './components/Home/PageNotFound'
 import { ListLegos } from './components/Lego/ListLegos'
-import { DetailMovie } from './components/Lego/DetailLegos'
+import { DetailLego } from './components/Lego/DetailLegos'
 import TableLegos from './components/Lego/TableLegos'
 import TableUsuarios from './components/Usuarios/TableUsuario'
 import TablePujas from './components/Pujas/TablePujas'
 
 const rutas = createBrowserRouter([
   {
-    element: <Layout/>,
+    element: <Layout />,
     children: [
       // Ruta principal
       { index: true, element: <Home /> },
 
       // Ruta comodín (404)
       { path: "*", element: <PageNotFound /> },
-       //Rutas componentes
-      {path:"lego/table", element: <TableLegos/>},
-      {path:"lego", element: <ListLegos/>},
-      {path:"lego/detail/:id", element: <DetailMovie />},
-      {path:"lego/usuarios", element: <TableUsuarios/>},
-      {path:"lego/pujas", element: <TablePujas/>}
+      //Rutas componentes
+      { path: "lego", element: <ListLegos /> },
+      { path: "lego/table", element: <TableLegos /> },
+      { path: "lego/detail/:id", element: <DetailLego /> },
+      { path: "lego/usuarios", element: <TableUsuarios /> },
+      { path: "lego/pujas", element: <TablePujas /> }
     ]
   }
 ])

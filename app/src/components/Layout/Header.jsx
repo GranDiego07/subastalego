@@ -15,7 +15,6 @@ import {
   ChevronDown,
   Clapperboard,
   User,
-  ShoppingBasket
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -35,17 +34,17 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const userEmail = "Usuarios";
 
-const navItems = [
-  { title: "Legos", href: "/lego", icon: <Film className="h-4 w-4" /> },
-  {
-    title: "Filtrar Lego",
-    href: "/lego/filter",
-    icon: <Filter className="h-4 w-4" />,
-  },
-];
+  const navItems = [
+    { title: "Legos", href: "/lego", icon: <Film className="h-4 w-4" /> },
+    {
+      title: "Filtrar Lego",
+      href: "/lego/filter",
+      icon: <Filter className="h-4 w-4" />,
+    },
+  ];
 
-const mantItems = [
- {
+  const mantItems = [
+    {
       title: "Lego",
       href: "lego/table",
       icon: <Wrench className="h-4 w-4" />,
@@ -53,28 +52,28 @@ const mantItems = [
     {
       title: "Usuarios",
       href: "lego/usuarios",
-      icon: <ShoppingBasket className="h-4 w-4" />,
+      icon: <LogIn className="h-4 w-4" />,
     },
     {
       title: "Pujas",
       href: "lego/pujas",
       icon: <ChartArea className="h-4 w-4" />,
     },
-];
+  ];
 
-const userItems = [
-  { title: "Login", href: "/user/login", icon: <LogIn className="h-4 w-4" /> },
-  {
-    title: "Registrarse",
-    href: "/user/create",
-    icon: <UserPlus className="h-4 w-4" />,
-  },
-  {
-    title: "Logout",
-    href: "#login",
-    icon: <LogOut className="h-4 w-4" />,
-  },
-];
+  const userItems = [
+    { title: "Login", href: "/user/login", icon: <LogIn className="h-4 w-4" /> },
+    {
+      title: "Registrarse",
+      href: "/user/create",
+      icon: <UserPlus className="h-4 w-4" />,
+    },
+    {
+      title: "Logout",
+      href: "#login",
+      icon: <LogOut className="h-4 w-4" />,
+    },
+  ];
   return (
     <header className="w-full fixed top-0 left-0 z-50 backdrop-blur-xl bg-gradient-to-r from-primary/80 via-primary/60 to-primary/80 border-b border-white/10 shadow-lg">
       <div className="flex items-center justify-between px-6 py-3 max-w-[1280px] mx-auto text-white">
@@ -103,8 +102,8 @@ const userItems = [
                     <Link
                       to={item.href}
                       className="flex items-center gap-2 py-2 px-3 rounded-md text-sm hover:bg-accent/10 transition"
-      >
-        
+                    >
+
                       {item.icon} {item.title}
                     </Link>
                   </MenubarItem>
@@ -120,12 +119,12 @@ const userItems = [
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">
                 {mantItems.map((item) => (
-                  <MenubarItem key={item.href} asChild> 
+                  <MenubarItem key={item.href} asChild>
                     <Link
                       to={item.href}
                       className="flex items-center gap-2 py-2 px-3 rounded-md text-sm hover:bg-accent/10 transition"
                     >
-                    {item.icon} {item.title}
+                      {item.icon} {item.title}
                     </Link>
                   </MenubarItem>
                 ))}

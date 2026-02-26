@@ -6,12 +6,12 @@ import { Clock, Globe, ShoppingCart, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 
-ListCardMovies.propTypes = {
+ListCardLego.propTypes = {
   data: PropTypes.array,
   isShopping: PropTypes.bool.isRequired,
 };
 
-export function ListCardMovies({ data, isShopping }) {
+export function ListCardLego({ data, isShopping }) {
   const BASE_URL = import.meta.env.VITE_BASE_URL + "uploads";
 
   return (

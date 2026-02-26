@@ -44,7 +44,19 @@ class UsuariosModel
         return $vResultado;
     }
 
+    public function getUsuarioList()
+    {
+        $vSql = "SELECT u.nombre_completo,
+                        r.nombre AS rol_nombre, 
+                        es.nombre AS estado_nombre
+                    FROM usuarios u
+                    inner join roles r on u.id_rol=r.id
+                    inner join estados_usuario es on u.id_estado=es.id
+                    ORDER BY u.id desc";
 
+        $vResultado = $this->enlace->ExecuteSQL($vSql);
+        return $vResultado;
+    }
     public function getUsuarioDetalle()
     {
         $vSql = "SELECT u.id, u.correo, u.nombre_completo, u.fecha_registro, 
@@ -63,7 +75,7 @@ class UsuariosModel
     {
         $estadoU = new EstadoUsuarioModel();
         $rolM = new RolModel();
-        
+
         $vSql = "SELECT u.id, u.correo, u.nombre_completo, u.fecha_registro, 
                         r.nombre AS rol_nombre, 
                         es.nombre AS estado_nombre 

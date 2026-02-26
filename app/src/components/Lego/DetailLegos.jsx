@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Info } from "lucide-react";
 
-export function DetailMovie() {
+export function DetailLego() {
     const navigate = useNavigate();
     const { id } = useParams();
     const [lego, setData] = useState(null);

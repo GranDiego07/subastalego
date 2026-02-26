@@ -21,7 +21,7 @@ class PujasModel
     public function get($id)
     {
         //Consulta sql
-        $vSql = "SELECT * FROM rol where id=$id";
+        $vSql = "SELECT * FROM pujas where id=$id";
 
         //Ejecutar la consulta
         $vResultado = $this->enlace->ExecuteSQL($vSql);

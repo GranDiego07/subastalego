@@ -20,9 +20,7 @@ import LegoService from "@/services/LegoService";
 
 // Columnas ajustadas a los campos reales de la API
 const legoColumns = [
-    { key: "id", label: "ID" },
     { key: "nombre", label: "Nombre del Set" },
-    { key: "descripcion", label: "Descripción" },
     { key: "categoria", label: "Categoría" },
     { key: "condicion", label: "Condición" },
     { key: "estado", label: "Estado" },
@@ -100,10 +98,8 @@ export default function TableLegos() {
                     <TableBody>
                         {legos.length > 0 ? (
                             legos.map((lego) => (
-                                <TableRow key={lego.id}>
-                                    <TableCell>{lego.id}</TableCell>
+                                <TableRow key={lego.nombre}>
                                     <TableCell className="font-medium">{lego.nombre}</TableCell>
-                                    <TableCell className="max-w-xs truncate">{lego.descripcion}</TableCell>
 
                                     {/* Categoría - ahora muestra el nombre */}
                                     <TableCell>

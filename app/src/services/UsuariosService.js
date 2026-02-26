@@ -40,6 +40,9 @@ class UsuariosService {
   getUsuarioDetalle() {
     return axios.get(`${BASE_URL}/getUsuarioDetalle`);
   }
+  getUsuarioList() {
+    return axios.get(`${BASE_URL}/getUsuarioList`);
+  }
   /**
    * Crear nuevo usuario
    * POST /usuarios

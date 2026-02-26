@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL + 'PujasController';
 class PujasService {
     /**
      * Obtener listado de todas las pujas
-     * GET /pujas
+     * GET /PujasController
      */
     getAll() {
         return axios.get(BASE_URL);
@@ -14,15 +14,15 @@ class PujasService {
 
     /**
      * Obtener una puja específica por ID
-     * GET /pujas/getById/1
+     * GET /PujasController/1
      */
-    getById(id) {
-        return axios.get(`${BASE_URL}/getById/${id}`);
+    get(id) {
+        return axios.get(`${BASE_URL}/${id}`);
     }
 
     /**
      * Obtener todas las pujas con detalles de usuario (Nombre, monto, etc.)
-     * GET /pujas/getPujaDetalle
+     * GET /PujasController/getPujaDetalle
      */
     getPujasDetalle() {
         return axios.get(`${BASE_URL}/getPujasDetalle`);
@@ -30,7 +30,7 @@ class PujasService {
 
     /**
      * Crear una nueva puja
-     * POST /pujas
+     * POST /PujasController
      */
     create(data) {
         return axios.post(BASE_URL, data);
