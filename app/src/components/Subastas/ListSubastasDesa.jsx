@@ -15,11 +15,6 @@ export function ListSubastasDesa() {
 
     const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-    // Función para manejar el clic en la subasta
-    const handleRowClick = (id) => {
-        navigate(`/lego/subasta/${id}`);
-    };
-
     // Función para obtener estilos del badge según estado
     const getEstadoStyles = (estado) => {
         const estilos = {
