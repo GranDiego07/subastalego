@@ -89,15 +89,11 @@ class SubastaModel
     /*Obtener historial de pujas de una subasta */
     public function getHistorialPujas($id)
     {
-        $vSql = "SELECT 
-            p.id AS puja_id,
-            p.monto,
-            p.fecha_hora,
-            u.nombre_completo AS usuario_pujador
-        FROM pujas p
-        INNER JOIN usuarios u ON p.id_usuario = u.id
-        WHERE p.id_subasta = $id
-        ORDER BY p.monto DESC, p.fecha_hora DESC";
+        $vSql = "SELECT p.id AS puja_id,p.monto,p.fecha_hora,p.id_subasta,u.nombre_completo AS usuario_pujador
+                    FROM pujas p
+                    LEFT JOIN usuarios u ON p.id_usuario = u.id
+                    WHERE p.id_subasta = $id   -- cambia 3 por el ID de una subasta que SÍ tenga pujas
+                    ORDER BY p.fecha_hora DESC;";
 
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         return $vResultado;

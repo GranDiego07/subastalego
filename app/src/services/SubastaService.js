@@ -29,8 +29,8 @@ class SubastaService {
     getDetalleSubasta(id) {
         return axios.get(`${BASE_URL}/getDetalleSubasta/${id}`);
     }
-    getHistorialPujas(subastaId) {
-        return axios.get(`${BASE_URL}/getHistorialPujas/${subastaId}`);
+    getHistorialPujas(id) {
+        return axios.get(`${BASE_URL}/getHistorialPujas/${id}`);
     }
 }
 export default new SubastaService();

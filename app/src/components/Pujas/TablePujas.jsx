@@ -9,7 +9,7 @@ import {
     TableCell,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Edit, Plus, Trash2 } from "lucide-react";
 import PujasService from "@/services/PujasService";
 
 // 1. Columnas alineadas con tu SQL

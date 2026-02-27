@@ -67,4 +67,15 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             handleException($e);
         }
     }
+    public function getHistorialPujas($id)
+    {
+        try {
+            $response = new Response();
+            $Subasta = new SubastaModel();
+            $result = $Subasta->getHistorialPujas($id);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
 }
