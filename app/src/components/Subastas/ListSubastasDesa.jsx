@@ -64,7 +64,7 @@ export function ListSubastasDesa() {
                     return (
                         <div 
                             key={index} 
-                            onClick={() => handleRowClick(item.id)}
+                            onClick={() => navigate(`/lego/subasta/detalle/${item.subasta_id}`)}
                             className="bg-zinc-900 border border-zinc-800 p-0 rounded-2xl shadow-xl hover:shadow-blue-900/20 transition-all cursor-pointer hover:scale-[1.03] group overflow-hidden"
                         >
                             {/* CONTENEDOR DE IMAGEN */}

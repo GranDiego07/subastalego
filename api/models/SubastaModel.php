@@ -31,7 +31,7 @@ class SubastaModel
     }
     public function getSubastasActivas()
     {
-        $vSql = "SELECT l.nombre AS Lego,(SELECT url FROM imagenes WHERE id_lego = l.id limit 1) AS imagen,
+        $vSql = "SELECT s.id AS subasta_id, l.nombre AS Lego,(SELECT url FROM imagenes WHERE id_lego = l.id limit 1) AS imagen,
                 s.fecha_cierre,s.precio_base as Precio, s.incremento_minimo,
                 (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas,
                 es.nombre AS estado_final
@@ -46,7 +46,7 @@ class SubastaModel
     }
     public function getSubastasCanFin()
     {
-        $vSql = "SELECT l.nombre AS Lego,(SELECT url FROM imagenes WHERE id_lego = l.id limit 1) AS imagen,
+        $vSql = "SELECT s.id AS subasta_id, l.nombre AS Lego,(SELECT url FROM imagenes WHERE id_lego = l.id limit 1) AS imagen,
                 s.fecha_cierre,s.precio_base as Precio, s.incremento_minimo,
                 (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas,
                 es.nombre AS estado_final
@@ -60,30 +60,30 @@ class SubastaModel
         return $vResultado;
     }
 
-    public function getDetalleSubasta()
+    public function getDetalleSubasta($id)
     {
-        $vSql = "
-        SELECT 
-            s.id AS subasta_id,
-            l.nombre AS Lego,
-            s.precio_base AS Precio,
-            s.fecha_cierre,
-            s.incremento_minimo,
-            es.nombre AS estado_final,
-            COUNT(p.id) AS cantidad_pujas,
-            MIN(i.url) AS imagen
+        $vSql = "SELECT 
+                s.id AS subasta_id,
+                COALESCE(l.nombre, 'Lego no asignado') AS Lego,   -- ← fallback si NULL
+                s.precio_base AS Precio,
+                s.fecha_cierre,
+                s.incremento_minimo,
+                es.nombre AS estado_final,
+                COUNT(p.id) AS cantidad_pujas,
+                (SELECT url FROM imagenes WHERE id_lego = l.id LIMIT 1) AS imagen
+                FROM subastas s
+                LEFT JOIN lego l ON s.id_lego = l.id                  -- ← Cambia INNER por LEFT
+                INNER JOIN estados_subasta es ON s.id_estado = es.id
+                LEFT JOIN pujas p ON p.id_subasta = s.id
+                WHERE s.id = $id
+                GROUP BY s.id, l.nombre, s.precio_base, s.fecha_cierre, s.incremento_minimo, es.nombre";
 
-        FROM subastas s
-        INNER JOIN lego l ON s.id_lego = l.id
-        INNER JOIN estados_subasta es ON s.id_estado = es.id
-        LEFT JOIN pujas p ON p.id_subasta = s.id
-        LEFT JOIN imagenes i ON i.id_lego = l.id
+        $vResultado = $this->enlace->ExecuteSQL($vSql);
 
-        WHERE es.nombre = 'activa'
-        GROUP BY s.id
-    ";
+        // Debug: ver qué devuelve realmente
+        error_log("getDetalleSubasta($id) resultado: " . print_r($vResultado, true));
 
-        return $this->enlace->ExecuteSQL($vSql);
+        return $vResultado;
     }
 
     /*Obtener historial de pujas de una subasta */
