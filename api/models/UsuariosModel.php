@@ -53,9 +53,8 @@ class UsuariosModel
         $vSql = "SELECT u.nombre_completo,
                         r.nombre AS rol_nombre, 
                         es.nombre AS estado_nombre
-                    FROM usuarios u
-                    inner join roles r on u.id_rol=r.id
-                    inner join estados_usuario es on u.id_estado=es.id
+                    FROM usuarios u, roles r, estados_usuario es
+                    where u.id_rol=r.id and  u.id_estado=es.id
                     ORDER BY u.id desc";
 
         $vResultado = $this->enlace->ExecuteSQL($vSql);

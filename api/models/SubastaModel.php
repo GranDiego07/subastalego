@@ -64,7 +64,7 @@ class SubastaModel
     {
         $vSql = "SELECT 
                 s.id AS subasta_id,
-                COALESCE(l.nombre, 'Lego no asignado') AS Lego,   -- ← fallback si NULL
+                COALESCE(l.nombre, 'Lego no asignado') AS Lego,   
                 s.precio_base AS Precio,
                 s.fecha_cierre,
                 s.incremento_minimo,
@@ -72,7 +72,7 @@ class SubastaModel
                 COUNT(p.id) AS cantidad_pujas,
                 (SELECT url FROM imagenes WHERE id_lego = l.id LIMIT 1) AS imagen
                 FROM subastas s
-                LEFT JOIN lego l ON s.id_lego = l.id                  -- ← Cambia INNER por LEFT
+                LEFT JOIN lego l ON s.id_lego = l.id                 
                 INNER JOIN estados_subasta es ON s.id_estado = es.id
                 LEFT JOIN pujas p ON p.id_subasta = s.id
                 WHERE s.id = $id
@@ -90,9 +90,8 @@ class SubastaModel
     public function getHistorialPujas($id)
     {
         $vSql = "SELECT p.id AS puja_id,p.monto,p.fecha_hora,p.id_subasta,u.nombre_completo AS usuario_pujador
-                    FROM pujas p
-                    LEFT JOIN usuarios u ON p.id_usuario = u.id
-                    WHERE p.id_subasta = $id   -- cambia 3 por el ID de una subasta que SÍ tenga pujas
+                    FROM pujas p, usuarios u
+                    WHERE p.id_usuario = u.id and p.id_subasta = $id   
                     ORDER BY p.fecha_hora DESC;";
 
         $vResultado = $this->enlace->ExecuteSQL($vSql);

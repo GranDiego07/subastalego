@@ -123,25 +123,18 @@ class LegoModel
     {
         $imagenM = new ImageModel();
         //Consulta SQL
-        $vSQL = "SELECT 
-    l.id, 
-    l.nombre, 
-    l.descripcion, 
-    cl.nombre AS condicion,
-    c.nombre AS categoria, 
-    v.nombre_completo AS vendedor, 
-    e.nombre AS estado,
-    (SELECT GROUP_CONCAT(url) FROM imagenes WHERE id_lego = l.id) AS imagenes_urls
-FROM lego l
-LEFT JOIN categorias c ON l.id_categoria = c.id
-LEFT JOIN usuarios v ON l.id_vendedor = v.id
-LEFT JOIN estados_lego e ON l.id_estado = e.id
-LEFT JOIN condiciones_lego cl ON l.id_condicion = cl.id
-WHERE l.id = $idActor;";
+        $vSQL = "SELECT l.id, l.nombre, l.descripcion, cl.nombre AS condicion,c.nombre AS categoria, 
+        v.nombre_completo AS vendedor, e.nombre AS estado,
+            (SELECT GROUP_CONCAT(url) FROM imagenes WHERE id_lego = l.id) AS imagenes_urls
+            FROM lego l
+            LEFT JOIN categorias c ON l.id_categoria = c.id
+            LEFT JOIN usuarios v ON l.id_vendedor = v.id
+            LEFT JOIN estados_lego e ON l.id_estado = e.id
+            LEFT JOIN condiciones_lego cl ON l.id_condicion = cl.id
+            WHERE l.id = $idActor;";
         //Ejecutar la consulta
         $vResultado = $this->enlace->ExecuteSQL($vSQL);
         //Retornar la respuesta
-
         return $vResultado;
     }
     /**

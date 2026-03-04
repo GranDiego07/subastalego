@@ -29,13 +29,13 @@ export function Home() {
         <div className="flex justify-center gap-4">
           <a
             href="/lego"
-            className="px-6 py-3 bg-primary text-white rounded-lg font-semibold shadow-lg hover:bg-primary/90 transition"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-lg hover:bg-blue-700 transition"
           >
             Ver Legos en Subasta
           </a> 
           <a
             href="/user/login"
-            className="px-6 py-3 bg-secondary text-white rounded-lg font-semibold shadow-lg hover:bg-secondary/90 transition"
+            className="px-6 py-3 bg-slate-700 text-white rounded-lg font-semibold shadow-lg hover::bg-slate-800 transition"
           >
             Iniciar Sesión
           </a>

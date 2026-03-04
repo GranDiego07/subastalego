@@ -2,10 +2,7 @@ import { useState } from "react";
 import { href, Link } from "react-router-dom";
 import {
   Layers,
-  Film,
   ChartArea,
-  Filter,
-  Wrench,
   LogIn,
   UserPlus,
   LogOut,
@@ -13,8 +10,12 @@ import {
   Menu,
   X,
   ChevronDown,
-  Clapperboard,
   User,
+  Blocks,
+  AlarmClock,
+  AlarmClockOff,
+CircleUserIcon,
+Database,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -35,16 +36,16 @@ export default function Header() {
   const userEmail = "Usuarios";
 
   const navItems = [
-    { title: "Legos", href: "/lego", icon: <Film className="h-4 w-4" /> },
+    { title: "Legos", href: "/lego", icon: <Blocks className="h-4 w-4" /> },
     {
       title: "Subastas Activas",
       href: "lego/subasta/activas",
-      icon: <Filter className="h-4 w-4" />,
+      icon: <AlarmClock className="h-4 w-4" />,
     },
     {
       title:"Subastas No activas",
       href:"lego/subasta/noactivas",
-      icon: <Filter className="h-4 w-4" />,
+      icon: <AlarmClockOff className="h-4 w-4" />,
     },
   ];
 
@@ -52,12 +53,12 @@ export default function Header() {
     {
       title: "Lego",
       href: "lego/table",
-      icon: <Wrench className="h-4 w-4" />,
+      icon: <Blocks className="h-4 w-4" />,
     },
     {
       title: "Usuarios",
       href: "lego/usuarios",
-      icon: <LogIn className="h-4 w-4" />,
+      icon: <CircleUserIcon className="h-4 w-4" />,
     },
     {
       title: "Pujas",
@@ -80,7 +81,8 @@ export default function Header() {
     },
   ];
   return (
-    <header className="w-full fixed top-0 left-0 z-50 backdrop-blur-xl bg-gradient-to-r from-primary/80 via-primary/60 to-primary/80 border-b border-white/10 shadow-lg">
+    <header className="w-full fixed top-0 left-0 z-50 backdrop-blur-xl bg-blue-900 
+    from-primary/80 via-primary/60 to-primary/80 border-b border-white/10 shadow-lg">
       <div className="flex items-center justify-between px-6 py-3 max-w-[1280px] mx-auto text-white">
 
         {/* -------- Logo -------- */}
@@ -88,7 +90,7 @@ export default function Header() {
           to="/"
           className="flex items-center gap-2 text-xl font-semibold tracking-wide hover:opacity-90 transition"
         >
-          <Clapperboard className="h-6 w-6" />
+          <Blocks className="h-6 w-6" />
           <span className="hidden sm:inline">LegosApp</span>
         </Link>
 
@@ -98,7 +100,7 @@ export default function Header() {
             {/* Lego */}
             <MenubarMenu>
               <MenubarTrigger className="text-white font-medium flex items-center gap-1 hover:text-secondary transition">
-                <Film className="h-4 w-4" /> Lego
+                <Blocks className="h-4 w-4" /> Lego
                 <ChevronDown className="h-3 w-3" />
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">
@@ -119,7 +121,7 @@ export default function Header() {
             {/* Mantenimientos */}
             <MenubarMenu>
               <MenubarTrigger className="text-white font-medium flex items-center gap-1 hover:text-secondary transition">
-                <Layers className="h-4 w-4" /> Mantenimientos
+                <Database className="h-4 w-4" /> Mantenimientos
                 <ChevronDown className="h-3 w-3" />
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">
@@ -139,7 +141,7 @@ export default function Header() {
             {/* Usuario */}
             <MenubarMenu>
               <MenubarTrigger className="text-white font-medium flex items-center gap-1 hover:text-secondary transition">
-                <User className="h-4 w-4" /> {userEmail}
+                <CircleUserIcon className="h-4 w-4" /> {userEmail}
                 <ChevronDown className="h-3 w-3" />
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">
@@ -181,13 +183,13 @@ export default function Header() {
               <nav className="mt-8 px-4 space-y-6">
                 <div>
                   <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
-                    <Clapperboard /> LegoPuja
+                    <Blocks /> LegoPuja
                   </Link>
                 </div>
 
                 <div>
                   <h4 className="mb-2 text-lg font-semibold flex items-center gap-2">
-                    <Film /> Lego
+                    <Blocks /> Lego
                   </h4>
                   {navItems.map((item) => (
                     <Link
