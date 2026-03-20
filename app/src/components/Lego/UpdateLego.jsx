@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Save, ArrowLeft } from "lucide-react";
 import LegoService from "@/services/LegoService";
-import CategoriaService from "@/services/CategoriaService";
-import CondicionService from "@/services/CondicionService";
+import CategoriaService from "@/services/CategoriaLegoService";
+import CondicionService from "@/services/CondicionLegoService";
+import EstadoService from "@/services/EstadoLegoService";
 import { CustomSelect } from "../ui/custom/custom-select";
 import { CustomMultiSelect } from "../ui/custom/custom-multiple-select";
 
-export function EditLego() {
+export function UpdateLego() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [lego, setLego] = useState(null);
@@ -129,7 +129,13 @@ export function EditLego() {
         <div>
           <Label className="block mb-1 text-sm font-medium" htmlFor="descripcion">Descripción</Label>
           <Controller name="descripcion" control={control} render={({ field }) => (
-            <Textarea {...field} id="descripcion" placeholder="Descripción (mínimo 20 caracteres)" rows={4} />
+            <textarea
+              {...field}
+              id="descripcion"
+              placeholder="Descripción (mínimo 20 caracteres)"
+              rows={4}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
           )} />
           {errors.descripcion && <p className="text-sm text-red-500">{errors.descripcion.message}</p>}
         </div>

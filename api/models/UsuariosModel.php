@@ -128,4 +128,15 @@ class UsuariosModel
         $resultado = $this->get($idUsuario);
         return $resultado;
     }
+    public function update($objeto)
+{
+    $sql = "UPDATE usuarios SET 
+                nombre_completo = '$objeto->nombre_completo',
+                correo = '$objeto->correo'
+            WHERE id = $objeto->id";
+
+    $this->enlace->executeSQL_DML($sql);
+
+    return $this->get($objeto->id);
+}
 }

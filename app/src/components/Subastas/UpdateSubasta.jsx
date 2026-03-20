@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Save, ArrowLeft } from "lucide-react";
 import SubastaService from "@/services/SubastaService";
 
-export function EditSubasta() {
+export function UpdateSubasta() {
     const navigate = useNavigate();
     const { id } = useParams();
     const [error, setError] = useState("");

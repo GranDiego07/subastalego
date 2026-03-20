@@ -59,28 +59,16 @@ class UsuariosService {
   }
 
   /**
-   * Login de usuario
-   * POST /usuarios/login
-   * Datos requeridos: email, password
-   */
-  login(credentials) {
-    return axios.post(`${BASE_URL}/login`, credentials, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  }
-
-  /**
    * Actualizar un usuario
    * PUT /usuarios
    */
-  update(usuarioData) {
-    return axios.put(BASE_URL, usuarioData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+  update(usuario) {
+    return axios({
+      method: 'put',
+      url: BASE_URL,
+      data: JSON.stringify(usuario)
+
+    })
   }
 
   /**

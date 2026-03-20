@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Save, ArrowLeft } from "lucide-react";
 import UsuariosService from "@/services/UsuariosService";
+import RolSevice from "@/services/RolSevice";
 
 export function UpdateUsuarios() {
     const navigate = useNavigate();
@@ -18,6 +19,7 @@ export function UpdateUsuarios() {
     const [usuario, setUsuario] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
+    const [dataRoles, setDataRoles] = useState([]); // 👈 estado para roles
 
     const usuarioSchema = yup.object({
         nombre_completo: yup
@@ -38,8 +40,24 @@ export function UpdateUsuarios() {
     useEffect(() => {
         const fetchUsuario = async () => {
             try {
-                const res = await UsuariosService.get(id);
-                const data = res.data?.data ?? res.data;
+                // 👇 Carga usuarios y roles al mismo tiempo
+                const [usuariosRes, rolesRes] = await Promise.all([
+                    UsuariosService.getAll(),
+                    RolSevice.getAll(),
+                ]);
+
+                const todos = usuariosRes.data?.data ?? usuariosRes.data ?? [];
+                const roles = rolesRes.data?.data ?? rolesRes.data ?? [];
+
+                setDataRoles(roles); // 👈 guarda los roles
+
+                const data = todos.find((u) => u.id == id);
+
+                if (!data) {
+                    setError("Usuario no encontrado");
+                    return;
+                }
+
                 setUsuario(data);
                 reset({
                     nombre_completo: data.nombre_completo,
@@ -68,6 +86,12 @@ export function UpdateUsuarios() {
         }
     };
 
+    // 👇 Función para obtener el nombre del rol por id
+    const getNombreRol = (idRol) => {
+        const rol = dataRoles.find((r) => r.id == idRol);
+        return rol?.nombre ?? `Rol #${idRol}`;
+    };
+
     if (loading) return <p className="p-10 text-center">Cargando usuario...</p>;
     if (error) return <p className="text-red-600 p-4">{error}</p>;
 
@@ -79,7 +103,9 @@ export function UpdateUsuarios() {
 
                 {/* Nombre Completo */}
                 <div>
-                    <Label className="block mb-1 text-sm font-medium" htmlFor="nombre_completo">Nombre Completo</Label>
+                    <Label className="block mb-1 text-sm font-medium" htmlFor="nombre_completo">
+                        Nombre Completo
+                    </Label>
                     <Controller name="nombre_completo" control={control} render={({ field }) => (
                         <Input {...field} id="nombre_completo" placeholder="Nombre completo" />
                     )} />
@@ -88,7 +114,9 @@ export function UpdateUsuarios() {
 
                 {/* Correo */}
                 <div>
-                    <Label className="block mb-1 text-sm font-medium" htmlFor="correo">Correo</Label>
+                    <Label className="block mb-1 text-sm font-medium" htmlFor="correo">
+                        Correo
+                    </Label>
                     <Controller name="correo" control={control} render={({ field }) => (
                         <Input {...field} id="correo" type="email" placeholder="correo@ejemplo.com" />
                     )} />
@@ -100,18 +128,33 @@ export function UpdateUsuarios() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <Label className="block mb-1 text-sm font-medium">Rol</Label>
-                            <Input value={usuario.rol_nombre ?? usuario.id_rol ?? "—"} disabled className="bg-muted text-muted-foreground" />
+                            <Input
+                                value={getNombreRol(usuario.id_rol)} // 👈 muestra el nombre
+                                disabled
+                                className="bg-muted text-muted-foreground"
+                            />
                         </div>
                         <div>
                             <Label className="block mb-1 text-sm font-medium">Fecha de Registro</Label>
-                            <Input value={usuario.fecha_registro ? new Date(usuario.fecha_registro).toLocaleString("es-CR") : "—"} disabled className="bg-muted text-muted-foreground" />
+                            <Input
+                                value={usuario.fecha_registro
+                                    ? new Date(usuario.fecha_registro).toLocaleString("es-CR")
+                                    : "—"}
+                                disabled
+                                className="bg-muted text-muted-foreground"
+                            />
                         </div>
                     </div>
                 )}
 
                 {/* Botones */}
                 <div className="flex justify-between gap-4 mt-6">
-                    <Button type="button" variant="default" className="flex items-center gap-2 bg-accent text-white" onClick={() => navigate(-1)}>
+                    <Button
+                        type="button"
+                        variant="default"
+                        className="flex items-center gap-2 bg-accent text-white"
+                        onClick={() => navigate(-1)}
+                    >
                         <ArrowLeft className="w-4 h-4" /> Regresar
                     </Button>
                     <Button type="submit" className="flex-1 flex items-center justify-center gap-2">

@@ -9,7 +9,7 @@ import { ListLegos } from './components/Lego/ListLegos'
 import { DetailLego } from './components/Lego/DetailLegos'
 import { CreateLego } from './components/Lego/CreateLego'
 import TableLegos from './components/Lego/TableLegos'
-import UpdateLego from './components/Lego/UpdateLego'
+import { UpdateLego } from './components/Lego/UpdateLego'
 import TableUsuarios from './components/Usuarios/TableUsuario'
 import TablePujas from './components/Pujas/TablePujas'
 import { DetailUsuario } from './components/Usuarios/DetailUsuario'
@@ -19,7 +19,7 @@ import { ListSubastasDesa } from './components/Subastas/ListSubastasDesa'
 import { DetailSubasta } from './components/Subastas/DetailSubasta'
 import { CreateSubasta } from './components/Subastas/CreateSubasta'
 import TableSubasta from './components/Subastas/TableSubastas'
-import {UpdateSubata} from './components/Subastas/UpdateSubasta'
+import { UpdateSubasta } from './components/Subastas/UpdateSubasta'
 import { UpdateUsuarios } from './components/Usuarios/UpdateUsuarios'
 
 
@@ -36,11 +36,11 @@ const rutas = createBrowserRouter([
       { path: "lego", element: <ListLegos /> },
       { path: "lego/table", element: <TableLegos /> },
       { path: "lego/create", element: <CreateLego /> },
-      { path: "lego/create", element: <UpdateLego /> },
+      { path: "lego/update:id", element: <UpdateLego /> },
       { path: "lego/detail/:id", element: <DetailLego /> },
       { path: "lego/usuarios", element: <TableUsuarios /> },
       { path: "lego/usuarios/create", element: <CreateUsuario /> },
-      { path: "lego/usuarios/update", element: <UpdateUsuarios /> },
+      { path: "lego/usuarios/update/:id", element: <UpdateUsuarios /> },
       { path: "lego/usuarios/detail/:id", element: <DetailUsuario /> },
       { path: "lego/pujas", element: <TablePujas /> },
       { path: "lego/subasta", element: <TableSubasta /> },
@@ -48,8 +48,8 @@ const rutas = createBrowserRouter([
       { path: "lego/subasta/noactivas", element: <ListSubastasDesa /> },
       { path: "lego/subasta/detalle/:id", element: <DetailSubasta /> },
       { path: "lego/subasta/create", element: <CreateSubasta /> },
-      { path: "lego/subasta/update", element: <UpdateSubata /> },
-      
+      { path: "lego/subasta/update/:id", element: <UpdateSubasta /> },
+
     ]
   }
 ])

@@ -64,12 +64,13 @@ class LegoService {
      * Actualizar un Lego
      * PUT /lego
      */
-    update(legoData) {
-        return axios.put(BASE_URL, legoData, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+    update(lego) {
+        return axios({
+            method: 'put',
+            url: BASE_URL,
+            data: JSON.stringify(lego)
+
+        })
     }
 
     /**

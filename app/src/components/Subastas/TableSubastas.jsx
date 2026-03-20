@@ -128,7 +128,7 @@ export default function TableSubastas() {
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <Button variant="ghost" size="icon" asChild>
-                                                        <Link to={`/subasta/update/${subasta.id}`}>
+                                                        <Link to={`/lego/subasta/update/${subasta.id}`}>
                                                             <Edit className="h-4 w-4 text-primary" />
                                                         </Link>
                                                     </Button>
