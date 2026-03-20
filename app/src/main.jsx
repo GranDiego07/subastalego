@@ -7,6 +7,7 @@ import { Home } from './components/Home/Home'
 import { PageNotFound } from './components/Home/PageNotFound'
 import { ListLegos } from './components/Lego/ListLegos'
 import { DetailLego } from './components/Lego/DetailLegos'
+import { CreateLego } from './components/Lego/CreateLego'
 import TableLegos from './components/Lego/TableLegos'
 import TableUsuarios from './components/Usuarios/TableUsuario'
 import TablePujas from './components/Pujas/TablePujas'
@@ -27,6 +28,7 @@ const rutas = createBrowserRouter([
       //Rutas componentes
       { path: "lego", element: <ListLegos /> },
       { path: "lego/table", element: <TableLegos /> },
+      { path: "lego/create", element: <CreateLego /> },
       { path: "lego/detail/:id", element: <DetailLego /> },
       { path: "lego/usuarios", element: <TableUsuarios /> },
       { path: "lego/usuarios/detail/:id", element: <DetailUsuario /> },

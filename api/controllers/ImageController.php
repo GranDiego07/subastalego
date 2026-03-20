@@ -1,38 +1,33 @@
 <?php
-//class Genre
-class image{
-    //POST Crear
+class image
+{
     public function create()
     {
         try {
-            $request = new Request();
             $response = new Response();
-            //Obtener json enviado
-            $inputFILE = $request->getBody();
-            //Instancia del modelo
+
+            // ✅ Leer de $_POST, no del body JSON
+            $inputFILE = new stdClass();
+            $inputFILE->lego_id = $_POST['lego_id'] ?? null;
+
             $imagen = new ImageModel();
-            //Acción del modelo a ejecutar
             $result = $imagen->uploadFile($inputFILE);
-            //Dar respuesta
+
             $response->toJSON($result);
         } catch (Exception $e) {
-            $response->toJSON($result);
             handleException($e);
-            
         }
     }
+
     public function get($id)
     {
         try {
             $response = new Response();
             $imagen = new ImageModel();
             $result = $imagen->getImageMovie($id);
-            //Dar respuesta
             $response->toJSON($result);
         } catch (Exception $e) {
-            $response->toJSON($result);
             handleException($e);
-            
         }
     }
 }

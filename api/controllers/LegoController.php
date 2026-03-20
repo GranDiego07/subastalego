@@ -19,7 +19,7 @@ class lego
         }
     }
     //GET Obtener 
-    // localhost:81/appmovie/api/movie/5
+    // localhost:81/appLego/api/Lego/5
     public function get($id)
     {
         try {
@@ -51,7 +51,7 @@ class lego
             handleException($e);
         }
     }
-    
+
     public function legosByEstado($idVendedor)
     {
         try {
@@ -98,6 +98,23 @@ class lego
             handleException($e);
         }
     }
+
+    public function LegosByShop($idShopRental)
+    {
+        try {
+            $response = new Response();
+            //Instancia del modelo
+            $Lego = new LegoModel();
+            //Acción del modelo a ejecutar
+            $result = $Lego->LegosByShop($idShopRental);
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+        }
+    }
+
     //POST Crear
     public function create()
     {

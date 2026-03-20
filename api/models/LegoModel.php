@@ -158,6 +158,35 @@ class LegoModel
         // Retornar el objeto
         return $vResultado;
     }
+
+    public function LegosByShop($LegosByShop)
+    {
+        $imagenM = new ImageModel();
+
+        // Consulta SQL
+        $vSQL = "SELECT l.*, 
+                    c.nombre AS condicion, 
+                    e.nombre AS estado,
+                    cat.nombre AS categoria
+                    FROM lego l
+                    INNER JOIN condiciones_lego c ON l.id_condicion = c.id
+                    INNER JOIN estados_lego e ON l.id_estado = e.id
+                    INNER JOIN categorias cat ON l.id_categoria = cat.id
+                    WHERE l.id_vendedor = $LegosByShop
+                    ORDER BY l.fecha_registro DESC";
+
+        // Ejecutar la consulta
+        $vResultado = $this->enlace->ExecuteSQL($vSQL);
+
+        // Incluir imagen principal de cada lego
+        if (!empty($vResultado) && is_array($vResultado)) {
+            for ($i = 0; $i < count($vResultado); $i++) {
+                $vResultado[$i]->imagen = $imagenM->getImagenPrincipal($vResultado[$i]->id);
+            }
+        }
+
+        return $vResultado;
+    }
     /**
      * Crear pelicula
      * @param $objeto pelicula a insertar
@@ -166,12 +195,23 @@ class LegoModel
     //
     public function create($objeto)
     {
-        //Consulta sql
+        $sql = "INSERT INTO lego (nombre, descripcion, id_condicion, id_estado, id_vendedor, id_categoria)" .
+            " VALUES ('$objeto->nombre', '$objeto->descripcion',
+                    $objeto->id_condicion, $objeto->id_estado, 
+                    $objeto->id_vendedor, $objeto->id_categoria)";
 
-        //Ejecutar la consulta
+        $idLego = $this->enlace->executeSQL_DML_last($sql);
 
-        //Retornar pelicula
+        // --- Imágenes (múltiples, la primera es la principal) ---
+        $esPrincipal = 1; // La primera imagen será es_principal = 1
+        foreach ($objeto->imagenes as $url) {
+            $sql = "INSERT INTO imagenes (url, es_principal, id_lego)" .
+                " VALUES ('$url', $esPrincipal, $idLego)";
+            $this->enlace->executeSQL_DML($sql);
+            $esPrincipal = 0; // Las siguientes serán es_principal = 0
+        }
 
+        return $this->get($idLego);
     }
     /**
      * Actualizar pelicula
@@ -181,36 +221,22 @@ class LegoModel
     //
     public function update($objeto)
     {
-        //Consulta sql
-        $sql = "Update movie SET title ='$objeto->title'," .
-            "year ='$objeto->year',time ='$objeto->time',lang ='$objeto->lang'," .
-            "director_id=$objeto->director_id" .
-            " Where id=$objeto->id";
+        $sql = "INSERT INTO lego (nombre, descripcion, id_condicion, id_estado, id_vendedor, id_categoria)" .
+            " VALUES ('$objeto->nombre', '$objeto->descripcion',
+                    $objeto->id_condicion, $objeto->id_estado, 
+                    $objeto->id_vendedor, $objeto->id_categoria)";
 
-        //Ejecutar la consulta
-        $cResults = $this->enlace->executeSQL_DML($sql);
-        //--- Generos ---
-        //Eliminar generos asociados a la pelicula
-        $sql = "Delete from movie_genre where movie_id=$objeto->id";
-        $vResultadoD = $this->enlace->executeSQL_DML($sql);
-        //Insertar generos
-        foreach ($objeto->genres as $item) {
-            $sql = "Insert into movie_genre(movie_id,genre_id)" .
-                " Values($objeto->id,$item)";
-            $vResultadoG = $this->enlace->executeSQL_DML($sql);
-        }
-        //--- Actores ---
-        //Eliminar actores asociados a la pelicula
-        $sql = "Delete from movie_cast where movie_id=$objeto->id";
-        $vResultadoD = $this->enlace->executeSQL_DML($sql);
-        //Crear actores
-        foreach ($objeto->actors as $item) {
-            $sql = "Insert into movie_cast(movie_id,actor_id,role)" .
-                " Values($objeto->id, $item->actor_id, '$item->role')";
-            $vResultadoA = $this->enlace->executeSQL_DML($sql);
+        $idLego = $this->enlace->executeSQL_DML_last($sql);
+
+        // --- Imágenes (múltiples, la primera es la principal) ---
+        $esPrincipal = 1; // La primera imagen será es_principal = 1
+        foreach ($objeto->imagenes as $url) {
+            $sql = "INSERT INTO imagenes (url, es_principal, id_lego)" .
+                " VALUES ('$url', $esPrincipal, $idLego)";
+            $this->enlace->executeSQL_DML($sql);
+            $esPrincipal = 0; // Las siguientes serán es_principal = 0
         }
 
-        //Retornar pelicula
-        return $this->get($objeto->id);
+        return $this->get($idLego);
     }
 }

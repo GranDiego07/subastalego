@@ -35,7 +35,7 @@ class LegoService {
         return axios.get(`${BASE_URL}/legosByDetalle/${vendedorId}`);
     }
 
-    
+
     /**
      * Obtener Legos por Estado
      * GET /lego/legosByEstado/1
@@ -57,11 +57,7 @@ class LegoService {
      * POST /lego
      */
     create(legoData) {
-        return axios.post(BASE_URL, legoData, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        return axios.post(BASE_URL, JSON.stringify(legoData));
     }
 
     /**
