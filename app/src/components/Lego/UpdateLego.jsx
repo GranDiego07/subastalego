@@ -1,356 +1,194 @@
 import { useEffect, useState } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
-// shadcn/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// icons
-import { Plus, Save, ArrowLeft } from "lucide-react";
-
-// servicios
-import GenreService from "../../services/GenreService";
-import ActorService from "../../services/ActorService";
-import DirectorService from "../../services/DirectorService";
-import MovieService from "../../services/MovieService";
-import ImageService from "../../services/ImageService";
-
-// componentes reutilizables
-import { CustomMultiSelect } from "../ui/custom/custom-multiple-select"; // select multi con chips
-import { ActorsForm } from "./Form/ActorsForm";
+import { Textarea } from "@/components/ui/textarea";
+import { Save, ArrowLeft } from "lucide-react";
+import LegoService from "@/services/LegoService";
+import CategoriaService from "@/services/CategoriaService";
+import CondicionService from "@/services/CondicionService";
 import { CustomSelect } from "../ui/custom/custom-select";
-import { CustomInputField } from "../ui/custom/custom-input-field";
+import { CustomMultiSelect } from "../ui/custom/custom-multiple-select";
 
-export function UpdateMovie() {
+export function EditLego() {
   const navigate = useNavigate();
-  const { id } = useParams(); // id de la película a actualizar
-  //URL base imagen
-  const BASE_URL_image = import.meta.env.VITE_BASE_URL + "uploads";
-  //Guardar pelicula a modificar
-  //const [dataMovie, setDataMovie] = useState([]);
-
-  /*** Estados para selects y preview de imagen ***/
-  const [dataDirector, setDataDirector] = useState([]);
-  const [dataGenres, setDataGenres] = useState([]);
-  const [dataActors, setDataActors] = useState([]);
-  const [file, setFile] = useState(null);
-  const [fileURL, setFileURL] = useState(null);
+  const { id } = useParams();
+  const [lego, setLego] = useState(null);
+  const [dataCategorias, setDataCategorias] = useState([]);
+  const [dataCondiciones, setDataCondiciones] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  /*** Esquema de validación Yup ***/
-  const movieSchema = yup.object({
-    title: yup.string().required("El título es requerido").min(2, "El título debe tener al menos 2 caracteres"),
-    year: yup
+  const legoSchema = yup.object({
+    nombre: yup
+      .string()
+      .required("El nombre es requerido")
+      .min(2, "Mínimo 2 caracteres"),
+    descripcion: yup
+      .string()
+      .required("La descripción es requerida")
+      .min(20, "La descripción debe tener mínimo 20 caracteres"),
+    id_condicion: yup
       .number()
-      .typeError("Solo acepta números")
-      .required("El año es requerido")
-      .positive("Solo acepta números positivos"),
-    time: yup.string().required("La duración es requerida"),
-    lang: yup.string().required("El idioma es requerido"),
-    director_id: yup.number().typeError("Seleccione un director").required("El director es requerido"),
-    genres: yup.array().of(yup.number()).min(1, "Seleccione al menos un género"),
-    actors: yup.array().of(
-      yup.object().shape({
-        actor_id: yup.number().typeError("Seleccione un actor").required("El actor es requerido"),
-        role: yup.string().required("El rol es requerido"),
-      })
-    ),
+      .typeError("Seleccione una condición")
+      .required("La condición es requerida"),
+    categorias: yup
+      .array()
+      .of(yup.number())
+      .min(1, "Seleccione al menos una categoría"),
   });
 
-  /*** React Hook Form ***/
   const { control, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
-      id: "",
-      title: "",
-      year: "",
-      time: "",
-      lang: "",
-      director_id: "",
-      genres: [],
-      actors: [{ actor_id: "", role: "" }],
+      nombre: "",
+      descripcion: "",
+      id_condicion: "",
+      categorias: [],
     },
-
-    resolver: yupResolver(movieSchema),
+    resolver: yupResolver(legoSchema),
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "actors",
-  });
-
-  const addNewActor = () => append({ actor_id: "", role: "" });
-  const removeActor = (index) => {
-    if (fields.length > 1) remove(index);
-  };
-
-  /*** Manejo de imagen ***/
-  const handleChangeImage = (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setFileURL(URL.createObjectURL(selectedFile));
-    }
-  };
-
-  /*** Cargar selects y datos de la película al montar ***/
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const directorsRes = await DirectorService.getDirectores();
-        const genresRes = await GenreService.getGenres();
-        const actorsRes = await ActorService.getActors();
-        const movieRes = await MovieService.getMovieById(id);
-        // Si la petición es exitosa, se guardan los datos
-        setDataDirector(directorsRes.data.data || []);
-        setDataGenres(genresRes.data.data || []);
-        setDataActors(actorsRes.data.data || []);
-        //Asignar al formulario la Pelicula a actualizar
-        if (movieRes.data) {
-          const movie = movieRes.data.data
-          console.log(movie)
-          reset({
-            id: movie.id,
-            title: movie.title,
-            year: movie.year,
-            time: movie.time,
-            lang: movie.lang,
-            director_id: movie.director_id,
-            genres: movie.genres.map(g => g.id),
-            actors: movie.actors.map(a => ({ actor_id: a.id, role: a.role }))
-          })
-          if (movie.imagen) setFileURL(BASE_URL_image + "/" + movie.imagen.image)
+        const [legoRes, catRes, condRes] = await Promise.all([
+          LegoService.getById(id),
+          CategoriaService.getAll(),
+          CondicionService.getAll(),
+        ]);
+
+        const data = legoRes.data?.data ?? legoRes.data;
+
+        // Validar que no esté en subasta activa
+        if (data.en_subasta_activa) {
+          toast.error("No se puede editar un lego en subasta activa");
+          navigate("/lego/table");
+          return;
         }
 
+        setLego(data);
+        setDataCategorias(catRes.data?.data ?? []);
+        setDataCondiciones(condRes.data?.data ?? []);
+
+        reset({
+          nombre: data.nombre,
+          descripcion: data.descripcion,
+          id_condicion: data.id_condicion,
+          // Ajusta según cómo te devuelve las categorías tu API
+          categorias: data.categorias?.map((c) => c.id) ?? [],
+        });
       } catch (err) {
-        // Si el error no es por cancelación, se registra
-        if (err.name !== "AbortError") setError(err.message);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchData();
-  }, [BASE_URL_image, id, reset]);
+  }, [id, navigate, reset]);
 
-
-  /*** Submit ***/
   const onSubmit = async (dataForm) => {
     try {
-      // isValid es async y recibe los datos
-      const isValid = await movieSchema.isValid(dataForm);
-      if (!isValid) return;
-
-      const response = await MovieService.updateMovie(dataForm);
-      //Imagen y notificación
+      const payload = { id, ...dataForm };
+      const response = await LegoService.update(payload);
       if (response.data) {
-        if(file){
-          //archivo FormData
-          const formData = new FormData()
-          formData.append("file", file)
-          formData.append("movie_id", response.data.data.id)
-          //Guardar
-          await ImageService.createImage(formData)
-        }
-        
-        //Notificar
-        toast.success(`Pelicula actualizada ${response.data.data.id} - ${response.data.data.title}`,
-          { duration: 3000 }
-        )
-        //Redireccionar a la lista
-        navigate("/movie/table")
-      } else if (response.error) {
-        setError(response.error)
+        toast.success("Lego actualizado correctamente", { duration: 4000 });
+        navigate("/lego/table");
       }
-
     } catch (err) {
       console.error(err);
-      setError("Error al actualizar película");
+      toast.error("Error al actualizar el lego");
     }
   };
 
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (loading) return <p className="p-10 text-center">Cargando lego...</p>;
+  if (error) return <p className="text-red-600 p-4">{error}</p>;
 
   return (
-    <Card className="p-6 max-w-5xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Actualizar Película</h2>
+    <Card className="p-6 max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold mb-6">Editar Lego</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Título */}
+
+        {/* Nombre */}
         <div>
-          <Label className="block mb-1 text-sm font-medium" htmlFor="title">Título</Label>
-          <Controller
-            name="title"
-            control={control}
-            render={({ field }) => <Input {...field} id="title" placeholder="Ingrese el título" />}
-          />
-          {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
+          <Label className="block mb-1 text-sm font-medium" htmlFor="nombre">Nombre</Label>
+          <Controller name="nombre" control={control} render={({ field }) => (
+            <Input {...field} id="nombre" placeholder="Nombre del set" />
+          )} />
+          {errors.nombre && <p className="text-sm text-red-500">{errors.nombre.message}</p>}
         </div>
 
-        {/* Año*/}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Descripción */}
+        <div>
+          <Label className="block mb-1 text-sm font-medium" htmlFor="descripcion">Descripción</Label>
+          <Controller name="descripcion" control={control} render={({ field }) => (
+            <Textarea {...field} id="descripcion" placeholder="Descripción (mínimo 20 caracteres)" rows={4} />
+          )} />
+          {errors.descripcion && <p className="text-sm text-red-500">{errors.descripcion.message}</p>}
+        </div>
+
+        {/* Condición */}
+        <div>
+          <Label className="block mb-1 text-sm font-medium">Condición</Label>
+          <Controller name="id_condicion" control={control} render={({ field }) => (
+            <CustomSelect
+              field={field}
+              data={dataCondiciones}
+              label="Seleccione una condición"
+              getOptionLabel={(item) => item.nombre}
+              getOptionValue={(item) => item.id}
+              error={errors.id_condicion?.message}
+            />
+          )} />
+          {errors.id_condicion && <p className="text-sm text-red-500">{errors.id_condicion.message}</p>}
+        </div>
+
+        {/* Categorías */}
+        <div>
+          <Label className="block mb-1 text-sm font-medium">Categorías</Label>
+          <Controller name="categorias" control={control} render={({ field }) => (
+            <CustomMultiSelect
+              field={field}
+              data={dataCategorias}
+              label="Categorías"
+              getOptionLabel={(item) => item.nombre}
+              getOptionValue={(item) => item.id}
+              placeholder="Seleccione categorías"
+              error={errors.categorias?.message}
+            />
+          )} />
+          {errors.categorias && <p className="text-sm text-red-500">{errors.categorias.message}</p>}
+        </div>
+
+        {/* Usuario vendedor (no editable) */}
+        {lego && (
           <div>
-            <Controller
-              name="year"
-              control={control}
-              render={({ field }) =>
-                <CustomInputField
-                  {...field}
-                  label="Año"
-                  placeholder="2025"
-                  error={errors.year?.message}
-                />
-              }
+            <Label className="block mb-1 text-sm font-medium">Vendedor</Label>
+            <Input
+              value={lego.vendedor_nombre ?? lego.nombre_vendedor ?? `Usuario #${lego.id_vendedor}`}
+              disabled
+              className="bg-muted text-muted-foreground"
             />
           </div>
-          {/*Duración*/}
-          <div>
-            <Controller
-              name="time"
-              control={control}
-              render={({ field }) =>
-                <CustomInputField
-                  {...field}
-                  label="Duración (min)"
-                  placeholder="160"
-                  error={errors.time?.message} />
-              }
-            />
-          </div>
-          {/*Idioma*/}
-          <div>
-            <Controller
-              name="lang"
-              control={control}
-              render={({ field }) =>
-                <CustomInputField
-                  {...field}
-                  label="Idioma"
-                  placeholder="Español"
-                  error={errors.lang?.message} />}
-            />
-          </div>
-        </div>
+        )}
 
-        {/* Director */}
-        <div>
-          <Label className="block mb-1 text-sm font-medium">Director</Label>
-
-          <Controller
-            name="director_id"
-            control={control}
-            render={({ field }) =>
-              <CustomSelect
-                field={field}
-                data={dataDirector}
-                label="Director"
-                getOptionLabel={(director) => `${director.fname} ${director.lname}`}
-                getOptionValue={(director) => director.id}
-                error={errors.director_id?.message}
-              />
-            }
-          />
-
-        </div>
-        {/* Géneros */}
-        <div>
-
-          <Controller
-            name="genres"
-            control={control}
-            render={({ field }) =>
-              <CustomMultiSelect field={field} data={dataGenres}
-                label="Géneros"
-                getOptionLabel={(item) => item.title}
-                getOptionValue={(item) => item.id}
-                placeholder="Seleccione géneros"
-                error={errors.genres?.message} />}
-          />
-        </div>
-        {/* Actores */}
-        <div>
-          <div className="flex items-center justify-between">
-            <Label className="block mb-1 text-sm font-medium">Actores</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button type="button" size="icon" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={addNewActor}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Agregar actor</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-          <div className="space-y-4 mt-3">
-            {fields.map((field, index) => (
-              <ActorsForm
-                key={field.id}
-                index={index}
-                control={control}
-                data={dataActors}
-                onRemove={removeActor}
-                disableRemoveButton={fields.length === 1}
-                errors={errors}
-              />
-            ))}
-          </div>
-        </div>
-        {/* Imagen */}
-        <div className="mb-6">
-          <Label htmlFor="image" className="block mb-1 text-sm font-medium">
-            Imagen
-          </Label>
-
-          <div
-            className="relative w-56 h-56 border-2 border-dashed border-muted/50 rounded-lg flex items-center justify-center cursor-pointer overflow-hidden hover:border-primary transition-colors"
-            onClick={() => document.getElementById("image").click()}
-          >
-            {!fileURL && (
-              <div className="text-center px-4">
-                <p className="text-sm text-muted-foreground">Haz clic o arrastra una imagen</p>
-                <p className="text-xs text-muted-foreground">(jpg, png, máximo 5MB)</p>
-              </div>
-            )}
-            {fileURL && (
-              <img
-                src={fileURL}
-                alt="preview"
-                className="w-full h-full object-contain rounded-lg shadow-sm"
-              />
-            )}
-          </div>
-
-          <input
-            type="file"
-            id="image"
-            className="hidden"
-            accept="image/*"
-            onChange={handleChangeImage}
-          />
-        </div>
-
+        {/* Botones */}
         <div className="flex justify-between gap-4 mt-6">
-          <Button
-            type="button"
-            variant="default" // sólido
-            className="flex items-center gap-2 bg-accent text-white"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Regresar
+          <Button type="button" variant="default" className="flex items-center gap-2 bg-accent text-white" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-4 h-4" /> Regresar
           </Button>
-          {/* Botón Guardar */}
-          <Button type="submit" className="flex-1">
-            <Save className="w-4 h-4" />
-            Guardar
+          <Button type="submit" className="flex-1 flex items-center justify-center gap-2">
+            <Save className="w-4 h-4" /> Guardar
           </Button>
         </div>
+
       </form>
     </Card>
   );

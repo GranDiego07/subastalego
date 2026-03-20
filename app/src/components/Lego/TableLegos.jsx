@@ -109,7 +109,7 @@ export default function TableLegos() {
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <Button variant="ghost" size="icon" asChild>
-                                                        <Link to={`/lego/edit/${lego.id}`}>
+                                                        <Link to={`/lego/update/${lego.id}`}>
                                                             <Edit className="h-4 w-4 text-primary" />
                                                         </Link>
                                                     </Button>

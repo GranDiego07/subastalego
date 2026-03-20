@@ -133,7 +133,7 @@ export default function TableUsers() {
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <Button variant="ghost" size="icon" asChild className="hover:bg-blue-500/20">
-                                                            <Link to={`/lego/usuarios/edit/${user.id}`}>
+                                                            <Link to={`/lego/usuarios/update/${user.id}`}>
                                                                 <Edit className="h-4 w-4 text-blue-400" />
                                                             </Link>
                                                         </Button>
