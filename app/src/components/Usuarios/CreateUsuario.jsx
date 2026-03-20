@@ -27,7 +27,6 @@ export function CreateUsuario() {
   const navigate = useNavigate();
 
   /*** Estados ***/
-  const [dataUsuarios, setDataUsuarios] = useState([]);
   const [dataEstado, setDataEstado] = useState([]);
   const [dataRol, setDataRol] = useState([]);
   const [error, setError] = useState("");
@@ -63,13 +62,11 @@ export function CreateUsuario() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usuariosRes, rolRes, estadoRes] = await Promise.all([
-          UsuarioService.getAll(),
+        const [ rolRes, estadoRes] = await Promise.all([
           RolServicio.getAll(),
           EstadoServicio.getAll(),
         ]);
 
-        setDataUsuarios(usuariosRes.data?.data ?? []);
         setDataRol(rolRes.data?.data ?? []);
         setDataEstado(estadoRes.data?.data ?? []);
 
