@@ -75,9 +75,9 @@ class UsuariosModel
     }
     //Obtener información de un usuarios específico, incluyendo las películas en las que participa y los roles
     public function getUsuarioDetallexId($id)
-{
-    // 1. Consulta con subconsultas para campos calculados
-    $vSql = "SELECT u.id, u.correo, u.nombre_completo, u.fecha_registro, 
+    {
+        // 1. Consulta con subconsultas para campos calculados
+        $vSql = "SELECT u.id, u.correo, u.nombre_completo, u.fecha_registro, 
                     r.nombre AS rol_nombre, 
                     es.nombre AS estado_nombre,
                     (SELECT COUNT(*) FROM subastas s WHERE s.id_creador = u.id) AS cantidad_subastas,
@@ -87,19 +87,35 @@ class UsuariosModel
                 INNER JOIN estados_usuario es ON u.id_estado = es.id
                 WHERE u.id = $id";
 
-    $vResultado = $this->enlace->ExecuteSQL($vSql);
-    
-    if (!empty($vResultado)) {
-        $vResultado = $vResultado[0];
-        
-        // 2. Cargar listas adicionales si el componente las requiere (opcional)
-        $estadoU = new EstadoUsuarioModel();
-        $rolM = new RolModel();
-        $vResultado->lista_estados = $estadoU->all();
-        $vResultado->lista_roles = $rolM->all();
-        
-        return $vResultado;
+        $vResultado = $this->enlace->ExecuteSQL($vSql);
+
+        if (!empty($vResultado)) {
+            $vResultado = $vResultado[0];
+
+            // 2. Cargar listas adicionales si el componente las requiere (opcional)
+            $estadoU = new EstadoUsuarioModel();
+            $rolM = new RolModel();
+            $vResultado->lista_estados = $estadoU->all();
+            $vResultado->lista_roles = $rolM->all();
+
+            return $vResultado;
+        }
+        return null;
     }
-    return null;
-}
+
+    public function create($objeto)
+    {
+        $sql = "INSERT INTO usuarios (correo, contrasena, nombre_completo, id_rol, id_estado, fecha_registro)" .
+            " VALUES (
+            '$objeto->correo', 
+            '$objeto->contrasena',
+            '$objeto->nombre_completo', 
+            $objeto->id_rol, 
+            $objeto->id_estado, 
+            '$objeto->fecha_registro'
+        )";
+        $idUsuario = $this->enlace->executeSQL_DML_last($sql);
+        $resultado = $this->get($idUsuario);
+        return $resultado;
+    }
 }

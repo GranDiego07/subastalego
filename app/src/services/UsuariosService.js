@@ -30,7 +30,7 @@ class UsuariosService {
   getUsuarioDetalleId(id) {
     // Cambiado de 'getUsuariosId' a 'getUsuarioDetalleId' para coincidir con el controlador
     return axios.get(`${BASE_URL}/getUsuarioDetalleId/${id}`);
-}
+  }
   /**
  * Obtener todos usuarios detallado
  * GET /usuarios/getUsuarios/
@@ -46,12 +46,8 @@ class UsuariosService {
    * POST /usuarios
    * Datos requeridos: nombre_completo, email, password, rol
    */
-  create(usuarioData) {
-    return axios.post(BASE_URL, usuarioData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+  create($usuariodata) {
+    return axios.post(BASE_URL, JSON.stringify($usuariodata));
   }
 
   /**

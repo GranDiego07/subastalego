@@ -79,4 +79,18 @@ class usuarios
             $response->toJSON(["error" => $e->getMessage()]);
         }
     }
+    public function create()
+    {
+        try {
+            $request = new Request();
+            $response = new Response();
+            $inputJSON = $request->getJSON();
+            $usuarios = new UsuariosModel();
+            $result = $usuarios->create($inputJSON);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON(["error" => $e->getMessage()]);
+            handleException($e);
+        }
+    }
 }

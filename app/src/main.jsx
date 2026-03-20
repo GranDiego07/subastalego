@@ -12,6 +12,7 @@ import TableLegos from './components/Lego/TableLegos'
 import TableUsuarios from './components/Usuarios/TableUsuario'
 import TablePujas from './components/Pujas/TablePujas'
 import { DetailUsuario } from './components/Usuarios/DetailUsuario'
+import { CreateUsuario } from './components/Usuarios/CreateUsuario'
 import { ListSubastasActi } from './components/Subastas/ListSubastasActi'
 import { ListSubastasDesa } from './components/Subastas/ListSubastasDesa'
 import { DetailSubasta } from './components/Subastas/DetailSubasta'
@@ -31,6 +32,7 @@ const rutas = createBrowserRouter([
       { path: "lego/create", element: <CreateLego /> },
       { path: "lego/detail/:id", element: <DetailLego /> },
       { path: "lego/usuarios", element: <TableUsuarios /> },
+      { path: "lego/usuarios/create", element: <CreateUsuario /> },
       { path: "lego/usuarios/detail/:id", element: <DetailUsuario /> },
       { path: "lego/pujas", element: <TablePujas /> },
       { path: "lego/subasta/activas", element: <ListSubastasActi /> },

@@ -18,6 +18,7 @@ class EstadoLegoService {
     getByEstado(estadoId) {
         return axios.get(`${BASE_URL}/getLegoEstado/${estadoId}`);
     }
+
 }
 
 export default new EstadoLegoService();
