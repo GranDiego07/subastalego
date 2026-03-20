@@ -33,6 +33,16 @@ class UsuariosModel
         // Retornar el objeto
         return $vResultado[0];
     }
+    public function getByRol()
+    {
+        //Consulta sql
+        $vSql = "SELECT * FROM usuarios where id_rol=2";
+
+        //Ejecutar la consulta
+        $vResultado = $this->enlace->ExecuteSQL($vSql);
+        // Retornar el objeto
+        return $vResultado;
+    }
     /*Obtener los usuarios con su lego respectivo */
     public function getUsuariosLego($idMovie)
     {

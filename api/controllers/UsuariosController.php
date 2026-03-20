@@ -28,6 +28,19 @@ class usuarios
             handleException($e);
         }
     }
+    public function getByRol()
+    {
+        try {
+            $response = new Response();
+            $usuarios = new UsuariosModel();
+            $result = $usuarios->getByRol();
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+        }
+    }
     public function getUsuariosLego($id)
     {
         try {

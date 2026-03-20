@@ -12,6 +12,14 @@ class UsuariosService {
   }
 
   /**
+    * Obtener listado de todos los usuarios que son vendedores
+    * GET /usuarios
+    */
+  getByRol() {
+    return axios.get(`${BASE_URL}/getByRol`);
+  }
+
+  /**
    * Obtener un usuario específico por ID
    * GET /usuarios/5
    */

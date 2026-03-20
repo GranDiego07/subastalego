@@ -25,7 +25,6 @@ export function CreateSubasta() {
   const [loadingLegos, setLoadingLegos] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ Validaciones actualizadas
   const subastaSchema = yup.object({
     id_usuario: yup.number().typeError("Seleccione un usuario").required("El usuario es requerido"),
     id_lego: yup.number().typeError("Seleccione un lego").required("El lego es requerido"),
@@ -34,12 +33,12 @@ export function CreateSubasta() {
       .number()
       .typeError("Ingrese un precio válido")
       .required("El precio inicial es requerido")
-      .moreThan(0, "El precio inicial debe ser mayor a 0"), // ✅ estrictamente mayor a 0
+      .moreThan(0, "El precio inicial debe ser mayor a 0"), 
     incremento_minimo: yup
       .number()
       .typeError("Ingrese un incremento válido")
       .required("El incremento mínimo es requerido")
-      .moreThan(0, "El incremento mínimo debe ser mayor a 0"), // ✅ no permite 0
+      .moreThan(0, "El incremento mínimo debe ser mayor a 0"), 
     fecha_inicio: yup.string().required("La fecha de inicio es requerida"),
     fecha_fin: yup.string().required("La fecha de fin es requerida"),
   });
@@ -50,7 +49,7 @@ export function CreateSubasta() {
       id_lego: "",
       id_estado: "",
       precio_inicial: "",
-      incremento_minimo: "", // ✅ nuevo campo
+      incremento_minimo: "", 
       fecha_inicio: "",
       fecha_fin: "",
     },
@@ -64,7 +63,7 @@ export function CreateSubasta() {
       try {
         const [estadoRes, usuarioRes] = await Promise.all([
           EstadoSubastaServicio.getAll(),
-          UsuariosService.getAll(),
+          UsuariosService.getByRol(),
         ]);
         setDataEstado(estadoRes.data?.data ?? []);
         setDataUsuario(usuarioRes.data?.data ?? []);
@@ -106,10 +105,10 @@ export function CreateSubasta() {
     try {
       const payload = {
         id_lego: dataForm.id_lego,
-        id_creador: dataForm.id_usuario,        // 👈 id_usuario → id_creador
+        id_creador: dataForm.id_usuario,        
         fecha_inicio: dataForm.fecha_inicio.replace("T", " "),
-        fecha_cierre: dataForm.fecha_fin.replace("T", " "), // 👈 fecha_fin → fecha_cierre
-        precio_base: dataForm.precio_inicial,   // 👈 precio_inicial → precio_base
+        fecha_cierre: dataForm.fecha_fin.replace("T", " "), 
+        precio_base: dataForm.precio_inicial,   
         incremento_minimo: dataForm.incremento_minimo,
         id_estado: dataForm.id_estado,
         fecha_registro: new Date().toISOString().slice(0, 19).replace("T", " "),
