@@ -2,9 +2,8 @@ import { useState } from "react";
 import { href, Link } from "react-router-dom";
 import {
   Layers,
-  ChartArea,
   LogIn,
-  UserPlus,
+  UserPlus, 
   LogOut,
   ShoppingCart,
   Menu,
@@ -14,8 +13,9 @@ import {
   Blocks,
   AlarmClock,
   AlarmClockOff,
-CircleUserIcon,
-Database,
+  CircleUserIcon,
+  Database, Activity,
+  KeyboardMusic,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -43,8 +43,8 @@ export default function Header() {
       icon: <AlarmClock className="h-4 w-4" />,
     },
     {
-      title:"Subastas No activas",
-      href:"lego/subasta/noactivas",
+      title: "Subastas No activas",
+      href: "lego/subasta/noactivas",
       icon: <AlarmClockOff className="h-4 w-4" />,
     },
   ];
@@ -63,8 +63,13 @@ export default function Header() {
     {
       title: "Pujas",
       href: "lego/pujas",
-      icon: <ChartArea className="h-4 w-4" />,
+      icon: <Activity className="h-4 w-4" />,
     },
+    {
+      title: "Subastas",
+      href: "lego/subasta",
+      icon: <KeyboardMusic className="h-4 w-4" />,
+    }
   ];
 
   const userItems = [

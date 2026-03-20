@@ -37,6 +37,7 @@ require_once "models/LegoModel.php";
 require_once "models/RolModel.php";
 require_once "models/UsuariosModel.php";
 require_once "models/SubastaModel.php";
+require_once "models/EstadoSubastaModel.php";
 require_once "models/PujasModel.php";
 
 /***--- Controladores ---*/
@@ -47,6 +48,7 @@ require_once "controllers/ImageController.php";
 require_once "controllers/LegoController.php";
 require_once "controllers/UsuariosController.php";
 require_once "controllers/SubastaController.php";
+require_once "controllers/EstadoSubastaController.php";
 require_once "controllers/PujasController.php";
 require_once "controllers/RolController.php";
 require_once "controllers/EstadoUsuarioController.php";

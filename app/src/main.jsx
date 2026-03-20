@@ -16,7 +16,8 @@ import { CreateUsuario } from './components/Usuarios/CreateUsuario'
 import { ListSubastasActi } from './components/Subastas/ListSubastasActi'
 import { ListSubastasDesa } from './components/Subastas/ListSubastasDesa'
 import { DetailSubasta } from './components/Subastas/DetailSubasta'
-
+import { CreateSubasta } from './components/Subastas/CreateSubasta'
+import TableSubasta from './components/Subastas/TableSubastas'
 const rutas = createBrowserRouter([
   {
     element: <Layout />,
@@ -35,9 +36,12 @@ const rutas = createBrowserRouter([
       { path: "lego/usuarios/create", element: <CreateUsuario /> },
       { path: "lego/usuarios/detail/:id", element: <DetailUsuario /> },
       { path: "lego/pujas", element: <TablePujas /> },
+      { path: "lego/subasta", element: <TableSubasta /> },
       { path: "lego/subasta/activas", element: <ListSubastasActi /> },
       { path: "lego/subasta/noactivas", element: <ListSubastasDesa /> },
-      { path: "lego/subasta/detalle/:id", element: <DetailSubasta /> }
+      { path: "lego/subasta/detalle/:id", element: <DetailSubasta /> },
+      { path: "lego/subasta/create", element: <CreateSubasta /> },
+      
     ]
   }
 ])

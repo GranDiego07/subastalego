@@ -10,6 +10,9 @@ class SubastaService {
     getAll() {
         return axios.get(BASE_URL);
     }
+    allConDetalle() {
+        return axios.get(`${BASE_URL}/allConDetalle`);
+    }
     /**
      * Obtener un usuario específico por ID
      * GET /Subasta/5
@@ -31,6 +34,14 @@ class SubastaService {
     }
     getHistorialPujas(id) {
         return axios.get(`${BASE_URL}/getHistorialPujas/${id}`);
+    }
+
+    /**
+   * Crear nuevo subasta
+   * POST /subasta
+   */
+    create($subasta) {
+        return axios.post(BASE_URL, JSON.stringify($subasta));
     }
 }
 export default new SubastaService();

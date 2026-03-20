@@ -97,4 +97,26 @@ class SubastaModel
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         return $vResultado;
     }
+
+    public function create($objeto)
+    {
+        $sql = "Insert into subastas (id_lego, id_creador, fecha_inicio, fecha_cierre, precio_base, incremento_minimo, id_estado)" .
+            "Values($objeto->id_lego,$objeto->id_creador,'$objeto->fecha_inicio','$objeto->fecha_cierre','$objeto->precio_base',
+        '$objeto->incremento_minimo',$objeto->id_estado)";
+
+        $idSubasta = $this->enlace->executeSQL_DML_last($sql);
+        $resultado = $this->get($idSubasta);
+        return $resultado;
+    }
+    public function allConDetalle()
+    {
+        $vSql = "SELECT s.id, l.nombre AS lego_nombre,s.fecha_inicio, s.fecha_cierre, s.precio_base, s.incremento_minimo,
+                (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas, es.nombre AS estado_final
+                FROM subastas s
+                INNER JOIN lego l ON s.id_lego = l.id
+                INNER JOIN estados_subasta es ON s.id_estado = es.id
+                ORDER BY s.fecha_cierre DESC;";
+
+        return $this->enlace->ExecuteSQL($vSql);
+    }
 }

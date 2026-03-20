@@ -78,4 +78,29 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             handleException($e);
         }
     }
+    public function create()
+    {
+        try {
+            $request = new Request();
+            $response = new Response();
+            $inputJSON = $request->getJSON();
+            $Subasta = new SubastaModel();
+            $result = $Subasta->create($inputJSON);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON(["error" => $e->getMessage()]);
+            handleException($e);
+        }
+    }
+    public function allConDetalle()
+    {
+        try {
+            $response = new Response();
+            $Subasta = new SubastaModel();
+            $result = $Subasta->allConDetalle();
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
 }
