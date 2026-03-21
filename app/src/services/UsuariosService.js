@@ -49,6 +49,11 @@ class UsuariosService {
   getUsuarioList() {
     return axios.get(`${BASE_URL}/getusuarioList`);
   }
+
+  toggleEstado(id){
+    return axios.get(`${BASE_URL}/toggleEstado/${id}`)
+  }
+
   /**
    * Crear nuevo usuario
    * POST /usuarios

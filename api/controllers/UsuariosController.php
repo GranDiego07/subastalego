@@ -92,6 +92,19 @@ class usuarios
             $response->toJSON(["error" => $e->getMessage()]);
         }
     }
+
+    public function toggleEstado($param)
+    {
+        try {
+            $response = new Response();
+            $usuarios = new UsuariosModel();
+            $id = intval($param);
+            $result = $usuarios->toggleEstado($id);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON(["error" => $e->getMessage()]);
+        }
+    }
     public function create()
     {
         try {
@@ -122,7 +135,6 @@ class usuarios
         } catch (Exception $e) {
             $response->toJSON($result);
             handleException($e);
-            
         }
     }
 }

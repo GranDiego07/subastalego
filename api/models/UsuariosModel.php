@@ -113,6 +113,15 @@ class UsuariosModel
         return null;
     }
 
+    public function toggleEstado($id)
+    {
+        // Si es 1 lo pasa a 2, si es 2 lo pasa a 1
+        $sql = "UPDATE usuarios SET id_estado = IF(id_estado = 1, 2, 1) WHERE id = $id";
+        $this->enlace->executeSQL_DML($sql);
+
+        return $this->get($id);
+    }
+
     public function create($objeto)
     {
         $sql = "INSERT INTO usuarios (correo, contrasena, nombre_completo, id_rol, id_estado, fecha_registro)" .

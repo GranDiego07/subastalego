@@ -1,177 +1,152 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Importar useNavigate
-import {
-    Table,
-    TableHeader,
-    TableBody,
-    TableRow,
-    TableHead,
-    TableCell,
-} from "@/components/ui/table";
+import { Link } from "react-router-dom";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Edit, Plus, Trash2, ArrowLeft, UserCircle } from "lucide-react";
-import UsuariosService from "@/services/UsuariosService";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Edit, ToggleLeft, ToggleRight } from "lucide-react";
+import UsuarioService from "@/services/UsuariosService";
+import toast from "react-hot-toast";
 
-const userColumns = [
-    { key: "nombre_completo", label: "Nombre Completo" },
-    { key: "rol", label: "Rol" },
-    { key: "estado", label: "Estado" },
+const usuarioColumns = [
+    { key: "nombre_completo", label: "Nombre" },
+    { key: "correo", label: "Correo" },
+    { key: "rol_nombre", label: "Rol" },
+    { key: "estado_nombre", label: "Estado" },
     { key: "acciones", label: "Acciones" },
 ];
 
-export default function TableUsers() {
-    const [users, setUsers] = useState([]);
-    const [error, setError] = useState(null);
+export default function TableUsuarios() {
+    const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate(); // Hook para redireccionar
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await UsuariosService.getUsuarioDetalle();
-                let data = response.data?.data || response.data || [];
-                setUsers(Array.isArray(data) ? data : [data]);
-            } catch (err) {
-                console.error("Error al cargar usuarios:", err);
-                setError("Error al conectar con el servidor");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+        fetchUsuarios();
     }, []);
 
-    // Función para manejar el clic en la fila
-    const handleRowClick = (id) => {
-        navigate(`/lego/usuarios/detail/${id}`); 
+    const fetchUsuarios = async () => {
+        try {
+            const res = await UsuarioService.getUsuarioDetalle();
+            const data = res.data?.data ?? res.data;
+            setUsuarios(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    if (loading) {
-        return <div className="p-10 text-center text-white mt-16">⏳ Cargando listado de usuarios...</div>;
-    }
+    const handleToggleEstado = async (usuario) => {
+        try {
+            await UsuarioService.toggleEstado(usuario.id);
 
-    if (error) {
-        return <div className="p-10 text-center text-red-600 mt-16">⚠️ {error}</div>;
-    }
+            // Actualizar localmente sin recargar toda la tabla
+            setUsuarios(prev =>
+                prev.map(u =>
+                    u.id === usuario.id
+                        ? { ...u, id_estado: u.id_estado === 1 ? 2 : 1, estado_nombre: u.id_estado === 1 ? "Inactivo" : "Activo" }
+                        : u
+                )
+            );
+
+            toast.success(`Usuario ${usuario.id_estado === 1 ? "desactivado" : "activado"} correctamente`);
+        } catch (err) {
+            toast.error("Error al cambiar el estado del usuario");
+        }
+    };
+
+    if (loading) return <div className="p-10 text-center">Cargando usuarios...</div>;
+    if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
     return (
-        <div className="container mx-auto py-8 mt-12">
+        <div className="container mx-auto py-8">
             <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-bold tracking-tight text-white">
-                    Gestión de Usuarios
-                </h1>
-                <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-                    <Link to="/lego/usuarios/create">
-                        <Plus className="h-4 w-4" /> Nuevo Usuario
-                    </Link>
-                </Button>
+                <h1 className="text-3xl font-bold tracking-tight">Usuarios</h1>
             </div>
 
-            <div className="rounded-md border border-gray-700 bg-gray-900 overflow-hidden">
+            <div className="rounded-md border">
                 <Table>
-                    <TableHeader className="bg-slate-800">
-                        <TableRow className="hover:bg-transparent border-gray-700">
-                            {userColumns.map((col) => (
-                                <TableHead key={col.key} className="text-gray-200 font-bold py-4">
+                    <TableHeader className="bg-slate-100">
+                        <TableRow>
+                            {usuarioColumns.map((col) => (
+                                <TableHead key={col.key} className="font-semibold text-black">
                                     {col.label}
                                 </TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.length > 0 ? (
-                            users.map((user) => (
-                                <TableRow 
-                                    key={user.id} 
-                                    // Evento de clic en la fila
-                                    onClick={() => handleRowClick(user.id)}
-                                    className="border-gray-700 hover:bg-gray-800/50 transition cursor-pointer"
-                                >
-                                    {/* 1. Nombre Completo */}
-                                    <TableCell className="text-white font-medium py-4">
-                                        <div className="flex items-center gap-3">
-                                            <UserCircle className="w-5 h-5 text-gray-400" />
-                                            {user.nombre_completo || `${user.nombre} ${user.apellido}`}
-                                        </div>
-                                    </TableCell>
+                        {usuarios.length > 0 ? (
+                            usuarios.map((usuario) => (
+                                <TableRow key={usuario.id}>
 
-                                    {/* 2. Rol */}
+                                    <TableCell className="font-medium">{usuario.nombre_completo}</TableCell>
+
+                                    <TableCell>{usuario.correo}</TableCell>
+
+                                    <TableCell>{usuario.rol_nombre}</TableCell>
+
+                                    {/* Badge visual de estado */}
                                     <TableCell>
-                                        <span className="px-2 py-1 rounded-md bg-blue-900/30 text-blue-300 text-xs font-semibold uppercase border border-blue-800">
-                                            {user.rol_nombre || user.rol || "Usuario"}
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${usuario.id_estado === 1
+                                                ? "bg-green-100 text-green-800"
+                                                : "bg-red-100 text-red-800"
+                                            }`}>
+                                            {usuario.estado_nombre ?? (usuario.id_estado === 1 ? "Activo" : "Inactivo")}
                                         </span>
                                     </TableCell>
 
-                                    {/* 3. Estado */}
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <div className={`h-2 w-2 rounded-full ${
-                                                user.estado === 'activo' || user.estado_nombre === 'activo' 
-                                                ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' 
-                                                : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'
-                                            }`} />
-                                            <span className={`text-sm font-medium ${
-                                                user.estado === 'activo' || user.estado_nombre === 'activo' 
-                                                ? 'text-green-400' 
-                                                : 'text-red-400'
-                                            }`}>
-                                                {user.estado_nombre || user.estado || "Desconocido"}
-                                            </span>
-                                        </div>
-                                    </TableCell>
+                                    <TableCell className="flex items-center gap-1">
 
-                                    {/* Acciones */}
-                                    <TableCell onClick={(e) => e.stopPropagation()}>
-                                        <div className="flex items-center gap-2">
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon" asChild className="hover:bg-blue-500/20">
-                                                            <Link to={`/lego/usuarios/update/${user.id}`}>
-                                                                <Edit className="h-4 w-4 text-blue-400" />
-                                                            </Link>
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>Editar</TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
+                                        {/* Editar */}
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" asChild>
+                                                        <Link to={`/usuarios/update/${usuario.id}`}>
+                                                            <Edit className="h-4 w-4 text-primary" />
+                                                        </Link>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Editar</TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
 
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="hover:bg-red-500/20">
-                                                            <Trash2 className="h-4 w-4 text-red-400" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>Eliminar</TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </div>
+                                        {/* Toggle estado */}
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleToggleEstado(usuario)}
+                                                        className={usuario.id_estado === 1 ? "hover:bg-red-100" : "hover:bg-green-100"}
+                                                    >
+                                                        {usuario.id_estado === 1
+                                                            ? <ToggleRight className="h-4 w-4 text-green-600" />
+                                                            : <ToggleLeft className="h-4 w-4 text-red-400" />
+                                                        }
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    {usuario.id_estado === 1 ? "Desactivar" : "Activar"}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+
                                     </TableCell>
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={userColumns.length} className="text-center py-12 text-gray-500">
-                                    No se encontraron usuarios en el sistema.
+                                <TableCell colSpan={usuarioColumns.length} className="text-center py-10 text-gray-500">
+                                    No hay usuarios registrados.
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
                 </Table>
             </div>
-
-            <Button asChild variant="ghost" className="text-gray-400 hover:text-white mt-6 gap-2">
-                <Link to="/lego">
-                    <ArrowLeft className="w-4 h-4" /> Regresar al inicio
-                </Link>
-            </Button>
         </div>
     );
 }
