@@ -27,12 +27,8 @@ const rutas = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      // Ruta principal
       { index: true, element: <Home /> },
 
-      // Ruta comodín (404)
-      { path: "*", element: <PageNotFound /> },
-      //Rutas componentes
       { path: "lego", element: <ListLegos /> },
       { path: "lego/table", element: <TableLegos /> },
       { path: "lego/create", element: <CreateLego /> },
@@ -49,6 +45,8 @@ const rutas = createBrowserRouter([
       { path: "lego/subasta/detalle/:id", element: <DetailSubasta /> },
       { path: "lego/subasta/create", element: <CreateSubasta /> },
       { path: "lego/subasta/update/:id", element: <UpdateSubasta /> },
+
+      { path: "*", element: <PageNotFound /> },  // ← siempre al final
     ]
   }
 ])

@@ -16,7 +16,6 @@ const subastaColumns = [
     { key: "acciones", label: "Acciones" },
 ];
 
-// Formatea fechas: "2026-12-29 12:00:00" → "29/12/2026 12:00"
 const formatFecha = (fecha) => {
     if (!fecha) return "—";
     const d = new Date(fecha.replace(" ", "T"));
@@ -26,7 +25,6 @@ const formatFecha = (fecha) => {
     });
 };
 
-// Formatea moneda
 const formatMoneda = (valor) => {
     if (valor == null) return "—";
     return `₡${Number(valor).toLocaleString("es-CR")}`;
@@ -50,6 +48,7 @@ export default function TableSubastas() {
                     dataArray = result;
                 }
 
+                console.log("Primera subasta:", dataArray[0]); // ← ver todos los campos
                 setSubastas(dataArray);
             } catch (err) {
                 console.error("Error al cargar subastas:", err);
@@ -95,62 +94,58 @@ export default function TableSubastas() {
                     </TableHeader>
                     <TableBody>
                         {subastas.length > 0 ? (
-                            subastas.map((subasta) => (
-                                <TableRow key={subasta.id}>
+                            subastas.map((subasta) => {
+                                console.log("subasta.id:", subasta.id); // ← ver qué llega
+                                return (
+                                    <TableRow key={subasta.id}>
 
-                                    {/* Objeto subastado */}
-                                    <TableCell className="font-medium">
-                                        {subasta.lego_nombre || subasta.nombre || "—"}
-                                    </TableCell>
+                                        <TableCell className="font-medium">
+                                            {subasta.lego_nombre || subasta.nombre || "—"}
+                                        </TableCell>
 
-                                    {/* Fecha de inicio */}
-                                    <TableCell>{formatFecha(subasta.fecha_inicio)}</TableCell>
+                                        <TableCell>{formatFecha(subasta.fecha_inicio)}</TableCell>
 
-                                    {/* Fecha estimada de cierre */}
-                                    <TableCell>{formatFecha(subasta.fecha_cierre)}</TableCell>
+                                        <TableCell>{formatFecha(subasta.fecha_cierre)}</TableCell>
 
-                                    {/* Precio base */}
-                                    <TableCell>{formatMoneda(subasta.precio_base)}</TableCell>
+                                        <TableCell>{formatMoneda(subasta.precio_base)}</TableCell>
 
-                                    {/* Incremento mínimo */}
-                                    <TableCell>{formatMoneda(subasta.incremento_minimo)}</TableCell>
+                                        <TableCell>{formatMoneda(subasta.incremento_minimo)}</TableCell>
 
-                                    {/* Cantidad de pujas */}
-                                    <TableCell>
-                                        <span className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                                            {subasta.cantidad_pujas ?? subasta.pujas ?? 0}
-                                        </span>
-                                    </TableCell>
+                                        <TableCell>
+                                            <span className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                                {subasta.cantidad_pujas ?? subasta.pujas ?? 0}
+                                            </span>
+                                        </TableCell>
 
-                                    {/* Acciones */}
-                                    <TableCell className="flex justify-start items-center gap-1">
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" asChild>
-                                                        <Link to={`/lego/subasta/update/${subasta.id}`}>
-                                                            <Edit className="h-4 w-4 text-primary" />
-                                                        </Link>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Editar</TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                        <TableCell className="flex justify-start items-center gap-1">
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="ghost" size="icon" asChild>
+                                                            <Link to={`/lego/subasta/update/${subasta.id}`}>
+                                                                <Edit className="h-4 w-4 text-primary" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Editar</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
 
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Eliminar</TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </TableCell>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Eliminar</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </TableCell>
 
-                                </TableRow>
-                            ))
+                                    </TableRow>
+                                );
+                            })
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={subastaColumns.length} className="text-center py-10 text-gray-500">
