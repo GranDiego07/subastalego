@@ -187,6 +187,7 @@ class LegoModel
 
         return $vResultado;
     }
+
     /**
      * Crear pelicula
      * @param $objeto pelicula a insertar
@@ -220,8 +221,8 @@ class LegoModel
      */
     //
     public function update($objeto)
-{
-    $sql = "UPDATE lego SET 
+    {
+        $sql = "UPDATE lego SET 
                 nombre = '$objeto->nombre',
                 descripcion = '$objeto->descripcion',
                 id_condicion = $objeto->id_condicion,
@@ -229,8 +230,29 @@ class LegoModel
                 id_categoria = $objeto->id_categoria
             WHERE id = $objeto->id";
 
-    $this->enlace->executeSQL_DML($sql);
+        $this->enlace->executeSQL_DML($sql);
 
-    return $this->get($objeto->id);
-}
+        return $this->get($objeto->id);
+    }
+
+    public function delete($id)
+    {
+        $vSql = "SELECT id_estado FROM lego WHERE id = $id";
+        $resultado = $this->enlace->ExecuteSQL($vSql);
+
+        if (empty($resultado)) {
+            return (object)["success" => false, "message" => "Lego no encontrado"];
+        }
+
+        $idEstado = (int)$resultado[0]->id_estado;
+
+        if (!in_array($idEstado, [3, 4, 5])) {
+            return (object)["success" => false, "message" => "No se puede eliminar: el lego debe estar en estado Vendido, Retirado o Inactivo"];
+        }
+
+        $sql = "DELETE FROM lego WHERE id = $id";
+        $this->enlace->executeSQL_DML($sql);
+
+        return (object)["success" => true, "message" => "Lego eliminado correctamente"];
+    }
 }

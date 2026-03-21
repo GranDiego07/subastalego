@@ -73,12 +73,8 @@ class LegoService {
         })
     }
 
-    /**
-     * Eliminar un Lego
-     * DELETE /lego/5
-     */
     delete(legoId) {
-        return axios.delete(`${BASE_URL}/${legoId}`);
+        return axios.delete(`${BASE_URL}/delete/${legoId}`);
     }
 }
 

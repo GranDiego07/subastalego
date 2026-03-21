@@ -34,14 +34,14 @@ export function CreateLego() {
   const [dataCategioria, setDataCategoria] = useState([]);
   const [dataCondicion, setDataCondicion] = useState([]);
   const [dataEstado, setDataEstado] = useState([]);
-  
+
   const [files, setFiles] = useState([]);
   const [fileURLs, setFileURLs] = useState([]);
   const [error, setError] = useState("");
 
   /*** Esquema Yup ***/
   const legoSchema = yup.object({
-    
+
     nombre: yup.string().required('El nombre es requerido').min(2, 'Mínimo 2 caracteres'),
     descripcion: yup.string().required('La descripción es requerida'),
     id_vendedor: yup.number().typeError('Seleccione un vendedor').required('El vendedor es requerido'),
@@ -54,6 +54,7 @@ export function CreateLego() {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -66,16 +67,6 @@ export function CreateLego() {
     },
     resolver: yupResolver(legoSchema),
   });
-
-  /* const { fields: categoryFields, append: appendCategory, remove: removeCategory } = useFieldArray({
-    control,
-    name: "categorias",
-  });
-
-  const addNewCategoria = () => appendCategory({ categoria_id: "" });
-  const removeCategoria = (index) => {
-    if (categoryFields.length > 1) removeCategory(index);
-  }; */
 
   /*** Manejo de imágenes ***/
   const handleChangeImage = (e) => {
@@ -147,15 +138,17 @@ export function CreateLego() {
       const response = await LegoService.create(payload);
 
       if (response.data) {
-        toast.success("Lego creada exitosamente", { duration: 3000 });
-        navigate("/lego/table");
+        toast.success("Lego creado exitosamente", { duration: 3000 });
+        reset();                // ← limpia todos los campos del form
+        setFiles([]);           // ← limpia las imágenes
+        setFileURLs([]);        // ← limpia los previews
       }
     } catch (err) {
       console.error(err);
       toast.error("Error al crear lego");
     }
   };
-  
+
   // ✅ helper para ver errores de validación en consola
   const onError = (errs) => console.log("Errores de validación:", errs);
 

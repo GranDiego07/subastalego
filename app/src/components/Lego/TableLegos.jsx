@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {Table, TableHeader, TableBody, TableRow, TableHead, TableCell,} from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Edit, Plus, Trash2, ArrowLeft } from "lucide-react";
 import LegoService from "@/services/LegoService";
+import toast from "react-hot-toast";
 
-// Columnas ajustadas a los campos reales de la API
 const legoColumns = [
     { key: "nombre", label: "Nombre del Set" },
     { key: "categoria", label: "Categoría" },
@@ -20,36 +20,45 @@ export default function TableLegos() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await LegoService.getAll();
-                console.log("Respuesta completa getAll:", response);
+    useEffect(() => { fetchLegos(); }, []);
 
-                const result = response.data;
-
-                let dataArray = [];
-                if (result?.success) {
-                    dataArray = result.data || [];
-                } else if (Array.isArray(result)) {
-                    dataArray = result;
-                }
-
-                console.log("Legos recibidos:", dataArray.length, "items");
-                if (dataArray.length > 0) {
-                    console.log("Primer lego:", dataArray[0]);
-                }
-
-                setLegos(dataArray);
-            } catch (err) {
-                console.error("Error al cargar legos:", err);
-                setError(err.message || "Error al conectar con el servidor");
-            } finally {
-                setLoading(false);
+    const fetchLegos = async () => {
+        try {
+            const response = await LegoService.getAll();
+            const result = response.data;
+            let dataArray = [];
+            if (result?.success) {
+                dataArray = result.data || [];
+            } else if (Array.isArray(result)) {
+                dataArray = result;
             }
-        };
-        fetchData();
-    }, []);
+            setLegos(dataArray);
+        } catch (err) {
+            setError(err.message || "Error al conectar con el servidor");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ─── Eliminación lógica ───────────────────────────────────────────────────
+    const handleDelete = async (lego) => {
+        try {
+            const res = await LegoService.delete(lego.id);
+            const result = res.data;
+
+            if (result?.success === false) {
+                toast.error(result.message || "No se puede eliminar este lego");
+                return;
+            }
+
+            setLegos(prev => prev.filter(l => l.id !== lego.id));
+            toast.success("Lego eliminado correctamente");
+        } catch (err) {
+            const msg = err.response?.data?.message || "Error al eliminar el lego";
+            toast.error(msg);
+        }
+    };
+
 
     if (loading) return <div className="p-10 text-center">Cargando inventario...</div>;
     if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
@@ -86,25 +95,27 @@ export default function TableLegos() {
                     <TableBody>
                         {legos.length > 0 ? (
                             legos.map((lego) => (
-                                <TableRow key={lego.nombre}>
+                                <TableRow key={lego.id}>
+
                                     <TableCell className="font-medium">{lego.nombre}</TableCell>
 
-                                    {/* Categoría - ahora muestra el nombre */}
-                                    <TableCell>
-                                        {lego.categoria_nombre || lego.id_categoria || "—"}
-                                    </TableCell>
+                                    <TableCell>{lego.categoria_nombre || lego.id_categoria || "—"}</TableCell>
 
-                                    {/* Condición */}
-                                    <TableCell>
-                                        {lego.condicion_nombre || lego.id_condicion || "—"}
-                                    </TableCell>
+                                    <TableCell>{lego.condicion_nombre || lego.id_condicion || "—"}</TableCell>
 
-                                    {/* Estado */}
+                                    {/* Badge de estado */}
                                     <TableCell>
-                                        {lego.estado_nombre || lego.id_estado || "—"}
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${lego.id_estado === 1
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-800"
+                                            }`}>
+                                            {lego.estado_nombre ?? (lego.id_estado === 1 ? "Activo" : "Inactivo")}
+                                        </span>
                                     </TableCell>
 
                                     <TableCell className="flex justify-start items-center gap-1">
+
+                                        {/* Editar */}
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
@@ -118,16 +129,23 @@ export default function TableLegos() {
                                             </Tooltip>
                                         </TooltipProvider>
 
+                                        {/* Eliminar lógico */}
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleDelete(lego)}
+                                                        className="hover:bg-red-100"
+                                                    >
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>Eliminar</TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>
+
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -142,10 +160,7 @@ export default function TableLegos() {
                 </Table>
             </div>
 
-            <Button
-                asChild
-                className="flex items-center gap-2 bg-slate-800 text-white hover:bg-slate-700 mt-6"
-            >
+            <Button asChild className="flex items-center gap-2 bg-slate-800 text-white hover:bg-slate-700 mt-6">
                 <Link to="/lego">
                     <ArrowLeft className="w-4 h-4" />
                     Regresar al catálogo

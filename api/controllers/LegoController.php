@@ -115,6 +115,20 @@ class lego
         }
     }
 
+
+    // DELETE eliminación lógica
+    public function delete($id)
+    {
+        try {
+            $response = new Response();
+            $lego     = new LegoModel();
+            $result   = $lego->delete(intval($id));
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON(["error" => $e->getMessage()]);
+        }
+    }
+
     //POST Crear
     public function create()
     {
