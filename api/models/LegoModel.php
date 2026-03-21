@@ -220,23 +220,17 @@ class LegoModel
      */
     //
     public function update($objeto)
-    {
-        $sql = "INSERT INTO lego (nombre, descripcion, id_condicion, id_estado, id_vendedor, id_categoria)" .
-            " VALUES ('$objeto->nombre', '$objeto->descripcion',
-                    $objeto->id_condicion, $objeto->id_estado, 
-                    $objeto->id_vendedor, $objeto->id_categoria)";
+{
+    $sql = "UPDATE lego SET 
+                nombre = '$objeto->nombre',
+                descripcion = '$objeto->descripcion',
+                id_condicion = $objeto->id_condicion,
+                id_estado = $objeto->id_estado,
+                id_categoria = $objeto->id_categoria
+            WHERE id = $objeto->id";
 
-        $idLego = $this->enlace->executeSQL_DML_last($sql);
+    $this->enlace->executeSQL_DML($sql);
 
-        // --- Imágenes (múltiples, la primera es la principal) ---
-        $esPrincipal = 1; // La primera imagen será es_principal = 1
-        foreach ($objeto->imagenes as $url) {
-            $sql = "INSERT INTO imagenes (url, es_principal, id_lego)" .
-                " VALUES ('$url', $esPrincipal, $idLego)";
-            $this->enlace->executeSQL_DML($sql);
-            $esPrincipal = 0; // Las siguientes serán es_principal = 0
-        }
-
-        return $this->get($idLego);
-    }
+    return $this->get($objeto->id);
+}
 }

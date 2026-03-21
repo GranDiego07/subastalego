@@ -58,7 +58,7 @@ export function UpdateSubasta() {
     useEffect(() => {
         const fetchSubasta = async () => {
             try {
-                const res = await SubastaService.get(id);
+                const res = await SubastaService.getById(id);
                 const subasta = res.data?.data ?? res.data;
 
                 // Validar que no haya iniciado y no tenga pujas

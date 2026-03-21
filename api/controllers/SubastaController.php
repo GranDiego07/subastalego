@@ -103,4 +103,22 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             handleException($e);
         }
     }
+    public function update()
+    {
+        try {
+            $request = new Request();
+            $response = new Response();
+            //Obtener json enviado
+            $inputJSON = $request->getJSON();
+            //Instancia del modelo
+            $Subasta = new SubastaModel();
+            //Acción del modelo a ejecutar
+            $result = $Subasta->update($inputJSON);
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+        }
+    }
 }

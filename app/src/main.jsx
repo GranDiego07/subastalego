@@ -36,7 +36,7 @@ const rutas = createBrowserRouter([
       { path: "lego", element: <ListLegos /> },
       { path: "lego/table", element: <TableLegos /> },
       { path: "lego/create", element: <CreateLego /> },
-      { path: "lego/update:id", element: <UpdateLego /> },
+      { path: "lego/update/:id", element: <UpdateLego /> },
       { path: "lego/detail/:id", element: <DetailLego /> },
       { path: "lego/usuarios", element: <TableUsuarios /> },
       { path: "lego/usuarios/create", element: <CreateUsuario /> },
@@ -49,7 +49,6 @@ const rutas = createBrowserRouter([
       { path: "lego/subasta/detalle/:id", element: <DetailSubasta /> },
       { path: "lego/subasta/create", element: <CreateSubasta /> },
       { path: "lego/subasta/update/:id", element: <UpdateSubasta /> },
-
     ]
   }
 ])

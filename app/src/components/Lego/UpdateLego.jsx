@@ -15,7 +15,6 @@ import CategoriaService from "@/services/CategoriaLegoService";
 import CondicionService from "@/services/CondicionLegoService";
 import EstadoService from "@/services/EstadoLegoService";
 import { CustomSelect } from "../ui/custom/custom-select";
-import { CustomMultiSelect } from "../ui/custom/custom-multiple-select";
 
 export function UpdateLego() {
   const navigate = useNavigate();
@@ -23,26 +22,16 @@ export function UpdateLego() {
   const [lego, setLego] = useState(null);
   const [dataCategorias, setDataCategorias] = useState([]);
   const [dataCondiciones, setDataCondiciones] = useState([]);
+  const [dataEstados, setDataEstados] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   const legoSchema = yup.object({
-    nombre: yup
-      .string()
-      .required("El nombre es requerido")
-      .min(2, "Mínimo 2 caracteres"),
-    descripcion: yup
-      .string()
-      .required("La descripción es requerida")
-      .min(20, "La descripción debe tener mínimo 20 caracteres"),
-    id_condicion: yup
-      .number()
-      .typeError("Seleccione una condición")
-      .required("La condición es requerida"),
-    categorias: yup
-      .array()
-      .of(yup.number())
-      .min(1, "Seleccione al menos una categoría"),
+    nombre: yup.string().required("El nombre es requerido").min(2, "Mínimo 2 caracteres"),
+    descripcion: yup.string().required("La descripción es requerida").min(20, "La descripción debe tener mínimo 20 caracteres"),
+    id_condicion: yup.number().typeError("Seleccione una condición").required("La condición es requerida"),
+    id_estado: yup.number().typeError("Seleccione un estado").required("El estado es requerido"),
+    id_categoria: yup.number().typeError("Seleccione una categoría").required("La categoría es requerida"),
   });
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm({
@@ -50,7 +39,8 @@ export function UpdateLego() {
       nombre: "",
       descripcion: "",
       id_condicion: "",
-      categorias: [],
+      id_estado: "",
+      id_categoria: "",
     },
     resolver: yupResolver(legoSchema),
   });
@@ -58,17 +48,17 @@ export function UpdateLego() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [legoRes, catRes, condRes] = await Promise.all([
-          LegoService.getById(id),
+        const [legoRes, catRes, condRes, estadoRes] = await Promise.all([
+          LegoService.getByDetalle(id),
           CategoriaService.getAll(),
           CondicionService.getAll(),
+          EstadoService.getAll(),
         ]);
 
-        const data = legoRes.data?.data ?? legoRes.data;
+        const data = legoRes.data?.data?.[0] ?? legoRes.data?.[0] ?? legoRes.data;
 
-        // Validar que no esté en subasta activa
         if (data.en_subasta_activa) {
-          toast.error("No se puede editar un lego en subasta activa");
+          toast.error("No se puede editar un lego que está en subasta activa");
           navigate("/lego/table");
           return;
         }
@@ -76,13 +66,14 @@ export function UpdateLego() {
         setLego(data);
         setDataCategorias(catRes.data?.data ?? []);
         setDataCondiciones(condRes.data?.data ?? []);
+        setDataEstados(estadoRes.data?.data ?? []);
 
         reset({
           nombre: data.nombre,
           descripcion: data.descripcion,
           id_condicion: data.id_condicion,
-          // Ajusta según cómo te devuelve las categorías tu API
-          categorias: data.categorias?.map((c) => c.id) ?? [],
+          id_estado: data.id_estado,
+          id_categoria: data.id_categoria,
         });
       } catch (err) {
         setError(err.message);
@@ -98,8 +89,8 @@ export function UpdateLego() {
       const payload = { id, ...dataForm };
       const response = await LegoService.update(payload);
       if (response.data) {
-        toast.success("Lego actualizado correctamente", { duration: 4000 });
-        navigate("/lego/table");
+        toast.success("¡Lego actualizado correctamente!", { duration: 2000 });
+        setTimeout(() => navigate("/lego/table"), 2000);
       }
     } catch (err) {
       console.error(err);
@@ -110,13 +101,19 @@ export function UpdateLego() {
   if (loading) return <p className="p-10 text-center">Cargando lego...</p>;
   if (error) return <p className="text-red-600 p-4">{error}</p>;
 
+  const nombreVendedor =
+    lego?.vendedor ?? `Usuario #${lego?.id_vendedor}`
+    lego?.nombre_vendedor ??
+    lego?.vendedor?.nombre ??
+    lego?.usuario?.nombre ??
+    `Usuario #${lego?.id_vendedor}`;
+
   return (
     <Card className="p-6 max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">Editar Lego</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
-        {/* Nombre */}
         <div>
           <Label className="block mb-1 text-sm font-medium" htmlFor="nombre">Nombre</Label>
           <Controller name="nombre" control={control} render={({ field }) => (
@@ -125,7 +122,6 @@ export function UpdateLego() {
           {errors.nombre && <p className="text-sm text-red-500">{errors.nombre.message}</p>}
         </div>
 
-        {/* Descripción */}
         <div>
           <Label className="block mb-1 text-sm font-medium" htmlFor="descripcion">Descripción</Label>
           <Controller name="descripcion" control={control} render={({ field }) => (
@@ -140,7 +136,6 @@ export function UpdateLego() {
           {errors.descripcion && <p className="text-sm text-red-500">{errors.descripcion.message}</p>}
         </div>
 
-        {/* Condición */}
         <div>
           <Label className="block mb-1 text-sm font-medium">Condición</Label>
           <Controller name="id_condicion" control={control} render={({ field }) => (
@@ -156,36 +151,43 @@ export function UpdateLego() {
           {errors.id_condicion && <p className="text-sm text-red-500">{errors.id_condicion.message}</p>}
         </div>
 
-        {/* Categorías */}
         <div>
-          <Label className="block mb-1 text-sm font-medium">Categorías</Label>
-          <Controller name="categorias" control={control} render={({ field }) => (
-            <CustomMultiSelect
+          <Label className="block mb-1 text-sm font-medium">Estado</Label>
+          <Controller name="id_estado" control={control} render={({ field }) => (
+            <CustomSelect
               field={field}
-              data={dataCategorias}
-              label="Categorías"
+              data={dataEstados}
+              label="Seleccione un estado"
               getOptionLabel={(item) => item.nombre}
               getOptionValue={(item) => item.id}
-              placeholder="Seleccione categorías"
-              error={errors.categorias?.message}
+              error={errors.id_estado?.message}
             />
           )} />
-          {errors.categorias && <p className="text-sm text-red-500">{errors.categorias.message}</p>}
+          {errors.id_estado && <p className="text-sm text-red-500">{errors.id_estado.message}</p>}
         </div>
 
-        {/* Usuario vendedor (no editable) */}
+        <div>
+          <Label className="block mb-1 text-sm font-medium">Categoría</Label>
+          <Controller name="id_categoria" control={control} render={({ field }) => (
+            <CustomSelect
+              field={field}
+              data={dataCategorias}
+              label="Seleccione una categoría"
+              getOptionLabel={(item) => item.nombre}
+              getOptionValue={(item) => item.id}
+              error={errors.id_categoria?.message}
+            />
+          )} />
+          {errors.id_categoria && <p className="text-sm text-red-500">{errors.id_categoria.message}</p>}
+        </div>
+
         {lego && (
           <div>
             <Label className="block mb-1 text-sm font-medium">Vendedor</Label>
-            <Input
-              value={lego.vendedor_nombre ?? lego.nombre_vendedor ?? `Usuario #${lego.id_vendedor}`}
-              disabled
-              className="bg-muted text-muted-foreground"
-            />
+            <Input value={nombreVendedor} disabled className="bg-muted text-muted-foreground" />
           </div>
         )}
 
-        {/* Botones */}
         <div className="flex justify-between gap-4 mt-6">
           <Button type="button" variant="default" className="flex items-center gap-2 bg-accent text-white" onClick={() => navigate(-1)}>
             <ArrowLeft className="w-4 h-4" /> Regresar

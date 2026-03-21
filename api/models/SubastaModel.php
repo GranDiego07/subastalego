@@ -119,4 +119,17 @@ class SubastaModel
 
         return $this->enlace->ExecuteSQL($vSql);
     }
+  public function update($objeto)
+{
+    $sql = "UPDATE subastas SET 
+                precio_base = '$objeto->precio_base',
+                incremento_minimo = '$objeto->incremento_minimo',
+                fecha_inicio = '$objeto->fecha_inicio',
+                fecha_cierre = '$objeto->fecha_cierre'
+            WHERE id = $objeto->id";
+
+    $this->enlace->executeSQL_DML($sql);
+
+    return $this->get($objeto->id);
+}
 }
