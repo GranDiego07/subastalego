@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Edit, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Edit, Plus, Trash2, ArrowLeft, Send, X } from "lucide-react";
+import toast from "react-hot-toast";
 import SubastaService from "@/services/SubastaService";
 
 const subastaColumns = [
-    { key: "nombre", label: "Objeto Subastado" },
-    { key: "fecha_inicio", label: "Fecha de Inicio" },
-    { key: "fecha_cierre", label: "Fecha Est. de Cierre" },
-    { key: "precio_base", label: "Precio Base" },
-    { key: "incremento", label: "Incremento Mínimo" },
-    { key: "cantidad_pujas", label: "Cantidad de Pujas" },
-    { key: "acciones", label: "Acciones" },
+    { key: "nombre",         label: "Objeto Subastado"     },
+    { key: "fecha_inicio",   label: "Fecha de Inicio"      },
+    { key: "fecha_cierre",   label: "Fecha Est. de Cierre" },
+    { key: "precio_base",    label: "Precio Base"          },
+    { key: "incremento",     label: "Incremento Mínimo"    },
+    { key: "cantidad_pujas", label: "Cantidad de Pujas"    },
+    { key: "acciones",       label: "Acciones"             },
 ];
 
 const formatFecha = (fecha) => {
@@ -30,28 +31,27 @@ const formatMoneda = (valor) => {
     return `₡${Number(valor).toLocaleString("es-CR")}`;
 };
 
+
 export default function TableSubastas() {
-    const [subastas, setSubastas] = useState([]);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const navigate                          = useNavigate();
+    const [subastas, setSubastas]           = useState([]);
+    const [error, setError]                 = useState(null);
+    const [loading, setLoading]             = useState(true);
+    const [modalCancelar, setModalCancelar] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await SubastaService.allConDetalle();
-                const result = response.data;
-
-                let dataArray = [];
+                const result   = response.data;
+                let dataArray  = [];
                 if (result?.success) {
                     dataArray = result.data || [];
                 } else if (Array.isArray(result)) {
                     dataArray = result;
                 }
-
-                console.log("Primera subasta:", dataArray[0]); // ← ver todos los campos
                 setSubastas(dataArray);
             } catch (err) {
-                console.error("Error al cargar subastas:", err);
                 setError(err.message || "Error al conectar con el servidor");
             } finally {
                 setLoading(false);
@@ -60,8 +60,27 @@ export default function TableSubastas() {
         fetchData();
     }, []);
 
+    const handleCancelar = async () => {
+        try {
+            const res    = await SubastaService.cancelar(modalCancelar.id);
+            const result = res.data;
+            if (result?.success === false) {
+                toast.error(result.message);
+                return;
+            }
+            setSubastas(prev => prev.map(s => s.id === modalCancelar.id
+                ? { ...s, id_estado: 3, estado_nombre: "cancelada" } : s
+            ));
+            toast.success("Subasta cancelada correctamente");
+        } catch {
+            toast.error("Error al cancelar la subasta");
+        } finally {
+            setModalCancelar(null);
+        }
+    };
+
     if (loading) return <div className="p-10 text-center">Cargando subastas...</div>;
-    if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
+    if (error)   return <div className="p-10 text-center text-red-600">{error}</div>;
 
     return (
         <div className="container mx-auto py-8">
@@ -94,58 +113,86 @@ export default function TableSubastas() {
                     </TableHeader>
                     <TableBody>
                         {subastas.length > 0 ? (
-                            subastas.map((subasta) => {
-                                console.log("subasta.id:", subasta.id); // ← ver qué llega
-                                return (
-                                    <TableRow key={subasta.id}>
+                            subastas.map((subasta) => (
+                                <TableRow key={subasta.id}>
 
-                                        <TableCell className="font-medium">
-                                            {subasta.lego_nombre || subasta.nombre || "—"}
-                                        </TableCell>
+                                    <TableCell className="font-medium">
+                                        {subasta.lego_nombre || subasta.nombre || "—"}
+                                    </TableCell>
+                                    <TableCell>{formatFecha(subasta.fecha_inicio)}</TableCell>
+                                    <TableCell>{formatFecha(subasta.fecha_cierre)}</TableCell>
+                                    <TableCell>{formatMoneda(subasta.precio_base)}</TableCell>
+                                    <TableCell>{formatMoneda(subasta.incremento_minimo)}</TableCell>
 
-                                        <TableCell>{formatFecha(subasta.fecha_inicio)}</TableCell>
+                                    <TableCell>
+                                        <span className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                            {subasta.cantidad_pujas ?? subasta.pujas ?? 0}
+                                        </span>
+                                    </TableCell>
 
-                                        <TableCell>{formatFecha(subasta.fecha_cierre)}</TableCell>
+                                    <TableCell className="flex justify-start items-center gap-1">
 
-                                        <TableCell>{formatMoneda(subasta.precio_base)}</TableCell>
-
-                                        <TableCell>{formatMoneda(subasta.incremento_minimo)}</TableCell>
-
-                                        <TableCell>
-                                            <span className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                                                {subasta.cantidad_pujas ?? subasta.pujas ?? 0}
-                                            </span>
-                                        </TableCell>
-
-                                        <TableCell className="flex justify-start items-center gap-1">
+                                        {/* Publicar - solo en borrador (4) */}
+                                        {subasta.id_estado == 4 && (
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon" asChild>
-                                                            <Link to={`/lego/subasta/update/${subasta.id}`}>
-                                                                <Edit className="h-4 w-4 text-primary" />
-                                                            </Link>
+                                                        <Button variant="ghost" size="icon"
+                                                            onClick={() => navigate(`/lego/subasta/publicar/${subasta.id}`)}
+                                                            className="hover:bg-green-100">
+                                                            <Send className="h-4 w-4 text-green-600" />
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent>Editar</TooltipContent>
+                                                    <TooltipContent>Publicar</TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
+                                        )}
 
+                                        {/* Editar - siempre visible */}
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" asChild>
+                                                        <Link to={`/lego/subasta/update/${subasta.id}`}>
+                                                            <Edit className="h-4 w-4 text-primary" />
+                                                        </Link>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Editar</TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+
+                                        {/* Cancelar - solo si está activa (1) */}
+                                        {subasta.id_estado == 1 && (
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        <Button variant="ghost" size="icon"
+                                                            onClick={() => setModalCancelar(subasta)}
+                                                            className="hover:bg-red-100">
+                                                            <X className="h-4 w-4 text-destructive" />
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent>Eliminar</TooltipContent>
+                                                    <TooltipContent>Cancelar subasta</TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
-                                        </TableCell>
+                                        )}
 
-                                    </TableRow>
-                                );
-                            })
+                                        {/* Eliminar - siempre visible */}
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Eliminar</TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+
+                                    </TableCell>
+                                </TableRow>
+                            ))
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={subastaColumns.length} className="text-center py-10 text-gray-500">
@@ -157,15 +204,25 @@ export default function TableSubastas() {
                 </Table>
             </div>
 
-            <Button
-                asChild
-                className="flex items-center gap-2 bg-slate-800 text-white hover:bg-slate-700 mt-6"
-            >
-                <Link to="/">
-                    <ArrowLeft className="w-4 h-4" />
-                    Regresar
-                </Link>
+            <Button asChild className="flex items-center gap-2 bg-slate-800 text-white hover:bg-slate-700 mt-6">
+                <Link to="/"><ArrowLeft className="w-4 h-4" /> Regresar</Link>
             </Button>
+
+            {/* Modal Cancelar */}
+            {modalCancelar && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+                        <h3 className="text-lg font-bold mb-2">Cancelar Subasta</h3>
+                        <p className="text-gray-600 mb-6">
+                            ¿Estás seguro que deseas cancelar la subasta de <strong>{modalCancelar.lego_nombre}</strong>? Esta acción no se puede deshacer.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <Button variant="outline" onClick={() => setModalCancelar(null)}>Cerrar</Button>
+                            <Button variant="destructive" onClick={handleCancelar}>Cancelar subasta</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

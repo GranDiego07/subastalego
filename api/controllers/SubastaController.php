@@ -67,6 +67,19 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             handleException($e);
         }
     }
+    public function getConDetalle($id)
+    {
+        try {
+            $response = new Response();
+            $Subasta = new SubastaModel();
+            $result = $Subasta->getConDetalle($id);
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+        }
+    }
     public function getHistorialPujas($id)
     {
         try {
@@ -119,6 +132,29 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
         } catch (Exception $e) {
             $response->toJSON($result);
             handleException($e);
+        }
+    }
+    public function publicar($id)
+    {
+        try {
+            $response = new Response();
+            $subasta  = new SubastaModel();
+            $result   = $subasta->publicar(intval($id));
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON(["error" => $e->getMessage()]);
+        }
+    }
+
+    public function cancelar($id)
+    {
+        try {
+            $response = new Response();
+            $subasta  = new SubastaModel();
+            $result   = $subasta->cancelar(intval($id));
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON(["error" => $e->getMessage()]);
         }
     }
 }

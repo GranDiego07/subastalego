@@ -85,7 +85,16 @@ class SubastaModel
 
         return $vResultado;
     }
+    public function getConDetalle($id)
+    {
+        $vSql = "SELECT s.*, l.nombre AS lego_nombre
+                    FROM subastas s
+                    INNER JOIN lego l ON s.id_lego = l.id
+                    WHERE s.id = $id";
 
+        $vResultado = $this->enlace->ExecuteSQL($vSql);
+        return $vResultado[0];
+    }
     /*Obtener historial de pujas de una subasta */
     public function getHistorialPujas($id)
     {
@@ -108,17 +117,6 @@ class SubastaModel
         $resultado = $this->get($idSubasta);
         return $resultado;
     }
-    public function allConDetalle()
-    {
-        $vSql = "SELECT s.id, l.nombre AS lego_nombre,s.fecha_inicio, s.fecha_cierre, s.precio_base, s.incremento_minimo,
-                (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas, es.nombre AS estado_final
-                FROM subastas s
-                INNER JOIN lego l ON s.id_lego = l.id
-                INNER JOIN estados_subasta es ON s.id_estado = es.id
-                ORDER BY s.fecha_cierre DESC;";
-
-        return $this->enlace->ExecuteSQL($vSql);
-    }
     public function update($objeto)
     {
         $sql = "UPDATE subastas SET 
@@ -131,5 +129,78 @@ class SubastaModel
         $this->enlace->executeSQL_DML($sql);
 
         return $this->get($objeto->id);
+    }
+    public function allConDetalle()
+    {
+        $vSql = "SELECT s.id, s.id_estado, l.nombre AS lego_nombre, s.fecha_inicio, s.fecha_cierre, s.precio_base, s.incremento_minimo,
+            (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas, es.nombre AS estado_nombre
+            FROM subastas s
+            INNER JOIN lego l ON s.id_lego = l.id
+            INNER JOIN estados_subasta es ON s.id_estado = es.id
+            ORDER BY s.fecha_cierre DESC;";
+        return $this->enlace->ExecuteSQL($vSql);
+    }
+
+    public function publicar($id)
+    {
+        $vSql = "SELECT id_estado, fecha_inicio FROM subastas WHERE id = $id";
+        $resultado = $this->enlace->ExecuteSQL($vSql);
+
+        if (empty($resultado)) {
+            return (object)["success" => false, "message" => "Subasta no encontrada"];
+        }
+
+        $subasta     = $resultado[0];
+        $idEstado    = (int)$subasta->id_estado;
+        $fechaInicio = new DateTime($subasta->fecha_inicio);
+        $ahora       = new DateTime();
+
+        if ($idEstado === 1) {
+            return (object)["success" => false, "message" => "La subasta ya está activa"];
+        }
+
+        if ($idEstado === 3) {
+            return (object)["success" => false, "message" => "No se puede publicar una subasta cancelada"];
+        }
+
+        if ($fechaInicio <= $ahora) {
+            return (object)["success" => false, "message" => "La fecha de inicio debe ser mayor a la fecha actual"];
+        }
+
+        $sql = "UPDATE subastas SET id_estado = 1 WHERE id = $id";
+        $this->enlace->executeSQL_DML($sql);
+
+        return (object)["success" => true, "message" => "Subasta publicada correctamente"];
+    }
+
+    public function cancelar($id)
+    {
+        $vSql = "SELECT s.id_estado, s.fecha_inicio,
+                (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas
+                    FROM subastas s WHERE s.id = $id";
+        $resultado = $this->enlace->ExecuteSQL($vSql);
+
+        if (empty($resultado)) {
+            return (object)["success" => false, "message" => "Subasta no encontrada"];
+        }
+
+        $subasta     = $resultado[0];
+        $idEstado    = (int)$subasta->id_estado;
+        $cantPujas   = (int)$subasta->cantidad_pujas;
+        $fechaInicio = new DateTime($subasta->fecha_inicio);
+        $ahora       = new DateTime();
+
+        if ($idEstado === 3) {
+            return (object)["success" => false, "message" => "La subasta ya está cancelada"];
+        }
+
+        if ($fechaInicio <= $ahora && $cantPujas > 0) {
+            return (object)["success" => false, "message" => "No se puede cancelar: la subasta ya inició y tiene pujas"];
+        }
+
+        $sql = "UPDATE subastas SET id_estado = 3 WHERE id = $id";
+        $this->enlace->executeSQL_DML($sql);
+
+        return (object)["success" => true, "message" => "Subasta cancelada correctamente"];
     }
 }

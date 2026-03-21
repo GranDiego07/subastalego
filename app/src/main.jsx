@@ -21,6 +21,7 @@ import { CreateSubasta } from './components/Subastas/CreateSubasta'
 import TableSubasta from './components/Subastas/TableSubastas'
 import { UpdateSubasta } from './components/Subastas/UpdateSubasta'
 import { UpdateUsuarios } from './components/Usuarios/UpdateUsuarios'
+import { PublicarSubasta } from './components/Subastas/PublicarSubasta'
 
 
 const rutas = createBrowserRouter([
@@ -45,7 +46,7 @@ const rutas = createBrowserRouter([
       { path: "lego/subasta/detalle/:id", element: <DetailSubasta /> },
       { path: "lego/subasta/create", element: <CreateSubasta /> },
       { path: "lego/subasta/update/:id", element: <UpdateSubasta /> },
-
+      { path: "lego/subasta/publicar/:id", element: <PublicarSubasta /> },
       { path: "*", element: <PageNotFound /> },  // ← siempre al final
     ]
   }

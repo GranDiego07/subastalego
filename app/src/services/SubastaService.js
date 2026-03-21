@@ -51,5 +51,16 @@ class SubastaService {
 
         })
     }
+    getConDetalle(id) {
+        return axios.get(`${BASE_URL}/getConDetalle/${id}`);
+    }
+
+    publicar(id) {
+        return axios.get(`${BASE_URL}/publicar/${id}`);
+    }
+
+    cancelar(id) {
+        return axios.get(`${BASE_URL}/cancelar/${id}`);
+    }
 }
 export default new SubastaService();

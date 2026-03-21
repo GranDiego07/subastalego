@@ -113,7 +113,7 @@ CREATE TABLE `estados_subasta` (
 
 LOCK TABLES `estados_subasta` WRITE;
 /*!40000 ALTER TABLE `estados_subasta` DISABLE KEYS */;
-INSERT INTO `estados_subasta` VALUES (1,'activa'),(3,'cancelada'),(2,'finalizada');
+INSERT INTO `estados_subasta` VALUES (1,'activa'),(2,'finalizada'),(3,'cancelada'),(4,'borrador');
 /*!40000 ALTER TABLE `estados_subasta` ENABLE KEYS */;
 UNLOCK TABLES;
 
