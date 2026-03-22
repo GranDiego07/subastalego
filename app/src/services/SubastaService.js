@@ -41,7 +41,9 @@ class SubastaService {
    * POST /subasta
    */
     create($subasta) {
-        return axios.post(BASE_URL, JSON.stringify($subasta));
+        return axios.post(BASE_URL, JSON.stringify($subasta), {
+            headers: { "Content-Type": "application/json" }  // ✅ Agregar esto
+        });
     }
     update(subasta) {
         return axios({
@@ -61,6 +63,9 @@ class SubastaService {
 
     cancelar(id) {
         return axios.get(`${BASE_URL}/cancelar/${id}`);
+    }
+    reactivar(id) {
+        return axios.get(`${BASE_URL}/reactivar/${id}`);
     }
 }
 export default new SubastaService();

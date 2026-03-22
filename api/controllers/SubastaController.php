@@ -157,4 +157,17 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             $response->toJSON(["error" => $e->getMessage()]);
         }
     }
+    public function reactivar($id)
+    {
+        try {
+            $response = new Response();
+            $Subasta = new SubastaModel();
+            $result = $Subasta->reactivar($id);
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+        }
+    }
 }

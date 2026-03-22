@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Edit, ToggleLeft, ToggleRight } from "lucide-react";
+import { Edit, ToggleLeft, ToggleRight,Plus } from "lucide-react";
 import UsuarioService from "@/services/UsuariosService";
 import toast from "react-hot-toast";
 
@@ -62,6 +62,18 @@ export default function TableUsuarios() {
         <div className="container mx-auto py-8">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl font-bold tracking-tight">Usuarios</h1>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button asChild variant="outline" size="icon" className="text-primary">
+                                <Link to="/lego/usuarios/create">
+                                    <Plus className="h-4 w-4" />
+                                </Link>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Nueva subasta</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </div>
 
             <div className="rounded-md border">
@@ -89,8 +101,8 @@ export default function TableUsuarios() {
                                     {/* Badge visual de estado */}
                                     <TableCell>
                                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${usuario.id_estado === 1
-                                                ? "bg-green-100 text-green-800"
-                                                : "bg-red-100 text-red-800"
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-800"
                                             }`}>
                                             {usuario.estado_nombre ?? (usuario.id_estado === 1 ? "Activo" : "Inactivo")}
                                         </span>
@@ -103,7 +115,7 @@ export default function TableUsuarios() {
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <Button variant="ghost" size="icon" asChild>
-                                                        <Link to={`/usuarios/update/${usuario.id}`}>
+                                                        <Link to={`/lego/usuarios/update/${usuario.id}`}>
                                                             <Edit className="h-4 w-4 text-primary" />
                                                         </Link>
                                                     </Button>

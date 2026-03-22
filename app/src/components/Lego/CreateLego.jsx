@@ -74,7 +74,6 @@ export function CreateLego() {
     if (selectedFiles.length === 0) return;
 
     const newURLs = selectedFiles.map((f) => URL.createObjectURL(f));
-    // ✅ FIX 3: prev siempre es [], nunca null
     setFiles((prev) => [...prev, ...selectedFiles]);
     setFileURLs((prev) => [...prev, ...newURLs]);
   };
@@ -89,13 +88,12 @@ export function CreateLego() {
     const fetchData = async () => {
       try {
         const [UsuariosRes, CategoriaLegoRes, CondicionLegoRes, EstadoLegoRes] = await Promise.all([
-          UsuarioService.getAll(),
+          UsuarioService.getByRol(),
           CategoriaLegoService.getAll(),
           CondicionLegoService.getAll(),
           EstadoLegoService.getAll(),
         ]);
 
-        // ✅ FIX 4: usar ?? [] para evitar null
         setDataUsuarios(UsuariosRes.data?.data ?? []);
         setDataCategoria(CategoriaLegoRes.data?.data ?? []);
         setDataCondicion(CondicionLegoRes.data?.data ?? []);
@@ -111,7 +109,6 @@ export function CreateLego() {
   }, []);
 
   /*** Submit ***/
-  // ✅ FIX 5: eliminar legoSchema.isValid(), RHF ya valida antes de llegar aquí
   const onSubmit = async (dataForm) => {
     if (files.length === 0) {
       toast.error("Debes seleccionar al menos una imagen");
@@ -119,37 +116,37 @@ export function CreateLego() {
     }
 
     try {
-      // Subir imágenes primero y obtener las URLs
-      const imageURLs = [];
+      // Primero crear el lego sin imágenes
+      const payload = { ...dataForm, imagenes: [] };
+      console.log("📦 Payload:", payload);
+
+      const response = await LegoService.create(payload);
+      console.log("✅ Lego creado:", response.data); // ← mirá aquí dónde está el id
+
+      const legoId = response.data?.data?.id;
+
+      if (!legoId) throw new Error("No se obtuvo el ID del lego creado");
+
+      // Luego subir cada imagen con el legoId
       for (const file of files) {
         const formData = new FormData();
         formData.append("file", file);
-        const imgResponse = await ImageService.createImage(formData);
-        imageURLs.push(imgResponse.data.url); // ajusta según lo que devuelva tu API
+        formData.append("lego_id", legoId);
+        await ImageService.createImage(formData);
       }
 
-      // Armar payload con el formato que espera el backend
-      const payload = {
-        ...dataForm,
-        imagenes: imageURLs,
-      };
+      toast.success("Lego creado exitosamente", { duration: 5000 });
+      reset();
+      setFiles([]);
+      setFileURLs([]);
+      navigate("/lego/table");
 
-      console.log("📦 Payload:", payload);
-      const response = await LegoService.create(payload);
-
-      if (response.data) {
-        toast.success("Lego creado exitosamente", { duration: 3000 });
-        reset();                // ← limpia todos los campos del form
-        setFiles([]);           // ← limpia las imágenes
-        setFileURLs([]);        // ← limpia los previews
-      }
     } catch (err) {
       console.error(err);
       toast.error("Error al crear lego");
     }
   };
 
-  // ✅ helper para ver errores de validación en consola
   const onError = (errs) => console.log("Errores de validación:", errs);
 
   if (error) return <p className="text-red-600">{error}</p>;
@@ -160,7 +157,6 @@ export function CreateLego() {
 
       <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-6">
 
-        {/* ✅ FIX 6: name="nombre" coincide con el schema */}
         <div>
           <Label className="block mb-1 text-sm font-medium" htmlFor="nombre">Nombre</Label>
           <Controller name="nombre" control={control} render={({ field }) =>
@@ -169,7 +165,6 @@ export function CreateLego() {
           {errors.nombre && <p className="text-sm text-red-500">{errors.nombre.message}</p>}
         </div>
 
-        {/* ✅ FIX 7: name="descripcion" sin typo */}
         <div>
           <Label className="block mb-1 text-sm font-medium" htmlFor="descripcion">Descripción</Label>
           <Controller name="descripcion" control={control} render={({ field }) =>
@@ -243,7 +238,6 @@ export function CreateLego() {
           <Label className="block mb-1 text-sm font-medium">Imágenes</Label>
 
           <div className="flex flex-wrap gap-3 mb-3">
-            {/* ✅ FIX 8: fileURLs siempre es [], nunca null */}
             {fileURLs.map((url, index) => (
               <div key={index} className="relative w-28 h-28">
                 <img

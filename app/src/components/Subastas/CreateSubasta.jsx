@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; // ❌ Eliminar dataForm del import
 import { useForm, Controller, useWatch } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -33,23 +33,24 @@ export function CreateSubasta() {
       .number()
       .typeError("Ingrese un precio válido")
       .required("El precio inicial es requerido")
-      .moreThan(0, "El precio inicial debe ser mayor a 0"), 
+      .moreThan(0, "El precio inicial debe ser mayor a 0"),
     incremento_minimo: yup
       .number()
       .typeError("Ingrese un incremento válido")
       .required("El incremento mínimo es requerido")
-      .moreThan(0, "El incremento mínimo debe ser mayor a 0"), 
+      .moreThan(0, "El incremento mínimo debe ser mayor a 0"),
     fecha_inicio: yup.string().required("La fecha de inicio es requerida"),
     fecha_fin: yup.string().required("La fecha de fin es requerida"),
   });
 
+  // ✅ defaultValues correctos — valores vacíos iniciales, NO el payload
   const { control, handleSubmit, setValue, formState: { errors } } = useForm({
     defaultValues: {
       id_usuario: "",
       id_lego: "",
       id_estado: "",
       precio_inicial: "",
-      incremento_minimo: "", 
+      incremento_minimo: "",
       fecha_inicio: "",
       fecha_fin: "",
     },
@@ -101,17 +102,17 @@ export function CreateSubasta() {
     fetchLegos();
   }, [selectedUsuario, setValue]);
 
+  // ✅ onSubmit correcto — el payload se construye aquí con dataForm
   const onSubmit = async (dataForm) => {
     try {
       const payload = {
         id_lego: dataForm.id_lego,
-        id_creador: dataForm.id_usuario,        
-        fecha_inicio: dataForm.fecha_inicio.replace("T", " "),
-        fecha_cierre: dataForm.fecha_fin.replace("T", " "), 
-        precio_base: dataForm.precio_inicial,   
+        id_creador: dataForm.id_usuario,
+        fecha_inicio: dataForm.fecha_inicio.replace("T", " ") + ":00",
+        fecha_cierre: dataForm.fecha_fin.replace("T", " ") + ":00",
+        precio_base: dataForm.precio_inicial,
         incremento_minimo: dataForm.incremento_minimo,
         id_estado: dataForm.id_estado,
-        fecha_registro: new Date().toISOString().slice(0, 19).replace("T", " "),
       };
 
       console.log("📦 Payload enviado:", JSON.stringify(payload, null, 2));
@@ -119,11 +120,11 @@ export function CreateSubasta() {
       const response = await SubastaService.create(payload);
       if (response.data) {
         toast.success("Subasta creada exitosamente", { duration: 5000 });
-        navigate("/subastas");
+        navigate("/lego/subasta");
       }
     } catch (err) {
-      console.error("❌ Error completo:", err.response?.data);
-      toast.error("Error al crear la subasta");
+      console.error("❌ Error completo:", JSON.stringify(err.response?.data));
+      toast.error(err.response?.data?.message || "Error al crear la subasta");
     }
   };
 
@@ -192,7 +193,7 @@ export function CreateSubasta() {
           {errors.precio_inicial && <p className="text-sm text-red-500">{errors.precio_inicial.message}</p>}
         </div>
 
-        {/* ✅ Incremento Mínimo — nuevo campo */}
+        {/* Incremento Mínimo */}
         <div>
           <Label className="block mb-1 text-sm font-medium" htmlFor="incremento_minimo">Incremento Mínimo</Label>
           <Controller name="incremento_minimo" control={control} render={({ field }) => (

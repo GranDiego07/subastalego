@@ -60,16 +60,19 @@ export function UpdateSubasta() {
                 const res = await SubastaService.getById(id);
                 const subasta = res.data?.data ?? res.data;
 
-                const ahora = new Date();
+                const ahora       = new Date();
                 const fechaInicio = new Date(subasta.fecha_inicio);
+                const cancelada   = subasta.id_estado == 3; // ← verificar si está cancelada
 
-                if (fechaInicio <= ahora) {
+                // ✅ Si está cancelada se permite editar aunque la fecha ya pasó
+                if (fechaInicio <= ahora && !cancelada) {
                     toast.error("No se puede editar una subasta que ya inició");
                     navigate("/lego/subasta");
                     return;
                 }
 
-                if (subasta.cantidad_pujas > 0) {
+                // ✅ Si está cancelada se permite editar aunque tenga pujas (ya no están activas)
+                if (subasta.cantidad_pujas > 0 && !cancelada) {
                     toast.error("No se puede editar una subasta que tiene pujas");
                     navigate("/lego/subasta");
                     return;

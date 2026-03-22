@@ -142,6 +142,9 @@ class RoutesController
                     case 'PATCH':
                         if ($param1) {
                             $response->update($param1);
+                        } elseif ($action && is_numeric($action)) {
+                            // ✅ El ID viene como segundo segmento /lego/30
+                            $response->update($action);
                         } elseif ($action && method_exists($response, $action)) {
                             $response->$action();
                         } else {
@@ -152,6 +155,8 @@ class RoutesController
                     case 'DELETE':
                         if ($param1) {
                             $response->delete($param1);
+                        } elseif ($action && is_numeric($action)) {  // ✅ igual que en GET
+                            $response->delete($action);
                         } elseif ($action && method_exists($response, $action)) {
                             $response->$action();
                         } else {

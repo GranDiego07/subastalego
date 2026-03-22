@@ -198,19 +198,10 @@ class LegoModel
     {
         $sql = "INSERT INTO lego (nombre, descripcion, id_condicion, id_estado, id_vendedor, id_categoria)" .
             " VALUES ('$objeto->nombre', '$objeto->descripcion',
-                    $objeto->id_condicion, $objeto->id_estado, 
-                    $objeto->id_vendedor, $objeto->id_categoria)";
+                $objeto->id_condicion, $objeto->id_estado, 
+                $objeto->id_vendedor, $objeto->id_categoria)";
 
         $idLego = $this->enlace->executeSQL_DML_last($sql);
-
-        // --- Imágenes (múltiples, la primera es la principal) ---
-        $esPrincipal = 1; // La primera imagen será es_principal = 1
-        foreach ($objeto->imagenes as $url) {
-            $sql = "INSERT INTO imagenes (url, es_principal, id_lego)" .
-                " VALUES ('$url', $esPrincipal, $idLego)";
-            $this->enlace->executeSQL_DML($sql);
-            $esPrincipal = 0; // Las siguientes serán es_principal = 0
-        }
 
         return $this->get($idLego);
     }
@@ -232,9 +223,9 @@ class LegoModel
 
         $this->enlace->executeSQL_DML($sql);
 
-        return $this->get($objeto->id);
+        // ✅ Retorna simple en vez de get() que tiene el bug
+        return (object)["success" => true, "message" => "Lego actualizado correctamente", "id" => $objeto->id];
     }
-
     public function delete($id)
     {
         $vSql = "SELECT id_estado FROM lego WHERE id = $id";

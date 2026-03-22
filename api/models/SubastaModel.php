@@ -109,13 +109,24 @@ class SubastaModel
 
     public function create($objeto)
     {
-        $sql = "Insert into subastas (id_lego, id_creador, fecha_inicio, fecha_cierre, precio_base, incremento_minimo, id_estado)" .
-            "Values($objeto->id_lego,$objeto->id_creador,'$objeto->fecha_inicio','$objeto->fecha_cierre','$objeto->precio_base',
-        '$objeto->incremento_minimo',$objeto->id_estado)";
+        // ✅ Validar que el objeto llegó correctamente
+        if (!$objeto || !isset($objeto->id_lego)) {
+            throw new Exception("Datos inválidos o mal formados en el JSON recibido");
+        }
+
+        $sql = "INSERT INTO subastas (id_lego, id_creador, fecha_inicio, fecha_cierre, precio_base, incremento_minimo, id_estado) " .
+            "VALUES (
+            " . intval($objeto->id_lego) . ",
+            " . intval($objeto->id_creador) . ",
+            '" . $objeto->fecha_inicio . "',
+            '" . $objeto->fecha_cierre . "',
+            " . floatval($objeto->precio_base) . ",
+            " . floatval($objeto->incremento_minimo) . ",
+            " . intval($objeto->id_estado) . "
+        )";
 
         $idSubasta = $this->enlace->executeSQL_DML_last($sql);
-        $resultado = $this->get($idSubasta);
-        return $resultado;
+        return $this->get($idSubasta);
     }
     public function update($objeto)
     {
@@ -194,6 +205,10 @@ class SubastaModel
             return (object)["success" => false, "message" => "La subasta ya está cancelada"];
         }
 
+        if ($idEstado === 4) {
+            return (object)["success" => false, "message" => "La subasta ya está cancelada"];
+        }
+
         if ($fechaInicio <= $ahora && $cantPujas > 0) {
             return (object)["success" => false, "message" => "No se puede cancelar: la subasta ya inició y tiene pujas"];
         }
@@ -202,5 +217,25 @@ class SubastaModel
         $this->enlace->executeSQL_DML($sql);
 
         return (object)["success" => true, "message" => "Subasta cancelada correctamente"];
+    }
+    public function reactivar($id)
+    {
+        $resultado = $this->enlace->ExecuteSQL(
+            "SELECT id_estado FROM subastas WHERE id = $id"
+        );
+
+        if (empty($resultado)) {
+            return (object)["success" => false, "message" => "Subasta no encontrada"];
+        }
+
+        if ((int)$resultado[0]->id_estado !== 3) {
+            return (object)["success" => false, "message" => "Solo se pueden reactivar subastas canceladas"];
+        }
+
+        $this->enlace->executeSQL_DML(
+            "UPDATE subastas SET id_estado = 4 WHERE id = $id"
+        );
+
+        return (object)["success" => true, "message" => "Subasta reactivada como borrador"];
     }
 }

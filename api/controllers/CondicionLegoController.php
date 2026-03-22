@@ -30,4 +30,18 @@ class CondicionLego
             
         }
     }
+    public function get($idusuario)
+    {
+        try{
+            $response= new Response();
+            $Condicionlego = new CondicionLegoModel();
+            $result = $Condicionlego->get($idusuario);
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+            
+        }
+    }
 }

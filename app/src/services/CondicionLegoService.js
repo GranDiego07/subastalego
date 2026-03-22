@@ -18,6 +18,9 @@ class CondicionLegoService {
     getByUsuario(usuarioId) {
         return axios.get(`${BASE_URL}/getLegoUsuarioCondicion/${usuarioId}`);
     }
+    get(usuarioId) {
+        return axios.get(`${BASE_URL}/${usuarioId}`);
+    }
 }
 
 export default new CondicionLegoService();

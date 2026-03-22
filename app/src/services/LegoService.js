@@ -56,8 +56,8 @@ class LegoService {
      * Crear nuevo Lego
      * POST /lego
      */
-    create(legoData) {
-        return axios.post(BASE_URL, JSON.stringify(legoData));
+    create(lego) {
+        return axios.post(BASE_URL, JSON.stringify(lego));
     }
 
     /**
@@ -67,14 +67,13 @@ class LegoService {
     update(lego) {
         return axios({
             method: 'put',
-            url: BASE_URL,
-            data: JSON.stringify(lego)
-
-        })
+            url: BASE_URL, // sin /${id}
+            data: lego,
+        });
     }
 
     delete(legoId) {
-        return axios.delete(`${BASE_URL}/delete/${legoId}`);
+        return axios.delete(`${BASE_URL}/${legoId}`); // ← quitar /delete/
     }
 }
 

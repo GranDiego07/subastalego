@@ -86,15 +86,14 @@ export function UpdateLego() {
 
   const onSubmit = async (dataForm) => {
     try {
-      const payload = { id, ...dataForm };
+      const payload = { id: Number(id), ...dataForm };
       const response = await LegoService.update(payload);
       if (response.data) {
         toast.success("¡Lego actualizado correctamente!", { duration: 2000 });
         setTimeout(() => navigate("/lego/table"), 2000);
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Error al actualizar el lego");
+      toast.error(err.response?.data?.message ?? "Error al actualizar el lego");
     }
   };
 
@@ -103,7 +102,7 @@ export function UpdateLego() {
 
   const nombreVendedor =
     lego?.vendedor ?? `Usuario #${lego?.id_vendedor}`
-    lego?.nombre_vendedor ??
+  lego?.nombre_vendedor ??
     lego?.vendedor?.nombre ??
     lego?.usuario?.nombre ??
     `Usuario #${lego?.id_vendedor}`;
