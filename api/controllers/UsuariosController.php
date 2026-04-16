@@ -137,4 +137,18 @@ class usuarios
             handleException($e);
         }
     }
+    public function login()
+    {
+        $response = new Response();
+        $request = new Request();
+        //Obtener json enviado
+        $inputJSON = $request->getJSON();
+        $usuario = new UsuariosModel();
+        $result = $usuario->login($inputJSON);
+        if (isset($result) && !empty($result) && $result != false) {
+            $response->toJSON($result);
+        } else {
+            $response->toJSON($response, "Usuario no valido");
+        }
+    }
 }

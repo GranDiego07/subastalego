@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import UserProvider from '@/context/UserProvider'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Layout } from './components/Layout/Layout'
 import { Home } from './components/Home/Home'
@@ -22,6 +23,8 @@ import TableSubasta from './components/Subastas/TableSubastas'
 import { UpdateSubasta } from './components/Subastas/UpdateSubasta'
 import { UpdateUsuarios } from './components/Usuarios/UpdateUsuarios'
 import { PublicarSubasta } from './components/Subastas/PublicarSubasta'
+import Login from './components/Usuarios/Login'
+import Register from './components/Usuarios/Register'
 
 
 const rutas = createBrowserRouter([
@@ -29,16 +32,18 @@ const rutas = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <Home /> },
-
+      { path: "*", element: <PageNotFound /> },  // ← siempre al final
       { path: "lego", element: <ListLegos /> },
       { path: "lego/table", element: <TableLegos /> },
       { path: "lego/create", element: <CreateLego /> },
       { path: "lego/update/:id", element: <UpdateLego /> },
       { path: "lego/detail/:id", element: <DetailLego /> },
-      { path: "lego/usuarios", element: <TableUsuarios /> },
-      { path: "lego/usuarios/create", element: <CreateUsuario /> },
-      { path: "lego/usuarios/update/:id", element: <UpdateUsuarios /> },
-      { path: "lego/usuarios/detail/:id", element: <DetailUsuario /> },
+      { path: "usuario", element: <TableUsuarios /> },
+      { path: "usuario/create", element: <CreateUsuario /> },
+      { path: "usuario/update/:id", element: <UpdateUsuarios /> },
+      { path: "usuario/detail/:id", element: <DetailUsuario /> },
+      { path: "usuario/login", element: <Login /> },
+      { path: 'usuario/create',element: <Register />},
       { path: "lego/pujas", element: <TablePujas /> },
       { path: "lego/subasta", element: <TableSubasta /> },
       { path: "lego/subasta/activas", element: <ListSubastasActi /> },
@@ -47,14 +52,14 @@ const rutas = createBrowserRouter([
       { path: "lego/subasta/create", element: <CreateSubasta /> },
       { path: "lego/subasta/update/:id", element: <UpdateSubasta /> },
       { path: "lego/subasta/publicar/:id", element: <PublicarSubasta /> },
-      { path: "*", element: <PageNotFound /> },  // ← siempre al final
+
     ]
   }
 ])
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={rutas} />
+    <UserProvider>
+      <RouterProvider router={rutas} />
+    </UserProvider>
   </StrictMode>,
 )
-
-

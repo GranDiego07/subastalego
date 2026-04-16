@@ -109,11 +109,6 @@ class SubastaModel
 
     public function create($objeto)
     {
-        // ✅ Validar que el objeto llegó correctamente
-        if (!$objeto || !isset($objeto->id_lego)) {
-            throw new Exception("Datos inválidos o mal formados en el JSON recibido");
-        }
-
         $sql = "INSERT INTO subastas (id_lego, id_creador, fecha_inicio, fecha_cierre, precio_base, incremento_minimo, id_estado) " .
             "VALUES (
             " . intval($objeto->id_lego) . ",
@@ -122,8 +117,7 @@ class SubastaModel
             '" . $objeto->fecha_cierre . "',
             " . floatval($objeto->precio_base) . ",
             " . floatval($objeto->incremento_minimo) . ",
-            " . intval($objeto->id_estado) . "
-        )";
+            " . intval($objeto->id_estado) . ")";
 
         $idSubasta = $this->enlace->executeSQL_DML_last($sql);
         return $this->get($idSubasta);
@@ -206,7 +200,7 @@ class SubastaModel
         }
 
         if ($idEstado === 4) {
-            return (object)["success" => false, "message" => "La subasta ya está cancelada"];
+            return (object)["success" => false, "message" => "La subasta ya está finalizada"];
         }
 
         if ($fechaInicio <= $ahora && $cantPujas > 0) {

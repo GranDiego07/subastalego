@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { href, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Layers,
   LogIn,
@@ -57,7 +57,7 @@ export default function Header() {
     },
     {
       title: "Usuarios",
-      href: "lego/usuarios",
+      href: "usuario",
       icon: <CircleUserIcon className="h-4 w-4" />,
     },
     {
@@ -73,10 +73,10 @@ export default function Header() {
   ];
 
   const userItems = [
-    { title: "Login", href: "/user/login", icon: <LogIn className="h-4 w-4" /> },
+    { title: "Login", href: "/usuario/login", icon: <LogIn className="h-4 w-4" /> },
     {
       title: "Registrarse",
-      href: "/user/create",
+      href: "/usuario/create",
       icon: <UserPlus className="h-4 w-4" />,
     },
     {

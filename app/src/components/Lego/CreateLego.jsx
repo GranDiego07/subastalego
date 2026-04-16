@@ -41,7 +41,6 @@ export function CreateLego() {
 
   /*** Esquema Yup ***/
   const legoSchema = yup.object({
-
     nombre: yup.string().required('El nombre es requerido').min(2, 'Mínimo 2 caracteres'),
     descripcion: yup.string().required('La descripción es requerida'),
     id_vendedor: yup.number().typeError('Seleccione un vendedor').required('El vendedor es requerido'),
@@ -98,8 +97,6 @@ export function CreateLego() {
         setDataCategoria(CategoriaLegoRes.data?.data ?? []);
         setDataCondicion(CondicionLegoRes.data?.data ?? []);
         setDataEstado(EstadoLegoRes.data?.data ?? []);
-
-        console.log("Usuarios:", UsuariosRes.data?.data);
       } catch (error) {
         console.log(error);
         if (error.name !== "AbortError") setError(error.message);
@@ -116,22 +113,19 @@ export function CreateLego() {
     }
 
     try {
-      // Primero crear el lego sin imágenes
+      // 1. Crear el lego
       const payload = { ...dataForm, imagenes: [] };
-      console.log("📦 Payload:", payload);
-
       const response = await LegoService.create(payload);
-      console.log("✅ Lego creado:", response.data); // ← mirá aquí dónde está el id
-
       const legoId = response.data?.data?.id;
 
       if (!legoId) throw new Error("No se obtuvo el ID del lego creado");
 
-      // Luego subir cada imagen con el legoId
+      // 2. Subir imágenes con el legoId y el nombre del lego
       for (const file of files) {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("lego_id", legoId);
+        formData.append("nombre", dataForm.nombre); // ✅ nombre para la carpeta
         await ImageService.createImage(formData);
       }
 

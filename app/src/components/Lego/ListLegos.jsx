@@ -5,7 +5,7 @@ import { LoadingGrid } from "../ui/custom/LoadingGrid";
 import { EmptyState } from "../ui/custom/EmptyState";
 import { ErrorAlert } from "../ui/custom/ErrorAlert";
 
-export function ListLegos({ idShopRental = 2 }) {
+export function ListLegos() {
     const [legos, setLegos] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ export function ListLegos({ idShopRental = 2 }) {
         const fetchLegos = async () => {
             setLoading(true);
             try {
-                const response = await LegoService.getByVendedor(idShopRental);
+                const response = await LegoService.getAll();
                 let allLegos = response.data?.data || response.data || [];
 
                 const uniqueLegos = allLegos.reduce((acc, lego) => {
@@ -37,7 +37,7 @@ export function ListLegos({ idShopRental = 2 }) {
             }
         };
         fetchLegos();
-    }, [idShopRental]);
+    }, []);
 
     if (loading) return <LoadingGrid type="grid" />;
     if (error) return <ErrorAlert title="Error al cargar" message={error} />;

@@ -83,6 +83,10 @@ class UsuariosService {
   delete(usuarioId) {
     return axios.delete(`${BASE_URL}/${usuarioId}`);
   }
+  
+  loginUser(User) {
+    return axios.post(BASE_URL + '/login/', JSON.stringify(User));
+  }
 }
 
 export default new UsuariosService();

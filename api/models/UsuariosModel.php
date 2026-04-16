@@ -3,6 +3,8 @@
 require_once "models/EstadoUsuarioModel.php"; // Ajusta la ruta según tu estructura
 require_once "models/RolModel.php";
 
+use Firebase\JWT\JWT;
+
 class UsuariosModel
 {
     public $enlace;
@@ -147,5 +149,35 @@ class UsuariosModel
         $this->enlace->executeSQL_DML($sql);
 
         return $this->get($objeto->id);
+    }
+    public function login($objeto)
+    {
+        $vSql = "SELECT * from User where email='$objeto->email'";
+        //Ejecutar la consulta
+        $vResultado = $this->enlace->ExecuteSQL($vSql);
+        if (is_object($vResultado[0])) {
+            $user = $vResultado[0];
+            if (password_verify($objeto->password, $user->password)) {
+                $usuario = $this->get($user->id);
+                if (!empty($usuario)) {
+                    // Datos para el token JWT
+                    $data = [
+                        'id' => $usuario->id,
+                        'email' => $usuario->email,
+                        'rol' => $usuario->rol,
+                        'iat' => time(),  // Hora de emisión
+                        'exp' => time() + 3600 // Expiración en 1 hora
+                    ];
+
+                    // Generar el token JWT
+                    $jwt_token = JWT::encode($data, config::get('SECRET_KEY'), 'HS256');
+
+                    // Enviar el token como respuesta
+                    return $jwt_token;
+                }
+            }
+        } else {
+            return false;
+        }
     }
 }

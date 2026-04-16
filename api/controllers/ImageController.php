@@ -6,9 +6,9 @@ class image
         try {
             $response = new Response();
 
-            // ✅ Leer de $_POST, no del body JSON
             $inputFILE = new stdClass();
             $inputFILE->lego_id = $_POST['lego_id'] ?? null;
+            $inputFILE->nombre  = $_POST['nombre']  ?? null; // ✅ agrega el nombre
 
             $imagen = new ImageModel();
             $result = $imagen->uploadFile($inputFILE);
