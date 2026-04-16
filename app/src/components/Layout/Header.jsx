@@ -39,12 +39,12 @@ export default function Header() {
     { title: "Legos", href: "/lego", icon: <Blocks className="h-4 w-4" /> },
     {
       title: "Subastas Activas",
-      href: "lego/subasta/activas",
+      href: "subasta/activas",
       icon: <AlarmClock className="h-4 w-4" />,
     },
     {
       title: "Subastas No activas",
-      href: "lego/subasta/noactivas",
+      href: "subasta/noactivas",
       icon: <AlarmClockOff className="h-4 w-4" />,
     },
   ];
@@ -52,7 +52,7 @@ export default function Header() {
   const mantItems = [
     {
       title: "Lego",
-      href: "lego/table",
+      href: "table",
       icon: <Blocks className="h-4 w-4" />,
     },
     {
@@ -62,18 +62,18 @@ export default function Header() {
     },
     {
       title: "Pujas",
-      href: "lego/pujas",
+      href: "pujas",
       icon: <Activity className="h-4 w-4" />,
     },
     {
       title: "Subastas",
-      href: "lego/subasta",
+      href: "subasta",
       icon: <KeyboardMusic className="h-4 w-4" />,
     }
   ];
 
   const userItems = [
-    { title: "Login", href: "/usuario/login", icon: <LogIn className="h-4 w-4" /> },
+    { title: "Login", href: "login", icon: <LogIn className="h-4 w-4" /> },
     {
       title: "Registrarse",
       href: "/usuario/create",
