@@ -76,7 +76,8 @@ class SubastaModel
                 INNER JOIN estados_subasta es ON s.id_estado = es.id
                 LEFT JOIN pujas p ON p.id_subasta = s.id
                 WHERE s.id = $id
-                GROUP BY s.id, l.nombre, s.precio_base, s.fecha_cierre, s.incremento_minimo, es.nombre";
+                GROUP BY s.id, l.nombre, s.precio_base, s.fecha_cierre, s.incremento_minimo, es.nombre
+                order by l.id desc";
 
         $vResultado = $this->enlace->ExecuteSQL($vSql);
 
@@ -90,7 +91,8 @@ class SubastaModel
         $vSql = "SELECT s.*, l.nombre AS lego_nombre
                     FROM subastas s
                     INNER JOIN lego l ON s.id_lego = l.id
-                    WHERE s.id = $id";
+                    WHERE s.id = $id
+                    order by l.id desc";
 
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         return $vResultado[0];
@@ -117,7 +119,7 @@ class SubastaModel
             '" . $objeto->fecha_cierre . "',
             " . floatval($objeto->precio_base) . ",
             " . floatval($objeto->incremento_minimo) . ",
-            " . intval($objeto->id_estado) . ")";
+            " . intval($objeto->id_estado??4) . ")";
 
         $idSubasta = $this->enlace->executeSQL_DML_last($sql);
         return $this->get($idSubasta);
@@ -142,7 +144,7 @@ class SubastaModel
             FROM subastas s
             INNER JOIN lego l ON s.id_lego = l.id
             INNER JOIN estados_subasta es ON s.id_estado = es.id
-            ORDER BY s.fecha_cierre DESC;";
+            ORDER BY l.id DESC;";
         return $this->enlace->ExecuteSQL($vSql);
     }
 

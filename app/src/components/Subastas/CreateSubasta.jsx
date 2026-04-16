@@ -19,7 +19,7 @@ import { CustomSelect } from "../ui/custom/custom-select";
 export function CreateSubasta() {
   const navigate = useNavigate();
 
-  const [dataEstado, setDataEstado] = useState([]);
+  /* const [dataEstado, setDataEstado] = useState([]); */
   const [dataLego, setDataLego] = useState([]);
   const [dataUsuario, setDataUsuario] = useState([]);
   const [loadingLegos, setLoadingLegos] = useState(false);
@@ -28,7 +28,7 @@ export function CreateSubasta() {
   const subastaSchema = yup.object({
     id_usuario: yup.number().typeError("Seleccione un usuario").required("El usuario es requerido"),
     id_lego: yup.number().typeError("Seleccione un lego").required("El lego es requerido"),
-    id_estado: yup.number().typeError("Seleccione un estado").required("El estado es requerido"),
+    /* id_estado: yup.number().typeError("Seleccione un estado").required("El estado es requerido"), */
     precio_inicial: yup
       .number()
       .typeError("Ingrese un precio válido")
@@ -48,7 +48,7 @@ export function CreateSubasta() {
     defaultValues: {
       id_usuario: "",
       id_lego: "",
-      id_estado: "",
+      id_estado: 4,
       precio_inicial: "",
       incremento_minimo: "",
       fecha_inicio: "",
@@ -62,11 +62,11 @@ export function CreateSubasta() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [estadoRes, usuarioRes] = await Promise.all([
+        const [/* estadoRes */, usuarioRes] = await Promise.all([
           EstadoSubastaServicio.getAll(),
           UsuariosService.getByRol(),
         ]);
-        setDataEstado(estadoRes.data?.data ?? []);
+        /* setDataEstado(estadoRes.data?.data ?? []); */
         setDataUsuario(usuarioRes.data?.data ?? []);
       } catch (err) {
         if (err.name !== "AbortError") setError(err.message);
@@ -112,7 +112,7 @@ export function CreateSubasta() {
         fecha_cierre: dataForm.fecha_fin.replace("T", " ") + ":00",
         precio_base: dataForm.precio_inicial,
         incremento_minimo: dataForm.incremento_minimo,
-        id_estado: dataForm.id_estado,
+        /* id_estado: dataForm.id_estado, */
       };
 
       console.log("📦 Payload enviado:", JSON.stringify(payload, null, 2));
@@ -173,7 +173,7 @@ export function CreateSubasta() {
         </div>
 
         {/* Estado */}
-        <div>
+        {/* <div>
           <Label className="block mb-1 text-sm font-medium">Estado</Label>
           <Controller name="id_estado" control={control} render={({ field }) => (
             <CustomSelect field={field} data={dataEstado} label="Seleccione un estado"
@@ -182,7 +182,7 @@ export function CreateSubasta() {
               error={errors.id_estado?.message} />
           )} />
           {errors.id_estado && <p className="text-sm text-red-500">{errors.id_estado.message}</p>}
-        </div>
+        </div> */}
 
         {/* Precio Inicial */}
         <div>

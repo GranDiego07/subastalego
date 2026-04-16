@@ -19,7 +19,7 @@ export function UpdateUsuarios() {
     const [usuario, setUsuario] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
-    const [dataRoles, setDataRoles] = useState([]); // 👈 estado para roles
+    const [dataRoles, setDataRoles] = useState([]); 
 
     const usuarioSchema = yup.object({
         nombre_completo: yup
@@ -78,7 +78,7 @@ export function UpdateUsuarios() {
             const response = await UsuariosService.update(payload);
             if (response.data) {
                 toast.success("Usuario actualizado correctamente", { duration: 4000 });
-                navigate("/lego/usuarios");
+                navigate("/usuario");
             }
         } catch (err) {
             console.error(err);
@@ -86,7 +86,6 @@ export function UpdateUsuarios() {
         }
     };
 
-    // 👇 Función para obtener el nombre del rol por id
     const getNombreRol = (idRol) => {
         const rol = dataRoles.find((r) => r.id == idRol);
         return rol?.nombre ?? `Rol #${idRol}`;

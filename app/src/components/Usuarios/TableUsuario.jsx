@@ -66,7 +66,7 @@ export default function TableUsuarios() {
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button asChild variant="outline" size="icon" className="text-primary">
-                                <Link to="/lego/usuarios/create">
+                                <Link to="create">
                                     <Plus className="h-4 w-4" />
                                 </Link>
                             </Button>
@@ -115,7 +115,7 @@ export default function TableUsuarios() {
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <Button variant="ghost" size="icon" asChild>
-                                                        <Link to={`/lego/usuarios/update/${usuario.id}`}>
+                                                        <Link to={`update/${usuario.id}`}>
                                                             <Edit className="h-4 w-4 text-primary" />
                                                         </Link>
                                                     </Button>

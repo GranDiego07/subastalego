@@ -18,21 +18,15 @@ class LegoModel
         $imagenM = new ImageModel();
 
         // Consulta SQL con JOINs para traer los nombres
-        $vSQL = "
-        SELECT 
-            l.*,
-            c.nombre AS categoria_nombre,
-            cond.nombre AS condicion_nombre,
-            e.nombre AS estado_nombre,
-            i.url AS imagen_url
-        FROM lego l
-        LEFT JOIN categorias c ON l.id_categoria = c.id
-        LEFT JOIN condiciones_lego cond ON l.id_condicion = cond.id
-        LEFT JOIN estados_lego e ON l.id_estado = e.id
-        LEFT JOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  
-        ORDER BY l.id DESC;
-    ";
-
+        $vSQL = "SELECT l.*,c.nombre AS categoria_nombre,cond.nombre AS condicion_nombre,e.nombre AS estado_nombre,
+                        i.url AS imagen_url, s.precio_base as precio
+                    FROM lego l
+                    inner join subastas s on s.id_lego = l.id
+                    inner JOIN categorias c ON l.id_categoria = c.id
+                    inner JOIN condiciones_lego cond ON l.id_condicion = cond.id
+                    inner jOIN estados_lego e ON l.id_estado = e.id
+                    inner jOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  
+                    ORDER BY l.id DESC;";
         // Ejecutar consulta
         $vResultado = $this->enlace->ExecuteSQL($vSQL);
 
@@ -40,7 +34,34 @@ class LegoModel
         if (!empty($vResultado) && is_array($vResultado)) {
             for ($i = 0; $i < count($vResultado); $i++) {
                 // Si quieres mantener la estructura anterior de imagen como objeto
-                $vResultado[$i]->imagen = $imagenM->getImageMovie($vResultado[$i]->id);
+                $vResultado[$i]->imagen = $imagenM->getImagenPrincipal($vResultado[$i]->id);
+            }
+        }
+
+        return $vResultado;
+    }
+
+    public function sinSubasta()
+    {
+        $imagenM = new ImageModel();
+
+        // Consulta SQL con JOINs para traer los nombres
+        $vSQL = "SELECT l.*,c.nombre AS categoria_nombre,cond.nombre AS condicion_nombre,e.nombre AS estado_nombre,
+                        i.url AS imagen_url
+                    FROM lego l
+                    inner JOIN categorias c ON l.id_categoria = c.id
+                    inner JOIN condiciones_lego cond ON l.id_condicion = cond.id
+                    inner jOIN estados_lego e ON l.id_estado = e.id
+                    inner jOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  
+                    ORDER BY l.id DESC;";
+        // Ejecutar consulta
+        $vResultado = $this->enlace->ExecuteSQL($vSQL);
+
+        // Opcional: mantener el populate de imagen si lo necesitas como objeto
+        if (!empty($vResultado) && is_array($vResultado)) {
+            for ($i = 0; $i < count($vResultado); $i++) {
+                // Si quieres mantener la estructura anterior de imagen como objeto
+                $vResultado[$i]->imagen = $imagenM->getImagenPrincipal($vResultado[$i]->id);
             }
         }
 
@@ -78,34 +99,7 @@ class LegoModel
         //Retornar la respuesta
         return $vResultado;
     }
-    /**
-     * Obtener las Legos por vendedor
-     * @param $idShopRental identificador de la tienda
-     * @return $vresultado - Lista de peliculas incluyendo el precio
-     */
-    //
-    //Obtener el inventario de películas de una tienda, incluyendo nombre de la película y precio
-    public function legobyVendedor($idUsuario)
-    {
-        $imagenM = new ImageModel();
-        //Consulta SQL
-        $vSQL = "SELECT l.*, u.nombre_completo
-                    FROM lego l, usuarios u
-                    where l.id_vendedor=$idUsuario
-                    order by l.nombre desc";
-        //Ejecutar la consulta
-        $vResultado = $this->enlace->ExecuteSQL($vSQL);
 
-        //Incluir imagenes
-        if (!empty($vResultado) && is_array($vResultado)) {
-            for ($i = 0; $i < count($vResultado); $i++) {
-                $vResultado[$i]->imagen = $imagenM->getImageMovie(($vResultado[$i]->id));
-            }
-        }
-        //Retornar la respuesta
-
-        return $vResultado;
-    }
     public function legoByEstado($idActor)
     {
         $imagenM = new ImageModel();
@@ -223,7 +217,7 @@ class LegoModel
 
         $this->enlace->executeSQL_DML($sql);
 
-        // ✅ Retorna simple en vez de get() que tiene el bug
+
         return (object)["success" => true, "message" => "Lego actualizado correctamente", "id" => $objeto->id];
     }
     public function delete($id)
@@ -241,9 +235,12 @@ class LegoModel
             return (object)["success" => false, "message" => "No se puede eliminar: el lego debe estar en estado Vendido, Retirado o Inactivo"];
         }
 
-        $sql = "DELETE FROM lego WHERE id = $id";
-        $this->enlace->executeSQL_DML($sql);
-
-        return (object)["success" => true, "message" => "Lego eliminado correctamente"];
+        try {
+            $sql = "DELETE FROM lego WHERE id = $id";
+            $this->enlace->executeSQL_DML($sql);
+            return (object)["success" => true, "message" => "Lego eliminado correctamente"];
+        } catch (Exception $e) {
+            return (object)["success" => false, "message" => $e->getMessage()];
+        }
     }
 }

@@ -18,6 +18,21 @@ class lego
             handleException($e);
         }
     }
+    public function sinSubasta()
+    {
+        try {
+            $response = new Response();
+            //Instancia modelo
+            $legoM = new LegoModel;
+            //Método del modelo
+            $result = $legoM->sinSubasta();
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+        }
+    }
     //GET Obtener 
     // localhost:81/appLego/api/Lego/5
     public function get($id)
@@ -36,21 +51,7 @@ class lego
         }
     }
     //Obtener peliculas por tienda
-    public function legosByVendedor($idVendedor)
-    {
-        try {
-            $response = new Response();
-            //Instancia del modelo
-            $lego = new LegoModel();
-            //Acción del modelo a ejecutar
-            $result = $lego->legobyVendedor($idVendedor);
-            //Dar respuesta
-            $response->toJSON($result);
-        } catch (Exception $e) {
-            $response->toJSON($result);
-            handleException($e);
-        }
-    }
+    
 
     public function legosByEstado($idVendedor)
     {

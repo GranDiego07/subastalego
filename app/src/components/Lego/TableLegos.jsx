@@ -24,7 +24,7 @@ export default function TableLegos() {
 
     const fetchLegos = async () => {
         try {
-            const response = await LegoService.getAll();
+            const response = await LegoService.sinSubasta();
             const result = response.data;
             let dataArray = [];
             if (result?.success) {
@@ -40,7 +40,6 @@ export default function TableLegos() {
         }
     };
 
-    // ─── Eliminación lógica ───────────────────────────────────────────────────
     const handleDelete = async (lego) => {
         try {
             const res = await LegoService.delete(lego.id);

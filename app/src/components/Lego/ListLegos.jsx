@@ -17,18 +17,7 @@ export function ListLegos() {
             try {
                 const response = await LegoService.getAll();
                 let allLegos = response.data?.data || response.data || [];
-
-                const uniqueLegos = allLegos.reduce((acc, lego) => {
-                    if (!acc[lego.id]) {
-                        acc[lego.id] = lego;
-                    } else if (lego.imagen) {
-                        if (!acc[lego.id].imagenes) acc[lego.id].imagenes = [];
-                        acc[lego.id].imagenes.push(lego.imagen);
-                    }
-                    return acc;
-                }, {});
-
-                setLegos(Object.values(uniqueLegos));
+                setLegos(allLegos); 
             } catch (err) {
                 console.error("Error al cargar legos:", err);
                 setError("No se pudo conectar con el servicio de Legos.");
@@ -55,8 +44,8 @@ export function ListLegos() {
                     const fullUrl = imagenPrincipal ? `${import.meta.env.VITE_BASE_URL}${imagenPrincipal}` : null;
 
                     return (
-                        <div 
-                            key={lego.id} 
+                        <div
+                            key={lego.id}
                             onClick={() => navigate(`/lego/detail/${lego.id}`)} // Evento de clic
                             className="bg-white border p-4 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
                         >
