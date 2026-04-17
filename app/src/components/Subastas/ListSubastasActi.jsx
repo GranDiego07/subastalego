@@ -44,28 +44,29 @@ export function ListSubastasActi() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {subastas.map((item, index) => {
-
-                    // 🔍 LOG CLAVE (AQUÍ)
-                    console.log("ITEM SUBASTA:", item);
-
                     const fullUrl = item.imagen ? `${BASE_URL}${item.imagen}` : null;
 
                     return (
                         <div
                             key={index}
-                            onClick={() => navigate(`/lego/subasta/detalle/${item.subasta_id}`)}
-                            className="bg-zinc-900 border border-zinc-800 p-0 rounded-2xl shadow-xl cursor-pointer"
+                            className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden flex flex-col"
                         >
+                            {/* ── Imagen ── */}
                             <div className="aspect-[4/3] bg-white flex items-center justify-center overflow-hidden relative">
                                 {fullUrl ? (
-                                    <img src={fullUrl} alt={item.Lego} className="object-contain w-full h-full p-4" />
+                                    <img
+                                        src={fullUrl}
+                                        alt={item.Lego}
+                                        className="object-contain w-full h-full p-4"
+                                    />
                                 ) : (
                                     <span className="text-xs text-gray-400">Sin Imagen</span>
                                 )}
                                 <Badge className="absolute top-3 right-3 bg-green-600">Activa</Badge>
                             </div>
 
-                            <div className="p-5 space-y-3">
+                            {/* ── Info ── */}
+                            <div className="p-5 space-y-3 flex flex-col flex-1">
                                 <h3 className="text-white font-bold text-lg leading-tight line-clamp-2 h-14">
                                     {item.Lego}
                                 </h3>
@@ -81,8 +82,19 @@ export function ListSubastasActi() {
                                     <span className="text-2xl font-black text-blue-400">
                                         ${item.Precio}
                                     </span>
-                                    <ArrowRight className="w-5 h-5 text-blue-500" />
+                                    <span className="text-xs text-zinc-500">
+                                        {item.cantidad_pujas} puja{item.cantidad_pujas !== 1 ? "s" : ""}
+                                    </span>
                                 </div>
+
+                                {/* ── Botón Ver Subasta ── */}
+                                <button
+                                    onClick={() => navigate(`/detalle/${item.subasta_id}`)}
+                                    className="mt-auto w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200"
+                                >
+                                    Ver subasta y pujar
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
                     );

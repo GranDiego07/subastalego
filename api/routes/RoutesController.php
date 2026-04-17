@@ -103,30 +103,26 @@ class RoutesController
                 switch ($_SERVER['REQUEST_METHOD']) {
                     case 'GET':
                         if ($action && is_numeric($action)) {
-                            // URL del tipo /movie/1
+                            // Ejemplo: /subasta/20 -> Llama a get(20)
                             $response->get($action);
                         } elseif ($action && method_exists($response, $action)) {
-                            // URL del tipo /movie/recent, /movie/search, etc.
+                            // Ejemplo: /subasta/getParaInterfaz/20
+
+                            // 1. Intentamos obtener el ID de los parámetros de la ruta ($param1)
+                            // 2. Si no existe, intentamos obtenerlo de la URL (?id=20)
+                            $idFinal = $param1 ?? ($_GET['id'] ?? null);
+
                             if ($param1 && $param2) {
-                                // URL con dos parámetros → /movie/search/2023/drama
                                 $response->$action($param1, $param2);
-                            } elseif ($param1) {
-                                // URL con un parámetro → /movie/search/2023
-                                $response->$action($param1);
+                            } elseif ($idFinal !== null) {
+                                // ✅ Ahora sí pasamos el ID a getParaInterfaz($id)
+                                $response->$action($idFinal);
                             } else {
-                                // URL sin parámetros → /movie/recent
+                                // Si de plano no hay ID, llamamos sin nada (esto dará error si la función lo exige)
                                 $response->$action();
                             }
                         } elseif (!$action) {
-                            // URL del tipo /movie
                             $response->index();
-                        } else {
-                            $json = [
-                                "success" => false,
-                                "status"  => 404,
-                                "message" => 'Acción no encontrada'
-                            ];
-                            echo json_encode($json, http_response_code($json["status"]));
                         }
                         break;
 

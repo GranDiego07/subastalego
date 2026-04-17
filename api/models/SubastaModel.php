@@ -119,7 +119,7 @@ class SubastaModel
             '" . $objeto->fecha_cierre . "',
             " . floatval($objeto->precio_base) . ",
             " . floatval($objeto->incremento_minimo) . ",
-            " . intval($objeto->id_estado??4) . ")";
+            " . intval($objeto->id_estado ?? 4) . ")";
 
         $idSubasta = $this->enlace->executeSQL_DML_last($sql);
         return $this->get($idSubasta);
@@ -233,5 +233,116 @@ class SubastaModel
         );
 
         return (object)["success" => true, "message" => "Subasta reactivada como borrador"];
+    }
+    public function getParaInterfaz($id)
+    {
+        // 1. Verificar si la subasta debe cerrarse por fecha antes de consultar
+        $idLimpiado = intval($id);
+        if ($idLimpiado <= 0) return null;
+
+        // 1. Verificar cierre por fecha
+        $this->verificarCierre($idLimpiado);
+
+        $vSql = "SELECT
+                    s.id,
+                    s.id_creador,
+                    s.fecha_inicio,
+                    s.fecha_cierre,
+                    s.precio_base,
+                    s.incremento_minimo,
+                    es.id   AS id_estado,
+                    es.nombre AS estado,
+                    l.nombre  AS lego_nombre,
+                    l.descripcion AS lego_descripcion,
+                    u.nombre_completo AS vendedor_nombre,
+                    GROUP_CONCAT(i.url ORDER BY i.id SEPARATOR '||') AS imagenes
+                FROM subastas s
+                INNER JOIN estados_subasta es ON es.id = s.id_estado
+                INNER JOIN lego l             ON l.id  = s.id_lego
+                INNER JOIN usuarios u         ON u.id  = s.id_creador
+                LEFT  JOIN imagenes i         ON i.id_lego = l.id
+                WHERE s.id = $idLimpiado
+                GROUP BY s.id";
+
+        $resultado = $this->enlace->ExecuteSQL($vSql);
+        if (empty($resultado)) return null;
+
+        $subasta = $resultado[0];
+        // Convertir imágenes concatenadas a array
+        $subasta->imagenes = $subasta->imagenes
+            ? explode('||', $subasta->imagenes)
+            : [];
+
+        return $subasta;
+    }
+
+    /**
+     * Historial de pujas ordenado por monto DESC (el líder primero).
+     */
+    public function getHistorialPujasOrdenado($id)
+    {
+        $vSql = "SELECT
+                    p.id AS puja_id,
+                    p.monto,
+                    p.fecha_hora,
+                    p.id_usuario,
+                    u.nombre_completo AS usuario_pujador
+                FROM pujas p
+                INNER JOIN usuarios u ON u.id = p.id_usuario
+                WHERE p.id_subasta = $id
+                ORDER BY p.monto DESC, p.fecha_hora DESC";
+
+        return $this->enlace->ExecuteSQL($vSql);
+    }
+
+    /**
+     * Puja más alta de una subasta.
+     */
+    public function getPujaMaxima($id)
+    {
+        $vSql = "SELECT p.monto, p.id_usuario, u.nombre_completo AS usuario_nombre
+                FROM pujas p
+                INNER JOIN usuarios u ON u.id = p.id_usuario
+                WHERE p.id_subasta = $id
+                ORDER BY p.monto DESC
+                LIMIT 1";
+
+        $resultado = $this->enlace->ExecuteSQL($vSql);
+        return empty($resultado) ? null : $resultado[0];
+    }
+
+    /**
+     * Registra una nueva puja.
+     */
+    public function registrarPuja($id_subasta, $id_usuario, $monto)
+    {
+        $vSql = "INSERT INTO pujas (id_subasta, id_usuario, monto, fecha_hora)
+                 VALUES ($id_subasta, $id_usuario, $monto, NOW())";
+        $this->enlace->executeSQL_DML($vSql);
+        return true;
+    }
+
+    /**
+     * Cierra la subasta si ya venció su fecha_cierre y aún está Activa (id_estado = 1).
+     * Llama a este método en getParaInterfaz y en pujar para cumplir el requerimiento
+     * de cierre por consulta/puja (sin cron jobs).
+     */
+    public function verificarCierre($id)
+    {
+        // Usamos id_estado = 1 = Activa. Ajusta si tu ID de "Activa" es diferente.
+        $vSql = "UPDATE subastas
+                    SET id_estado = (SELECT id FROM estados_subasta WHERE nombre = 'Finalizada' LIMIT 1)
+                    WHERE id = $id
+                    AND fecha_cierre <= NOW()
+                    AND id_estado = 1";
+        $this->enlace->executeSQL_DML($vSql);
+    }
+    /**
+     * Obtiene el nombre completo de un usuario por ID.
+     */
+    public function getNombreUsuario($id)
+    {
+        $vSql = "SELECT nombre_completo FROM usuarios WHERE id = $id";
+        $this->enlace->executeSQL_DML($vSql);
     }
 }
