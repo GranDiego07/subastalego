@@ -1,4 +1,5 @@
 <?php
+
 class subasta  // ← Debe estar en minúsculas para que el router la encuentre
 {
     public function index()
@@ -226,60 +227,50 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             $id_subasta = intval($input->id_subasta ?? 0);
             $monto      = floatval($input->monto     ?? 0);
 
-            // ── Validaciones básicas ──────────────────────────────────────
             if ($id_subasta <= 0 || $monto <= 0) {
                 $response->toJSON(["error" => "Datos inválidos"]);
                 return;
             }
 
-            // ── 1. Obtener subasta (verificarCierre se llama dentro) ──────
             $subasta = $Subasta->getParaInterfaz($id_subasta);
             if (!$subasta) {
                 $response->toJSON(["error" => "Subasta no encontrada"]);
                 return;
             }
 
-            // ── 2. Validar estado activo ──────────────────────────────────
             if (strtolower($subasta->estado) !== 'activa') {
                 $response->toJSON(["error" => "La subasta no está activa"]);
                 return;
             }
 
-            // ── 3. Validar que el usuario no sea el vendedor ──────────────
             if ((int)$subasta->id_creador === $this->USUARIO_ACTUAL_ID) {
                 $response->toJSON(["error" => "El vendedor no puede pujar en su propia subasta"]);
                 return;
             }
 
-            // ── 4. Obtener puja máxima actual ─────────────────────────────
             $pujaMax     = $Subasta->getPujaMaxima($id_subasta);
-            $montoActual = $pujaMax
-                ? floatval($pujaMax->monto)
-                : floatval($subasta->precio_base);
+            $montoActual = $pujaMax ? floatval($pujaMax->monto) : floatval($subasta->precio_base);
 
-            // ── 5. Validar monto mayor ────────────────────────────────────
             if ($monto <= $montoActual) {
-                $response->toJSON([
-                    "error" => "El monto debe ser mayor a la puja actual (" . number_format($montoActual, 2) . ")"
-                ]);
+                $response->toJSON(["error" => "El monto debe ser mayor a la puja actual"]);
                 return;
             }
 
-            // ── 6. Validar incremento mínimo ──────────────────────────────
             $incremento = floatval($subasta->incremento_minimo);
             if (($monto - $montoActual) < $incremento) {
-                $response->toJSON([
-                    "error" => "El incremento mínimo es " . number_format($incremento, 2)
-                ]);
+                $response->toJSON(["error" => "El incremento mínimo es " . number_format($incremento, 2)]);
                 return;
             }
 
-            // ── 7. Registrar puja ─────────────────────────────────────────
+            // ── 1. Registrar en Base de Datos ─────────────────────────────
             $Subasta->registrarPuja($id_subasta, $this->USUARIO_ACTUAL_ID, $monto);
 
-            // ── 8. Publicar evento en Ably ────────────────────────────────
-            // Obtener nombre del usuario actual para el evento
-            $nombreUsuario = $this->getNombreUsuario($this->USUARIO_ACTUAL_ID);
+            // ── 2. Obtener nombre para Ably (Sin usar Response interno) ───
+            // Corregimos la llamada al modelo para obtener el string directamente
+            $nombreUsuarioData = $Subasta->getNombreUsuario($this->USUARIO_ACTUAL_ID);
+            $nombreUsuario = $nombreUsuarioData->nombre ?? "Usuario " . $this->USUARIO_ACTUAL_ID;
+
+            // ── 3. Publicar en Ably para TIEMPO REAL ──────────────────────
             $this->publicarAbly("auction-{$id_subasta}", "new-bid", [
                 "id_subasta"     => $id_subasta,
                 "monto"          => $monto,
@@ -288,6 +279,7 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
                 "fecha_hora"     => date("Y-m-d H:i:s"),
             ]);
 
+            // ── 4. Respuesta final al usuario que pujó ────────────────────
             $response->toJSON([
                 "success" => true,
                 "monto"   => $monto,
@@ -297,17 +289,17 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             handleException($e);
         }
     }
- 
-    // ── Helpers privados ─────────────────────────────────────────────────────
 
     /**
-     * Publica un evento en Ably usando la REST API (sin SDK, solo cURL).
+     * Envía la notificación a Ably vía REST API
      */
     private function publicarAbly($canal, $evento, $data)
     {
-        $apiKey = $_ENV['ABLY_API_KEY'] ?? getenv('ABLY_API_KEY') ?? '';
-        if (!$apiKey) {
-            error_log("ABLY_API_KEY no configurada");
+        // Asegúrate de que esta variable esté en tu .env o definida en el servidor
+        $apiKey = $_ENV['ABLY_API_KEY'] ?? getenv('ABLY_API_KEY') ?? 'TU_API_KEY_AQUI';
+
+        if (!$apiKey || $apiKey === 'TU_API_KEY_AQUI') {
+            error_log("ERROR: ABLY_API_KEY no configurada en el servidor.");
             return;
         }
 
@@ -324,12 +316,15 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
                 "Authorization: Basic " . base64_encode($apiKey),
             ],
         ]);
+
         $res = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        error_log("Ably publish [$canal/$evento]: $res");
+        if ($httpCode >= 400) {
+            error_log("Ably Error ($httpCode): " . $res);
+        }
     }
-
     public function getNombreUsuario($id)
     {
         try {

@@ -89,17 +89,18 @@ export function ListSubastasActi() {
 
                                 {/* ── Botón Ver Subasta ── */}
                                 <button
-                                    onClick={() => navigate(`/detalle/${item.subasta_id}`)}
-                                    className="mt-auto w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200"
+
+                                onClick={() => navigate(`/subasta/detalle/${item.subasta_id}`)}
+                                className="mt-auto w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200"
                                 >
-                                    Ver subasta y pujar
-                                    <ArrowRight className="w-4 h-4" />
-                                </button>
-                            </div>
+                                Ver subasta y pujar
+                                <ArrowRight className="w-4 h-4" />
+                            </button>
                         </div>
-                    );
+                        </div>
+            );
                 })}
-            </div>
         </div>
+        </div >
     );
 }

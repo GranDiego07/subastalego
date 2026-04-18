@@ -67,5 +67,27 @@ class SubastaService {
     reactivar(id) {
         return axios.get(`${BASE_URL}/reactivar/${id}`);
     }
+    getParaInterfaz(id) {
+        // Tu controlador PHP usa $_GET['id'] como respaldo, 
+        // pero esta forma es más limpia si tu router soporta parámetros de ruta.
+        return axios.get(`${BASE_URL}/getParaInterfaz/${id}`);
+    }
+
+    /**
+     * Registra una puja
+     * @param {Object} datosPuja - Debe contener { id_subasta, monto }
+     */
+    pujar(datosPuja) {
+        return axios.post(`${BASE_URL}/pujar`, JSON.stringify(datosPuja), {
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+
+    /**
+     * Obtiene el nombre de un usuario por ID
+     */
+    getNombreUsuario(id) {
+        return axios.get(`${BASE_URL}/getNombreUsuario/${id}`);
+    }
 }
 export default new SubastaService();

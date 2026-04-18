@@ -26,6 +26,7 @@ import { PublicarSubasta } from './components/Subastas/PublicarSubasta'
 import Login from './components/Usuarios/Login'
 import Register from './components/Usuarios/Register'
 import SubastaDetalle from './components/Subastas/SubastaDetalle'
+import MisPagos from "./components/Pujas/MisPagos";
 
 
 const rutas = createBrowserRouter([
@@ -33,7 +34,7 @@ const rutas = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <Home /> },
-      { path: "*", element: <PageNotFound /> },  // ← siempre al final
+
       { path: "lego", element: <ListLegos /> },
       { path: "table", element: <TableLegos /> },
       { path: "lego/create", element: <CreateLego /> },
@@ -44,16 +45,17 @@ const rutas = createBrowserRouter([
       { path: "usuario/update/:id", element: <UpdateUsuarios /> },
       { path: "usuario/detail/:id", element: <DetailUsuario /> },
       { path: "login", element: <Login /> },
-      { path: 'usuario/create',element: <Register />},
+      { path: 'usuario/create', element: <Register /> },
       { path: "pujas", element: <TablePujas /> },
       { path: "subasta", element: <TableSubasta /> },
       { path: "subasta/activas", element: <ListSubastasActi /> },
       { path: "subasta/noactivas", element: <ListSubastasDesa /> },
-      { path: "detalle/:id", element: <SubastaDetalle /> },
+      { path: "subasta/detalle/:id", element: <SubastaDetalle /> },
       { path: "subasta/create", element: <CreateSubasta /> },
       { path: "subasta/update/:id", element: <UpdateSubasta /> },
       { path: "subasta/publicar/:id", element: <PublicarSubasta /> },
-
+      { path: "/mis-pagos", element: <MisPagos />},
+      { path: "*", element: <PageNotFound /> },  // ← siempre al final
     ]
   }
 ])

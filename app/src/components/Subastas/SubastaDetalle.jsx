@@ -1,41 +1,38 @@
-// pages/SubastaDetalle.jsx
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as Ably from "ably";
 import {
-    Gavel, Clock, ChevronLeft, Trophy, AlertTriangle,
-    User, Tag, TrendingUp, History, CheckCircle
+    Gavel, Clock, ChevronLeft, AlertTriangle,
+    History, CheckCircle, ChevronRight, Trophy
 } from "lucide-react";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VARIABLE LÓGICA DEL USUARIO ACTUAL
-// Cambiar manualmente para simular distintos usuarios en pruebas.
-// NO mostrar ni editar desde la interfaz.
-// ─────────────────────────────────────────────────────────────────────────────
 const USUARIO_ACTUAL_ID = 1;
-
 const BASE_URL = import.meta.env.VITE_BASE_URL ?? "";
 const ABLY_KEY = import.meta.env.VITE_ABLY_KEY ?? "";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function formatMonto(n) {
-    return Number(n).toLocaleString("es-CR", { style: "currency", currency: "CRC" });
-}
-function formatFecha(str) {
-    if (!str) return "—";
-    return new Date(str).toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
+    return Number(n || 0).toLocaleString("es-CR", { style: "currency", currency: "CRC" });
 }
 
-// ── Contador regresivo ────────────────────────────────────────────────────────
-function useCountdown(fechaCierre) {
+// Hook para countdown con sincronización de cierre
+function useCountdown(fechaCierre, onFinalizado) {
     const [texto, setTexto] = useState("--:--:--");
+    const [finalizada, setFinalizada] = useState(false);
 
     useEffect(() => {
         if (!fechaCierre) return;
+
         const tick = () => {
             const ms = new Date(fechaCierre) - Date.now();
-            if (ms <= 0) { setTexto("Finalizada"); return; }
+
+            if (ms <= 0) {
+                setTexto("Finalizada");
+                setFinalizada(true);
+                if (onFinalizado) onFinalizado();
+                return;
+            }
+
             const s = Math.floor(ms / 1000);
             const h = Math.floor(s / 3600);
             const m = Math.floor((s % 3600) / 60);
@@ -44,15 +41,107 @@ function useCountdown(fechaCierre) {
                 `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
             );
         };
+
         tick();
         const id = setInterval(tick, 1000);
         return () => clearInterval(id);
-    }, [fechaCierre]);
+    }, [fechaCierre, onFinalizado]);
 
-    return texto;
+    return { texto, finalizada };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// Carrusel con miniaturas
+function ImageCarousel({ imagenes, nombre }) {
+    const [idx, setIdx] = useState(0);
+
+    if (!imagenes || imagenes.length === 0) {
+        return (
+            <div className="rounded-2xl overflow-hidden bg-zinc-900 aspect-video border border-zinc-800 flex items-center justify-center">
+                <span className="text-zinc-600">Sin imagen disponible</span>
+            </div>
+        );
+    }
+
+    const toSrc = (img) => img.startsWith("http") ? img : `${BASE_URL}/${img}`;
+    const prev = () => setIdx(i => (i - 1 + imagenes.length) % imagenes.length);
+    const next = () => setIdx(i => (i + 1) % imagenes.length);
+
+    return (
+        <div className="space-y-3">
+            <div className="relative rounded-2xl overflow-hidden bg-zinc-900 aspect-video border border-zinc-800 flex items-center justify-center group">
+                <img
+                    src={toSrc(imagenes[idx])}
+                    alt={`${nombre} - ${idx + 1}`}
+                    className="max-h-full max-w-full object-contain p-4"
+                    onError={(e) => {
+                        e.target.src = "https://via.placeholder.com/400?text=Sin+imagen";
+                    }}
+                />
+                {imagenes.length > 1 && (
+                    <>
+                        <button
+                            onClick={prev}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <ChevronLeft className="w-5 h-5 text-white" />
+                        </button>
+                        <button
+                            onClick={next}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <ChevronRight className="w-5 h-5 text-white" />
+                        </button>
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
+                            {idx + 1} / {imagenes.length}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {imagenes.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                    {imagenes.map((img, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setIdx(i)}
+                            className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === idx
+                                    ? "border-blue-500"
+                                    : "border-zinc-700 hover:border-zinc-500"
+                                }`}
+                        >
+                            <img
+                                src={toSrc(img)}
+                                alt={`miniatura ${i + 1}`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.target.src = "https://via.placeholder.com/64?text=?";
+                                }}
+                            />
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Componente para mostrar ganador
+function GanadorAnnouncement({ ganador, monto }) {
+    return (
+        <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/50 rounded-2xl p-6 text-center">
+            <div className="flex justify-center mb-3">
+                <Trophy className="w-8 h-8 text-yellow-400 animate-bounce" />
+            </div>
+            <h3 className="text-xl font-bold text-yellow-400 mb-1">¡Subasta Finalizada!</h3>
+            <p className="text-zinc-400 text-sm mb-3">Ganador:</p>
+            <p className="text-2xl font-black text-yellow-300 mb-1">{ganador}</p>
+            <p className="text-sm text-zinc-500">
+                Monto final: <span className="text-yellow-400 font-bold">{formatMonto(monto)}</span>
+            </p>
+        </div>
+    );
+}
+
 export default function SubastaDetalle() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -69,374 +158,463 @@ export default function SubastaDetalle() {
     const [msgOk, setMsgOk] = useState("");
 
     const [superado, setSuperado] = useState(false);
-    const [imgIdx, setImgIdx] = useState(0);
-
     const superadoTimer = useRef(null);
-    const ablyRef = useRef(null);
-    const channelRef = useRef(null);
 
-    const countdown = useCountdown(subasta?.fecha_cierre);
+    const [subastaCerrada, setSubastaCerrada] = useState(false);
+    const [ganador, setGanador] = useState(null);
 
-    // ── Cargar datos desde el backend ─────────────────────────────────────────
-    const cargar = async () => {
+    const countdownData = useCountdown(subasta?.fecha_cierre, () => {
+        // Cuando el countdown llega a 0, marcar subasta como cerrada
+        cerrarSubastaAutomaticamente();
+    });
+
+    const { texto: countdown, finalizada: tiempoFinalizado } = countdownData;
+
+    // ============== CARGA INICIAL ==============
+    const cargarDatos = async () => {
         try {
-            const { data } = await axios.get(`${BASE_URL}/subasta/getParaInterfaz`, {
+            setLoading(true);
+            setErrorPage("");
+
+            const response = await axios.get(`${BASE_URL}/subasta/getParaInterfaz`, {
                 params: { id }
             });
-            setSubasta(data.subasta);
-            setPujas(data.pujas ?? []);
-            setPujaMax(data.puja_maxima ?? null);
-        } catch {
-            setErrorPage("No se pudo cargar la subasta.");
+
+            const res = response.data;
+
+            // ✅ ESTRUCTURA REAL: { data: { subasta: {...}, pujas: [...], puja_maxima: {...} } }
+            const item = res?.data?.subasta;
+            const listaPujas = Array.isArray(res?.data?.pujas) ? res.data.pujas : [];
+            const pujaMaxAPI = res?.data?.puja_maxima || null;
+
+            if (!item) throw new Error("No se encontraron datos de la subasta");
+
+            // Verificar si la subasta debe estar cerrada
+            const ahora = Date.now();
+            const fechaCierre = new Date(item.fecha_cierre).getTime();
+            const debeCerrada = ahora > fechaCierre;
+
+            const subastaNormalizada = {
+                id: item.id,
+                id_creador: item.id_creador,
+                lego_nombre: item.lego_nombre || "Sin nombre",
+                lego_descripcion: item.lego_descripcion || "Sin descripción",
+                precio_base: parseFloat(item.precio_base) || 0,
+                incremento_minimo: parseFloat(item.incremento_minimo) || 0,
+                fecha_cierre: item.fecha_cierre,
+                fecha_inicio: item.fecha_inicio,
+                estado: debeCerrada ? "Finalizada" : item.estado,
+                vendedor_nombre: item.vendedor_nombre,
+                imagenes: Array.isArray(item.imagenes) ? item.imagenes : [],
+                ganador_id: item.ganador_id || null,
+                ganador_nombre: item.ganador_nombre || null,
+                monto_final: item.monto_final || null
+            };
+
+            setSubasta(subastaNormalizada);
+            setPujas(listaPujas);
+
+            // Establecer puja máxima desde la API o la primera de la lista
+            if (pujaMaxAPI) {
+                setPujaMax({
+                    monto: parseFloat(pujaMaxAPI.monto),
+                    usuario_nombre: pujaMaxAPI.usuario_nombre,
+                    id_usuario: pujaMaxAPI.id_usuario
+                });
+            } else if (listaPujas.length > 0) {
+                setPujaMax({
+                    monto: parseFloat(listaPujas[0].monto),
+                    usuario_nombre: listaPujas[0].usuario_pujador,
+                    id_usuario: listaPujas[0].id_usuario
+                });
+            }
+
+            // Si ya tiene ganador registrado, mostrar
+            if (item.ganador_nombre) {
+                setGanador({
+                    nombre: item.ganador_nombre,
+                    monto: item.monto_final
+                });
+            }
+
+            if (debeCerrada) {
+                setSubastaCerrada(true);
+            }
+
+        } catch (err) {
+            console.error("Error al cargar:", err);
+            setErrorPage(err.message || "Error al cargar la subasta");
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => { cargar(); }, [id]);
-
-    // ── Suscripción a Ably ────────────────────────────────────────────────────
     useEffect(() => {
-        if (!id || !ABLY_KEY) return;
-
-        const client = new Ably.Realtime({ key: ABLY_KEY });
-        const channel = client.channels.get(`auction-${id}`);
-        ablyRef.current = client;
-        channelRef.current = channel;
-
-        // Evento: nueva puja
-        channel.subscribe("new-bid", (msg) => {
-            const d = msg.data;
-
-            // ¿El usuario actual fue superado?
-            setPujaMax(prev => {
-                if (prev && parseInt(prev.id_usuario) === USUARIO_ACTUAL_ID
-                    && parseInt(d.id_usuario) !== USUARIO_ACTUAL_ID) {
-                    setSuperado(true);
-                    clearTimeout(superadoTimer.current);
-                    superadoTimer.current = setTimeout(() => setSuperado(false), 5000);
-                }
-                return {
-                    monto: d.monto,
-                    usuario_nombre: d.usuario_nombre,
-                    id_usuario: d.id_usuario,
-                };
-            });
-
-            // Agregar al historial
-            setPujas(prev => [{
-                puja_id: Date.now(),
-                monto: d.monto,
-                usuario_pujador: d.usuario_nombre,
-                fecha_hora: d.fecha_hora,
-                id_usuario: d.id_usuario,
-            }, ...prev]);
-        });
-
-        // Evento: subasta cerrada
-        channel.subscribe("auction-closed", () => {
-            setSubasta(prev => prev ? { ...prev, estado: "Finalizada" } : prev);
-        });
-
-        return () => {
-            channel.unsubscribe();
-            client.close();
-        };
+        if (id) cargarDatos();
     }, [id]);
 
-    // ── Enviar puja ───────────────────────────────────────────────────────────
+    // ============== ACTUALIZACIÓN EN TIEMPO REAL CON ABLY ==============
+    useEffect(() => {
+        if (!id || !ABLY_KEY || !subasta) return;
+
+        try {
+            const client = new Ably.Realtime({ key: ABLY_KEY });
+            const channel = client.channels.get(`auction-${id}`);
+
+            // Escuchar nuevas pujas
+            channel.subscribe("new-bid", (msg) => {
+                const d = msg.data;
+
+                // Actualizar puja máxima y detectar si fue superado
+                setPujaMax((prev) => {
+                    // Verificar si el usuario actual fue superado
+                    if (
+                        prev &&
+                        parseInt(prev.id_usuario) === USUARIO_ACTUAL_ID &&
+                        parseInt(d.id_usuario) !== USUARIO_ACTUAL_ID
+                    ) {
+                        setSuperado(true);
+                        if (superadoTimer.current) clearTimeout(superadoTimer.current);
+                        superadoTimer.current = setTimeout(() => setSuperado(false), 5000);
+                    }
+
+                    return {
+                        monto: d.monto,
+                        usuario_nombre: d.usuario_nombre,
+                        id_usuario: d.id_usuario
+                    };
+                });
+
+                // Agregar a historial de pujas
+                setPujas((prev) => [
+                    {
+                        puja_id: Date.now(),
+                        monto: d.monto,
+                        usuario_pujador: d.usuario_nombre,
+                        fecha_hora: d.fecha_hora,
+                        id_usuario: d.id_usuario
+                    },
+                    ...prev
+                ]);
+            });
+
+            // Escuchar cierre de subasta
+            channel.subscribe("auction-closed", (msg) => {
+                const d = msg.data;
+                setSubastaCerrada(true);
+                setGanador({
+                    nombre: d.ganador_nombre,
+                    monto: d.monto_final
+                });
+                setSubasta((prev) => ({
+                    ...prev,
+                    estado: "Finalizada",
+                    ganador_id: d.ganador_id,
+                    ganador_nombre: d.ganador_nombre,
+                    monto_final: d.monto_final
+                }));
+            });
+
+            return () => {
+                channel.unsubscribe();
+                client.close();
+            };
+        } catch (err) {
+            console.error("Error Ably:", err);
+        }
+    }, [id, ABLY_KEY, !!subasta]);
+
+    // ============== CIERRE AUTOMÁTICO ==============
+    const cerrarSubastaAutomaticamente = async () => {
+        if (subastaCerrada || !subasta) return;
+
+        try {
+            const response = await axios.post(`${BASE_URL}/subasta/cerrar`, {
+                id_subasta: parseInt(id)
+            });
+
+            const resultado = response.data;
+
+            setSubastaCerrada(true);
+            setSubasta((prev) => ({
+                ...prev,
+                estado: "Finalizada",
+                ganador_id: resultado.ganador_id,
+                ganador_nombre: resultado.ganador_nombre,
+                monto_final: resultado.monto_final
+            }));
+
+            if (resultado.ganador_nombre) {
+                setGanador({
+                    nombre: resultado.ganador_nombre,
+                    monto: resultado.monto_final
+                });
+            }
+        } catch (err) {
+            console.error("Error al cerrar subasta:", err);
+        }
+    };
+
+    // ============== PUJAR ==============
     const handlePujar = async () => {
         setMsgError("");
         setMsgOk("");
-        const montoNum = parseFloat(monto);
-        if (!monto || isNaN(montoNum) || montoNum <= 0) {
-            setMsgError("Ingresa un monto válido.");
+
+        // Validar que no esté cerrada
+        if (subastaCerrada || tiempoFinalizado) {
+            setMsgError("Esta subasta ya ha sido finalizada");
             return;
         }
+
+        const montoNum = parseFloat(monto);
+        const montoActual = pujaMax
+            ? parseFloat(pujaMax.monto)
+            : parseFloat(subasta.precio_base);
+        const montoMinimoRequerido = montoActual + parseFloat(subasta.incremento_minimo);
+
+        if (!monto || isNaN(montoNum)) {
+            setMsgError("Ingresa un monto válido");
+            return;
+        }
+
+        if (montoNum < montoMinimoRequerido) {
+            setMsgError(`La puja mínima es ${formatMonto(montoMinimoRequerido)}`);
+            return;
+        }
+
         setEnviando(true);
         try {
             await axios.post(`${BASE_URL}/subasta/pujar`, {
                 id_subasta: parseInt(id),
                 monto: montoNum,
+                id_usuario: USUARIO_ACTUAL_ID
             });
-            setMsgOk("¡Puja registrada con éxito!");
+
+            setMsgOk("¡Puja enviada correctamente!");
             setMonto("");
         } catch (err) {
-            setMsgError(err.response?.data?.error ?? "Error al registrar la puja.");
+            setMsgError(
+                err.response?.data?.error || "Error al procesar puja"
+            );
         } finally {
             setEnviando(false);
         }
     };
 
-    // ── Render ────────────────────────────────────────────────────────────────
-    if (loading) return (
-        <div className="flex items-center justify-center min-h-screen bg-zinc-950">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
-        </div>
-    );
+    // ============== UI ==============
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-zinc-950">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+            </div>
+        );
+    }
 
-    if (errorPage) return (
-        <div className="flex items-center justify-center min-h-screen bg-zinc-950 text-red-400 text-center p-8">
-            {errorPage}
-        </div>
-    );
+    if (errorPage || !subasta) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 text-center p-6">
+                <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
+                <p className="text-zinc-400 mb-6">
+                    {errorPage || "No se pudo cargar la subasta"}
+                </p>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="bg-zinc-800 px-6 py-2 rounded-xl text-white hover:bg-zinc-700 transition-colors"
+                >
+                    Volver
+                </button>
+            </div>
+        );
+    }
 
-    if (!subasta) return null;
-
-    const estaActiva = subasta.estado?.toLowerCase() === "activa";
+    const estaActiva = !subastaCerrada && subasta.estado?.toLowerCase() === "activa";
     const esVendedor = parseInt(subasta.id_creador) === USUARIO_ACTUAL_ID;
-    const montoActual = pujaMax ? parseFloat(pujaMax.monto) : parseFloat(subasta.precio_base);
-    const montoMinimo = montoActual + parseFloat(subasta.incremento_minimo);
-    const imagenes = subasta.imagenes ?? [];
+    const precioReferencia = pujaMax
+        ? parseFloat(pujaMax.monto)
+        : parseFloat(subasta.precio_base);
+    const montoMinimo = precioReferencia + parseFloat(subasta.incremento_minimo);
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-white">
-
-            {/* ── Notificación: puja superada ───────────────────────────── */}
+        <div className="min-h-screen bg-zinc-950 text-white pb-10">
+            {/* Notificación de puja superada */}
             {superado && (
-                <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50
-                                bg-red-600 text-white px-6 py-3 rounded-2xl shadow-2xl
-                                flex items-center gap-3 animate-bounce">
+                <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <AlertTriangle className="w-5 h-5" />
                     <span className="font-semibold">¡Tu puja ha sido superada!</span>
                 </div>
             )}
 
-            {/* ── Header ───────────────────────────────────────────────── */}
+            {/* Header */}
             <div className="border-b border-zinc-800 px-6 py-4 flex items-center gap-4">
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors text-sm"
+                    className="text-zinc-400 hover:text-white transition-colors"
                 >
-                    <ChevronLeft className="w-4 h-4" /> Volver
+                    <ChevronLeft />
                 </button>
-                <h1 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Gavel className="w-5 h-5 text-blue-500" />
-                    {subasta.lego_nombre}
+                <h1 className="text-lg font-bold flex items-center gap-2">
+                    <Gavel className="w-5 h-5 text-blue-500" /> {subasta.lego_nombre}
                 </h1>
-                <span className={`ml-auto text-xs font-bold px-3 py-1 rounded-full ${estaActiva
-                        ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                        : "bg-zinc-700 text-zinc-400"
-                    }`}>
+                <span
+                    className={`ml-auto text-xs font-bold px-3 py-1 rounded-full ${estaActiva
+                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                            : "bg-red-500/20 text-red-400 border border-red-500/30"
+                        }`}
+                >
                     {subasta.estado}
                 </span>
             </div>
 
-            {/* ── Contenido principal ───────────────────────────────────── */}
+            {/* Contenido principal */}
             <div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                {/* ══ COLUMNA IZQUIERDA ══════════════════════════════════ */}
+                {/* Izquierda: carrusel + descripción */}
                 <div className="space-y-4">
+                    <ImageCarousel imagenes={subasta.imagenes} nombre={subasta.lego_nombre} />
 
-                    {/* Galería */}
-                    <div className="rounded-2xl overflow-hidden bg-zinc-900 aspect-video relative">
-                        {imagenes.length > 0 ? (
-                            <>
-                                <img
-                                    src={`${BASE_URL}${imagenes[imgIdx]}`}
-                                    alt={subasta.lego_nombre}
-                                    className="w-full h-full object-contain p-4 transition-all duration-300"
-                                />
-                                {imagenes.length > 1 && (
-                                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                                        {imagenes.map((_, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => setImgIdx(i)}
-                                                className={`w-2.5 h-2.5 rounded-full transition-all ${i === imgIdx ? "bg-blue-400 scale-125" : "bg-zinc-600"
-                                                    }`}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-zinc-600 text-sm">
-                                Sin imagen
-                            </div>
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                        <h2 className="text-xl font-bold mb-2">{subasta.lego_nombre}</h2>
+                        <p className="text-zinc-400 text-sm">{subasta.lego_descripcion}</p>
+                        {subasta.vendedor_nombre && (
+                            <p className="text-zinc-500 text-xs mt-3">
+                                Vendedor:{" "}
+                                <span className="text-zinc-300">
+                                    {subasta.vendedor_nombre}
+                                </span>
+                            </p>
                         )}
-                    </div>
-
-                    {/* Info del objeto */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
-                        <h2 className="text-xl font-bold text-white">{subasta.lego_nombre}</h2>
-                        <p className="text-zinc-400 text-sm leading-relaxed">{subasta.lego_descripcion}</p>
-                        <div className="flex items-center gap-2 text-sm pt-1">
-                            <User className="w-4 h-4 text-zinc-500" />
-                            <span className="text-zinc-500">Vendedor:</span>
-                            <span className="text-zinc-200 font-medium">{subasta.vendedor_nombre}</span>
-                        </div>
-                    </div>
-
-                    {/* Info de la subasta */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 grid grid-cols-2 gap-4">
-                        <div>
-                            <div className="flex items-center gap-1 text-xs text-zinc-500 uppercase tracking-wider mb-1">
-                                <Tag className="w-3 h-3" /> Precio base
-                            </div>
-                            <p className="text-lg font-semibold text-zinc-200">
-                                {formatMonto(subasta.precio_base)}
-                            </p>
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-1 text-xs text-zinc-500 uppercase tracking-wider mb-1">
-                                <TrendingUp className="w-3 h-3" /> Incremento mínimo
-                            </div>
-                            <p className="text-lg font-semibold text-zinc-200">
-                                {formatMonto(subasta.incremento_minimo)}
-                            </p>
-                        </div>
-                        <div className="col-span-2">
-                            <div className="flex items-center gap-1 text-xs text-zinc-500 uppercase tracking-wider mb-1">
-                                <Clock className="w-3 h-3" /> Tiempo restante
-                            </div>
-                            <p className={`text-3xl font-mono font-bold tabular-nums ${estaActiva ? "text-blue-400" : "text-zinc-500"
-                                }`}>
-                                {countdown}
-                            </p>
-                        </div>
                     </div>
                 </div>
 
-                {/* ══ COLUMNA DERECHA ════════════════════════════════════ */}
+                {/* Derecha: precio + pujas */}
                 <div className="space-y-4">
-
-                    {/* Puja líder */}
-                    <div className="bg-zinc-900 border border-blue-500/30 rounded-2xl p-5">
-                        <div className="flex items-center gap-2 text-xs text-blue-400/70 uppercase tracking-wider mb-3">
-                            <Trophy className="w-3.5 h-3.5" /> Puja más alta
-                        </div>
-                        {pujaMax ? (
-                            <>
-                                <p className="text-4xl font-black text-blue-400 tabular-nums">
-                                    {formatMonto(pujaMax.monto)}
-                                </p>
-                                <p className="text-sm text-zinc-400 mt-2 flex items-center gap-2">
-                                    por
-                                    <span className="text-zinc-200 font-medium">{pujaMax.usuario_nombre}</span>
-                                    {parseInt(pujaMax.id_usuario) === USUARIO_ACTUAL_ID && (
-                                        <span className="text-xs bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full">
-                                            Tú lideras 🏆
-                                        </span>
-                                    )}
-                                </p>
-                            </>
-                        ) : (
-                            <p className="text-zinc-500 text-sm">Sin pujas aún. ¡Sé el primero!</p>
-                        )}
-                    </div>
-
-                    {/* Formulario de puja */}
-                    {estaActiva && !esVendedor && (
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
-                            <p className="text-xs text-zinc-500 uppercase tracking-wider">
-                                Mínimo a ofrecer:{" "}
-                                <span className="text-blue-400 font-semibold">
-                                    {formatMonto(montoMinimo)}
-                                </span>
+                    {/* Precio actual o ganador */}
+                    {subastaCerrada && ganador ? (
+                        <GanadorAnnouncement
+                            ganador={ganador.nombre}
+                            monto={ganador.monto}
+                        />
+                    ) : (
+                        <div className="bg-zinc-900 border border-blue-500/30 rounded-2xl p-6 text-center shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                            <div className="text-xs text-blue-400 uppercase mb-1 tracking-widest font-bold">
+                                Precio Actual
+                            </div>
+                            <p className="text-5xl font-black text-blue-400">
+                                {formatMonto(precioReferencia)}
                             </p>
+                            {pujaMax && (
+                                <p className="text-zinc-500 text-xs mt-2">
+                                    Mejor oferta de{" "}
+                                    <span className="text-zinc-300">
+                                        {pujaMax.usuario_nombre}
+                                    </span>
+                                </p>
+                            )}
+                        </div>
+                    )}
 
+                    {/* Controles y countdown */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2 text-sm text-zinc-500">
+                                <Clock className="w-4 h-4" />
+                                Termina en:{" "}
+                                <span
+                                    className={`font-mono font-bold ${tiempoFinalizado ? "text-red-400" : "text-white"
+                                        }`}
+                                >
+                                    {countdown}
+                                </span>
+                            </div>
+                            <div className="text-sm text-zinc-500">
+                                Incremento:{" "}
+                                <span className="text-white font-bold">
+                                    {formatMonto(subasta.incremento_minimo)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {estaActiva && !esVendedor && (
                             <div className="flex gap-2">
                                 <input
                                     type="number"
                                     value={monto}
-                                    onChange={e => setMonto(e.target.value)}
-                                    placeholder={`Mínimo ${montoMinimo}`}
-                                    min={montoMinimo}
-                                    step={parseFloat(subasta.incremento_minimo)}
-                                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5
-                                               text-white placeholder-zinc-600
-                                               focus:outline-none focus:border-blue-500 transition-colors"
+                                    onChange={(e) => setMonto(e.target.value)}
+                                    placeholder={`Mínimo ${formatMonto(montoMinimo)}`}
+                                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all"
                                 />
                                 <button
                                     onClick={handlePujar}
                                     disabled={enviando}
-                                    className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50
-                                               text-white font-bold px-5 py-2.5 rounded-xl
-                                               transition-colors flex items-center gap-2"
+                                    className="bg-blue-600 hover:bg-blue-500 px-6 rounded-xl font-bold transition-all disabled:opacity-50"
                                 >
-                                    <Gavel className="w-4 h-4" />
                                     {enviando ? "..." : "Pujar"}
                                 </button>
                             </div>
+                        )}
 
-                            {msgError && (
-                                <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
-                                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                                    {msgError}
-                                </div>
-                            )}
-                            {msgOk && (
-                                <div className="flex items-center gap-2 text-green-400 text-sm bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2">
-                                    <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                                    {msgOk}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        {esVendedor && estaActiva && (
+                            <p className="text-zinc-500 text-xs text-center">
+                                Eres el vendedor de esta subasta
+                            </p>
+                        )}
 
-                    {/* Mensaje si es vendedor */}
-                    {esVendedor && estaActiva && (
-                        <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 text-zinc-400 text-sm text-center">
-                            Eres el vendedor de esta subasta — no puedes pujar.
-                        </div>
-                    )}
+                        {!estaActiva && (
+                            <p className="text-zinc-500 text-xs text-center">
+                                Esta subasta ha finalizado
+                            </p>
+                        )}
 
-                    {/* Mensaje si está finalizada */}
-                    {!estaActiva && (
-                        <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 text-center space-y-1">
-                            <p className="text-zinc-400 text-sm">Esta subasta ha finalizado.</p>
-                            {pujaMax && (
-                                <p className="text-green-400 font-semibold text-sm flex items-center justify-center gap-2">
-                                    <Trophy className="w-4 h-4" />
-                                    Ganador: {pujaMax.usuario_nombre} — {formatMonto(pujaMax.monto)}
-                                </p>
-                            )}
-                            {!pujaMax && (
-                                <p className="text-zinc-500 text-sm">Finalizada sin ofertas.</p>
-                            )}
-                        </div>
-                    )}
+                        {msgError && (
+                            <p className="text-red-400 text-xs font-medium flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" /> {msgError}
+                            </p>
+                        )}
+
+                        {msgOk && (
+                            <p className="text-green-400 text-xs font-medium flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" /> {msgOk}
+                            </p>
+                        )}
+                    </div>
 
                     {/* Historial de pujas */}
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-3">
-                            <History className="w-4 h-4" /> Historial de pujas
+                        <h3 className="text-xs font-bold text-zinc-500 uppercase mb-4 flex items-center gap-2">
+                            <History className="w-3 h-3" /> Historial de Pujas
                         </h3>
-
-                        {pujas.length === 0 ? (
-                            <p className="text-zinc-600 text-sm text-center py-4">
-                                Sin pujas registradas
-                            </p>
-                        ) : (
-                            <ul className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                                {pujas.map((p, i) => (
-                                    <li
-                                        key={p.puja_id ?? i}
-                                        className={`flex items-center justify-between py-2.5 px-3 rounded-xl ${i === 0
+                        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                            {pujas.length > 0 ? (
+                                pujas.map((p, i) => (
+                                    <div
+                                        key={p.puja_id || i}
+                                        className={`flex justify-between items-center text-sm p-3 rounded-xl ${i === 0
                                                 ? "bg-blue-500/10 border border-blue-500/20"
-                                                : "bg-zinc-800/60"
+                                                : "bg-zinc-800/30"
                                             }`}
                                     >
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-medium text-zinc-200">
-                                                {p.usuario_pujador}
-                                                {i === 0 && (
-                                                    <span className="ml-1 text-xs text-blue-400">👑</span>
-                                                )}
-                                            </span>
-                                            <span className="text-xs text-zinc-500">
-                                                {formatFecha(p.fecha_hora)}
-                                            </span>
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className={`w-2 h-2 rounded-full ${i === 0
+                                                        ? "bg-blue-500 animate-pulse"
+                                                        : "bg-zinc-600"
+                                                    }`}
+                                            />
+                                            <span>{p.usuario_pujador}</span>
                                         </div>
-                                        <span className={`font-bold tabular-nums text-sm ${i === 0 ? "text-blue-400" : "text-zinc-300"
-                                            }`}>
+                                        <span
+                                            className={`font-bold ${i === 0 ? "text-blue-400" : "text-white"
+                                                }`}
+                                        >
                                             {formatMonto(p.monto)}
                                         </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-center text-zinc-600 text-sm py-4">
+                                    No hay pujas todavía. ¡Sé el primero!
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
