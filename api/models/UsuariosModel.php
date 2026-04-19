@@ -80,7 +80,7 @@ class UsuariosModel
                     FROM usuarios u
                     inner join roles r on u.id_rol=r.id
                     inner join estados_usuario es on u.id_estado=es.id
-                    ORDER BY u.id desc";
+                    ORDER BY u.id_rol asc";
 
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         return $vResultado;

@@ -16,7 +16,6 @@ export function DetailLego() {
 
     const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-    // Función de seguridad para extraer texto de objetos y evitar el error "Objects are not valid"
     const formatValue = (value, property = 'nombre') => {
         if (!value) return "";
         if (typeof value === 'object') return value[property] || "";
@@ -27,12 +26,21 @@ export function DetailLego() {
         const fetchData = async () => {
             try {
                 const response = await LegoService.getByDetalle(id);
-                // Extraemos el objeto de la respuesta
                 const item = response.data.data?.[0] || response.data.data || response.data;
+
+                // Parsear historial_pujas
+                if (item.historial_pujas) {
+                    const pujas = item.historial_pujas.split(';;').map(puja => {
+                        const [usuario, monto, fecha_hora] = puja.split('|');
+                        return { usuario, monto, fecha_hora };
+                    });
+                    item.historial_pujas = pujas;
+                } else {
+                    item.historial_pujas = [];
+                }
 
                 setData(item);
 
-                // Procesamos las imágenes relacionadas
                 if (item.imagenes_urls) {
                     const urls = item.imagenes_urls.split(',');
                     setImagesList(urls);
@@ -67,8 +75,7 @@ export function DetailLego() {
                     <div className="grid grid-cols-4 gap-3">
                         {imagesList.map((url, index) => (
                             <div key={index} onClick={() => setMainImage(url)}
-                                className={`cursor-pointer bg-white p-2 rounded-lg border-2 transition-all aspect-square flex items-center justify-center ${mainImage === url ? 'border-blue-500 scale-95' : 'border-transparent'
-                                    }`}>
+                                className={`cursor-pointer bg-white p-2 rounded-lg border-2 transition-all aspect-square flex items-center justify-center ${mainImage === url ? 'border-blue-500 scale-95' : 'border-transparent'}`}>
                                 <img src={`${BASE_URL}${url}`} className="max-h-full object-contain" alt="Miniatura" />
                             </div>
                         ))}
@@ -117,13 +124,14 @@ export function DetailLego() {
                             <p className="text-zinc-300 text-sm">{formatValue(lego.descripcion)}</p>
                         </div>
                     </div>
-                    {/* SECCIÓN DE HISTORIAL DE SUBASTAS */}
+
+                    {/* HISTORIAL DE PUJAS */}
                     <div className="mt-10 space-y-4">
                         <div className="flex items-center justify-between border-b border-zinc-700 pb-2">
                             <h3 className="font-bold uppercase text-sm text-zinc-400">
-                                Historial de subastas donde ha participado
+                                Historial de pujas
                             </h3>
-                            <button 
+                            <button
                                 onClick={() => setOrdenAscendente(!ordenAscendente)}
                                 className="flex items-center gap-2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-2 py-1 rounded"
                             >
@@ -135,34 +143,32 @@ export function DetailLego() {
                             </button>
                         </div>
 
-                        {lego.historial_subastas && lego.historial_subastas.length > 0 ? (
+                        {lego.historial_pujas && lego.historial_pujas.length > 0 ? (
                             <div className="grid gap-4">
-                                {lego.historial_subastas
+                                {lego.historial_pujas
                                     .slice()
                                     .sort((a, b) => {
-                                        const fechaA = new Date(a.fecha_cierre);
-                                        const fechaB = new Date(b.fecha_cierre);
-                                        return ordenAscendente ? fechaA - fechaB : fechaB - fechaA;
+                                        return ordenAscendente
+                                            ? new Date(a.fecha_hora) - new Date(b.fecha_hora)
+                                            : new Date(b.fecha_hora) - new Date(a.fecha_hora);
                                     })
-                                    .map((subasta) => (
-                                        <div key={subasta.subasta_id} className="bg-zinc-900/30 border border-zinc-800 p-4 rounded-lg flex justify-between items-center">
+                                    .map((puja, index) => (
+                                        <div key={index} className="bg-zinc-900/30 border border-zinc-800 p-4 rounded-lg flex justify-between items-center">
                                             <div>
-                                                <span className="text-blue-500 font-mono text-xs">ID: #{subasta.subasta_id}</span>
-                                                <div className="flex gap-4 mt-1 text-sm text-zinc-300">
-                                                    <span><strong className="text-zinc-500">Inicio:</strong> {subasta.fecha_inicio}</span>
-                                                    <span><strong className="text-zinc-500">Cierre:</strong> {subasta.fecha_cierre}</span>
-                                                </div>
+                                                <span className="text-blue-400 font-semibold">{puja.usuario}</span>
+                                                <div className="text-sm text-zinc-400 mt-1">{puja.fecha_hora}</div>
                                             </div>
-                                            <Badge variant="outline" className="border-blue-500 text-blue-400">
-                                                {subasta.estado_subasta}
+                                            <Badge variant="outline" className="border-green-500 text-green-400 text-base font-bold">
+                                                ${Number(puja.monto).toLocaleString()}
                                             </Badge>
                                         </div>
                                     ))}
                             </div>
                         ) : (
-                            <p className="text-zinc-500 italic text-sm">Este objeto aún no ha participado en ninguna subasta.</p>
+                            <p className="text-zinc-500 italic text-sm">Este objeto aún no tiene pujas.</p>
                         )}
                     </div>
+
                     <Button onClick={() => navigate(-1)} variant="outline" className="text-white border-zinc-700 hover:bg-zinc-800 mt-4">
                         <ArrowLeft className="mr-2 w-4 h-4" /> Volver al catálogo
                     </Button>

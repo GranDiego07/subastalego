@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -19,32 +20,58 @@ const schema = yup.object({
 
 export default function Register() {
     const navigate = useNavigate();
+    const [open, setOpen] = useState(false);
+    const [rolId, setRolId] = useState(1);
+
+    const options = [
+        { value: 1, label: "Comprador" },
+        { value: 2, label: "Vendedor" },
+    ];
 
     const {
         register,
         handleSubmit,
+        setValue,
+        reset,
         formState: { errors, isSubmitting },
     } = useForm({
-        // Valores iniciales
         defaultValues: {
             name: '',
             email: '',
             password: '',
-            rol_id: '',
+            rol_id: 1,
         },
         resolver: yupResolver(schema)
     });
 
     const onSubmit = async (data) => {
         try {
-            const response = await UsuariosService.create(data);
+            const payload = {
+                nombre_completo: data.name,
+                correo: data.email,
+                contrasena: data.password,
+                id_rol: Number(rolId),
+                id_estado: '1',
+                fecha_registro: new Date().toISOString().split('T')[0],
+            };
+            console.log("Datos enviados:", payload);
+            const response = await UsuariosService.create(payload);
             if (response?.success) {
                 toast.success("Usuario creado correctamente");
+                reset(),
+                    setRolId(1),
+                    setValue("rol_id", 1)
                 navigate("/user/login");
             } else {
-                toast.error("No se pudo crear el usuario");
+                if (response?.message?.includes("Duplicate entry")) {
+                    toast.error("Este correo ya está registrado");
+                } else {
+                    toast.error("No se pudo crear el usuario");
+
+                }
             }
-        } catch (error) {
+        }
+        catch (error) {
             toast.error("Error al crear usuario");
             console.error(error);
         }
@@ -81,18 +108,42 @@ export default function Register() {
                             />
                             {errors.email && <p className="text-red-300 text-sm mt-1">{errors.email.message}</p>}
                         </div>
+
                         <div>
                             <Label htmlFor="rol_id">Tipo de cuenta</Label>
-                            <select
-                                id="rol_id"
-                                {...register("rol_id", { valueAsNumber: true })}
-                                className="w-full rounded-md bg-white/20 border border-white/30 text-white p-2"
-                            >
-                                <option value={1}>Comprador</option>
-                                <option value={2}>Vendedor</option>
-                            </select>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setOpen(!open)}
+                                    className="w-full rounded-md bg-white/20 border border-white/30 text-white p-2 text-left flex justify-between items-center"
+                                >
+                                    {options.find(o => o.value === rolId)?.label}
+                                    <span>▾</span>
+                                </button>
+
+                                {open && (
+                                    <ul className="absolute z-10 w-full mt-1 bg-black border border-white/30 rounded-md overflow-hidden">
+                                        {options.map(option => (
+                                            <li
+                                                key={option.value}
+                                                onClick={() => {
+                                                    setRolId(option.value);
+                                                    setValue("rol_id", option.value);
+                                                    setOpen(false);
+                                                }}
+                                                className="px-3 py-2 text-white hover:bg-white/20 cursor-pointer"
+                                            >
+                                                {option.label}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                <input type="hidden" {...register("rol_id")} value={rolId} />
+                            </div>
                             {errors.rol_id && <p className="text-red-300 text-sm mt-1">{errors.rol_id.message}</p>}
                         </div>
+
                         <div>
                             <Label htmlFor="password">Contraseña</Label>
                             <Input
