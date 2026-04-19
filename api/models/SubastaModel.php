@@ -31,16 +31,18 @@ class SubastaModel
     }
     public function getSubastasActivas()
     {
-        $vSql = "SELECT s.id AS subasta_id, l.nombre AS Lego,(SELECT url FROM imagenes WHERE id_lego = l.id limit 1) AS imagen,
-                s.fecha_cierre,s.precio_base as Precio, s.incremento_minimo,
+        $vSql = "SELECT s.id AS subasta_id, l.nombre AS Lego,
+                (SELECT url FROM imagenes WHERE id_lego = l.id LIMIT 1) AS imagen,
+                s.fecha_cierre,
+                (SELECT MAX(monto) FROM pujas WHERE id_subasta = s.id) AS UltimaPuja,
+                s.incremento_minimo,
                 (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas,
                 es.nombre AS estado_final
-                FROM subastas s
-                INNER JOIN lego l ON s.id_lego = l.id
-                INNER JOIN estados_subasta es ON s.id_estado = es.id
-                where es.id=1
-                ORDER BY s.fecha_cierre DESC;";
-
+                    FROM subastas s
+                    INNER JOIN lego l ON s.id_lego = l.id
+                    INNER JOIN estados_subasta es ON s.id_estado = es.id
+                    WHERE es.id = 1
+                    ORDER BY s.fecha_cierre DESC;";
         $vResultado = $this->enlace->ExecuteSQL($vSql);
         return $vResultado;
     }

@@ -219,13 +219,14 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
     public function pujar()
     {
         try {
-            $request   = new Request();
+           $request   = new Request();
             $response  = new Response();
             $input     = $request->getJSON();
             $Subasta   = new SubastaModel();
 
             $id_subasta = intval($input->id_subasta ?? 0);
             $monto      = floatval($input->monto     ?? 0);
+            $id_usuario = intval($input->id_usuario  ?? $this->USUARIO_ACTUAL_ID);
 
             if ($id_subasta <= 0 || $monto <= 0) {
                 $response->toJSON(["error" => "Datos inválidos"]);
@@ -243,7 +244,7 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
                 return;
             }
 
-            if ((int)$subasta->id_creador === $this->USUARIO_ACTUAL_ID) {
+            if ((int)$subasta->id_creador === $id_usuario) {
                 $response->toJSON(["error" => "El vendedor no puede pujar en su propia subasta"]);
                 return;
             }
@@ -262,24 +263,19 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
                 return;
             }
 
-            // ── 1. Registrar en Base de Datos ─────────────────────────────
-            $Subasta->registrarPuja($id_subasta, $this->USUARIO_ACTUAL_ID, $monto);
+            $Subasta->registrarPuja($id_subasta, $id_usuario, $monto);
 
-            // ── 2. Obtener nombre para Ably (Sin usar Response interno) ───
-            // Corregimos la llamada al modelo para obtener el string directamente
-            $nombreUsuarioData = $Subasta->getNombreUsuario($this->USUARIO_ACTUAL_ID);
-            $nombreUsuario = $nombreUsuarioData->nombre ?? "Usuario " . $this->USUARIO_ACTUAL_ID;
+            $nombreUsuarioData = $Subasta->getNombreUsuario($id_usuario);
+            $nombreUsuario = $nombreUsuarioData->nombre ?? "Usuario " . $id_usuario;
 
-            // ── 3. Publicar en Ably para TIEMPO REAL ──────────────────────
             $this->publicarAbly("auction-{$id_subasta}", "new-bid", [
                 "id_subasta"     => $id_subasta,
                 "monto"          => $monto,
-                "id_usuario"     => $this->USUARIO_ACTUAL_ID,
+                "id_usuario"     => $id_usuario,
                 "usuario_nombre" => $nombreUsuario,
                 "fecha_hora"     => date("Y-m-d H:i:s"),
             ]);
 
-            // ── 4. Respuesta final al usuario que pujó ────────────────────
             $response->toJSON([
                 "success" => true,
                 "monto"   => $monto,

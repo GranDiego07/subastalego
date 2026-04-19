@@ -67,7 +67,7 @@ export default function Header() {
     },
     {
       title: "Subastas",
-      href: "subasta",
+      href: "lego/subasta",
       icon: <KeyboardMusic className="h-4 w-4" />,
     }
   ];
@@ -76,7 +76,7 @@ export default function Header() {
     { title: "Login", href: "login", icon: <LogIn className="h-4 w-4" /> },
     {
       title: "Registrarse",
-      href: "/usuario/create",
+      href: "/create",
       icon: <UserPlus className="h-4 w-4" />,
     },
     {

@@ -17,7 +17,6 @@ import { DetailUsuario } from './components/Usuarios/DetailUsuario'
 import { CreateUsuario } from './components/Usuarios/CreateUsuario'
 import { ListSubastasActi } from './components/Subastas/ListSubastasActi'
 import { ListSubastasDesa } from './components/Subastas/ListSubastasDesa'
-import { DetailSubasta } from './components/Subastas/DetailSubasta'
 import { CreateSubasta } from './components/Subastas/CreateSubasta'
 import TableSubasta from './components/Subastas/TableSubastas'
 import { UpdateSubasta } from './components/Subastas/UpdateSubasta'
@@ -26,7 +25,7 @@ import { PublicarSubasta } from './components/Subastas/PublicarSubasta'
 import Login from './components/Usuarios/Login'
 import Register from './components/Usuarios/Register'
 import SubastaDetalle from './components/Subastas/SubastaDetalle'
-import MisPagos from "./components/Pujas/MisPagos";
+
 
 
 const rutas = createBrowserRouter([
@@ -45,16 +44,15 @@ const rutas = createBrowserRouter([
       { path: "usuario/update/:id", element: <UpdateUsuarios /> },
       { path: "usuario/detail/:id", element: <DetailUsuario /> },
       { path: "login", element: <Login /> },
-      { path: 'usuario/create', element: <Register /> },
+      { path: 'create', element: <Register /> },
       { path: "pujas", element: <TablePujas /> },
-      { path: "subasta", element: <TableSubasta /> },
+      { path: "lego/subasta", element: <TableSubasta /> },
       { path: "subasta/activas", element: <ListSubastasActi /> },
       { path: "subasta/noactivas", element: <ListSubastasDesa /> },
       { path: "subasta/detalle/:id", element: <SubastaDetalle /> },
-      { path: "subasta/create", element: <CreateSubasta /> },
-      { path: "subasta/update/:id", element: <UpdateSubasta /> },
-      { path: "subasta/publicar/:id", element: <PublicarSubasta /> },
-      { path: "/mis-pagos", element: <MisPagos />},
+      { path: "lego/subasta/create", element: <CreateSubasta /> },
+      { path: "lego/subasta/update/:id", element: <UpdateSubasta /> },
+      { path: "lego/subasta/publicar/:id", element: <PublicarSubasta /> },
       { path: "*", element: <PageNotFound /> },  // ← siempre al final
     ]
   }

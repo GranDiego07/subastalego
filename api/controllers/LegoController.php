@@ -68,6 +68,21 @@ class lego
             handleException($e);
         }
     }
+    public function legosByVendedor($idVendedor)
+    {
+        try {
+            $response = new Response();
+            //Instancia del modelo
+            $lego = new LegoModel();
+            //Acción del modelo a ejecutar
+            $result = $lego->legobyVendedor($idVendedor);
+            //Dar respuesta
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            $response->toJSON($result);
+            handleException($e);
+        }
+    }
     public function legosByDetalle($idVendedor)
     {
         try {

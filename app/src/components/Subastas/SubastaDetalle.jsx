@@ -7,7 +7,6 @@ import {
     History, CheckCircle, ChevronRight, Trophy
 } from "lucide-react";
 
-const USUARIO_ACTUAL_ID = 1;
 const BASE_URL = import.meta.env.VITE_BASE_URL ?? "";
 const ABLY_KEY = import.meta.env.VITE_ABLY_KEY ?? "";
 
@@ -15,7 +14,6 @@ function formatMonto(n) {
     return Number(n || 0).toLocaleString("es-CR", { style: "currency", currency: "CRC" });
 }
 
-// Hook para countdown con sincronización de cierre
 function useCountdown(fechaCierre, onFinalizado) {
     const [texto, setTexto] = useState("--:--:--");
     const [finalizada, setFinalizada] = useState(false);
@@ -43,14 +41,13 @@ function useCountdown(fechaCierre, onFinalizado) {
         };
 
         tick();
-        const id = setInterval(tick, 1000);
-        return () => clearInterval(id);
+        const interval = setInterval(tick, 1000);
+        return () => clearInterval(interval);
     }, [fechaCierre, onFinalizado]);
 
     return { texto, finalizada };
 }
 
-// Carrusel con miniaturas
 function ImageCarousel({ imagenes, nombre }) {
     const [idx, setIdx] = useState(0);
 
@@ -79,16 +76,10 @@ function ImageCarousel({ imagenes, nombre }) {
                 />
                 {imagenes.length > 1 && (
                     <>
-                        <button
-                            onClick={prev}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
+                        <button onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <ChevronLeft className="w-5 h-5 text-white" />
                         </button>
-                        <button
-                            onClick={next}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
+                        <button onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <ChevronRight className="w-5 h-5 text-white" />
                         </button>
                         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
@@ -104,18 +95,13 @@ function ImageCarousel({ imagenes, nombre }) {
                         <button
                             key={i}
                             onClick={() => setIdx(i)}
-                            className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === idx
-                                    ? "border-blue-500"
-                                    : "border-zinc-700 hover:border-zinc-500"
-                                }`}
+                            className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === idx ? "border-blue-500" : "border-zinc-700 hover:border-zinc-500"}`}
                         >
                             <img
                                 src={toSrc(img)}
                                 alt={`miniatura ${i + 1}`}
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.src = "https://via.placeholder.com/64?text=?";
-                                }}
+                                onError={(e) => { e.target.src = "https://via.placeholder.com/64?text=?"; }}
                             />
                         </button>
                     ))}
@@ -125,7 +111,6 @@ function ImageCarousel({ imagenes, nombre }) {
     );
 }
 
-// Componente para mostrar ganador
 function GanadorAnnouncement({ ganador, monto }) {
     return (
         <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/50 rounded-2xl p-6 text-center">
@@ -146,6 +131,11 @@ export default function SubastaDetalle() {
     const { id } = useParams();
     const navigate = useNavigate();
 
+    // Leer uid y nombre directo de la URL (para pruebas de dos usuarios)
+    const urlParams = new URLSearchParams(window.location.search);
+    const testUserId = urlParams.get("uid") ? parseInt(urlParams.get("uid")) : 1;
+    const testNombre = urlParams.get("nombre") || "Diego";
+
     const [subasta, setSubasta] = useState(null);
     const [pujas, setPujas] = useState([]);
     const [pujaMax, setPujaMax] = useState(null);
@@ -156,6 +146,11 @@ export default function SubastaDetalle() {
     const [enviando, setEnviando] = useState(false);
     const [msgError, setMsgError] = useState("");
     const [msgOk, setMsgOk] = useState("");
+    const [nombreUsuarioSesion, setNombreUsuarioSesion] = useState("");
+    const [usuarioActual, setUsuarioActual] = useState({ id: null, rol: null });
+
+    // *** REF clave: siempre tiene el id actualizado dentro de callbacks de Ably ***
+    const usuarioActualRef = useRef({ id: null });
 
     const [superado, setSuperado] = useState(false);
     const superadoTimer = useRef(null);
@@ -164,32 +159,37 @@ export default function SubastaDetalle() {
     const [ganador, setGanador] = useState(null);
 
     const countdownData = useCountdown(subasta?.fecha_cierre, () => {
-        // Cuando el countdown llega a 0, marcar subasta como cerrada
         cerrarSubastaAutomaticamente();
     });
 
     const { texto: countdown, finalizada: tiempoFinalizado } = countdownData;
 
-    // ============== CARGA INICIAL ==============
     const cargarDatos = async () => {
         try {
             setLoading(true);
             setErrorPage("");
 
-            const response = await axios.get(`${BASE_URL}/subasta/getParaInterfaz`, {
-                params: { id }
-            });
+            const response = await axios.get(`${BASE_URL}/subasta/getParaInterfaz`, { params: { id } });
 
             const res = response.data;
-
-            // ✅ ESTRUCTURA REAL: { data: { subasta: {...}, pujas: [...], puja_maxima: {...} } }
             const item = res?.data?.subasta;
             const listaPujas = Array.isArray(res?.data?.pujas) ? res.data.pujas : [];
             const pujaMaxAPI = res?.data?.puja_maxima || null;
 
             if (!item) throw new Error("No se encontraron datos de la subasta");
 
-            // Verificar si la subasta debe estar cerrada
+            // Priorizar uid de la URL, si no usar el del backend
+            const userId = testUserId ?? res?.data?.usuario_actual_id ?? null;
+            const userName = testNombre ?? res?.data?.usuario_actual_nombre ?? "Usuario";
+
+            setNombreUsuarioSesion(userName);
+            setUsuarioActual({ id: userId, rol: res?.data?.usuario_actual_rol });
+
+            // Actualizar el ref también
+            usuarioActualRef.current = { id: userId };
+
+            console.log("✅ Usuario cargado:", { id: userId, nombre: userName });
+
             const ahora = Date.now();
             const fechaCierre = new Date(item.fecha_cierre).getTime();
             const debeCerrada = ahora > fechaCierre;
@@ -214,7 +214,6 @@ export default function SubastaDetalle() {
             setSubasta(subastaNormalizada);
             setPujas(listaPujas);
 
-            // Establecer puja máxima desde la API o la primera de la lista
             if (pujaMaxAPI) {
                 setPujaMax({
                     monto: parseFloat(pujaMaxAPI.monto),
@@ -229,17 +228,11 @@ export default function SubastaDetalle() {
                 });
             }
 
-            // Si ya tiene ganador registrado, mostrar
             if (item.ganador_nombre) {
-                setGanador({
-                    nombre: item.ganador_nombre,
-                    monto: item.monto_final
-                });
+                setGanador({ nombre: item.ganador_nombre, monto: item.monto_final });
             }
 
-            if (debeCerrada) {
-                setSubastaCerrada(true);
-            }
+            if (debeCerrada) setSubastaCerrada(true);
 
         } catch (err) {
             console.error("Error al cargar:", err);
@@ -253,124 +246,88 @@ export default function SubastaDetalle() {
         if (id) cargarDatos();
     }, [id]);
 
-    // ============== ACTUALIZACIÓN EN TIEMPO REAL CON ABLY ==============
     useEffect(() => {
         if (!id || !ABLY_KEY || !subasta) return;
 
-        try {
-            const client = new Ably.Realtime({ key: ABLY_KEY });
-            const channel = client.channels.get(`auction-${id}`);
+        const client = new Ably.Realtime({ key: ABLY_KEY });
+        const channel = client.channels.get(`auction-${id}`);
 
-            // Escuchar nuevas pujas
-            channel.subscribe("new-bid", (msg) => {
-                const d = msg.data;
+        channel.subscribe("new-bid", (msg) => {
+            const d = msg.data;
 
-                // Actualizar puja máxima y detectar si fue superado
-                setPujaMax((prev) => {
-                    // Verificar si el usuario actual fue superado
-                    if (
-                        prev &&
-                        parseInt(prev.id_usuario) === USUARIO_ACTUAL_ID &&
-                        parseInt(d.id_usuario) !== USUARIO_ACTUAL_ID
-                    ) {
-                        setSuperado(true);
-                        if (superadoTimer.current) clearTimeout(superadoTimer.current);
-                        superadoTimer.current = setTimeout(() => setSuperado(false), 5000);
-                    }
+            // Usar el REF en lugar del state para evitar closure stale
+            const miId = usuarioActualRef.current.id;
 
-                    return {
-                        monto: d.monto,
-                        usuario_nombre: d.usuario_nombre,
-                        id_usuario: d.id_usuario
-                    };
-                });
+            console.log("📨 Nueva puja recibida:", d);
+            console.log("👤 Mi ID (ref):", miId);
 
-                // Agregar a historial de pujas
-                setPujas((prev) => [
-                    {
-                        puja_id: Date.now(),
-                        monto: d.monto,
-                        usuario_pujador: d.usuario_nombre,
-                        fecha_hora: d.fecha_hora,
-                        id_usuario: d.id_usuario
-                    },
-                    ...prev
-                ]);
+            setPujaMax((prev) => {
+                if (
+                    prev &&
+                    parseInt(prev.id_usuario) === miId &&
+                    parseInt(d.id_usuario) !== miId
+                ) {
+                    console.log("🔔 ¡Superado!");
+                    setSuperado(true);
+                    if (superadoTimer.current) clearTimeout(superadoTimer.current);
+                    superadoTimer.current = setTimeout(() => setSuperado(false), 5000);
+                }
+                return { monto: d.monto, usuario_nombre: d.usuario_nombre, id_usuario: d.id_usuario };
             });
 
-            // Escuchar cierre de subasta
-            channel.subscribe("auction-closed", (msg) => {
-                const d = msg.data;
-                setSubastaCerrada(true);
-                setGanador({
-                    nombre: d.ganador_nombre,
-                    monto: d.monto_final
-                });
-                setSubasta((prev) => ({
-                    ...prev,
-                    estado: "Finalizada",
-                    ganador_id: d.ganador_id,
-                    ganador_nombre: d.ganador_nombre,
-                    monto_final: d.monto_final
-                }));
-            });
+            setPujas((prev) => [
+                {
+                    puja_id: Date.now(),
+                    monto: d.monto,
+                    usuario_pujador: d.usuario_nombre,
+                    fecha_hora: d.fecha_hora,
+                    id_usuario: d.id_usuario
+                },
+                ...prev
+            ]);
+        });
 
-            return () => {
-                channel.unsubscribe();
-                client.close();
-            };
-        } catch (err) {
-            console.error("Error Ably:", err);
-        }
-    }, [id, ABLY_KEY, !!subasta]);
-
-    // ============== CIERRE AUTOMÁTICO ==============
-    const cerrarSubastaAutomaticamente = async () => {
-        if (subastaCerrada || !subasta) return;
-
-        try {
-            const response = await axios.post(`${BASE_URL}/subasta/cerrar`, {
-                id_subasta: parseInt(id)
-            });
-
-            const resultado = response.data;
-
+        channel.subscribe("auction-closed", (msg) => {
+            const d = msg.data;
             setSubastaCerrada(true);
+            setGanador({ nombre: d.ganador_nombre, monto: d.monto_final });
             setSubasta((prev) => ({
                 ...prev,
                 estado: "Finalizada",
-                ganador_id: resultado.ganador_id,
-                ganador_nombre: resultado.ganador_nombre,
-                monto_final: resultado.monto_final
+                ganador_id: d.ganador_id,
+                ganador_nombre: d.ganador_nombre,
+                monto_final: d.monto_final
             }));
+        });
 
+        return () => { channel.unsubscribe(); client.close(); };
+    }, [id, ABLY_KEY, !!subasta]);
+
+    const cerrarSubastaAutomaticamente = async () => {
+        if (subastaCerrada || !subasta) return;
+        try {
+            const response = await axios.post(`${BASE_URL}/subasta/cerrar`, { id_subasta: parseInt(id) });
+            const resultado = response.data;
+            setSubastaCerrada(true);
             if (resultado.ganador_nombre) {
-                setGanador({
-                    nombre: resultado.ganador_nombre,
-                    monto: resultado.monto_final
-                });
+                setGanador({ nombre: resultado.ganador_nombre, monto: resultado.monto_final });
             }
-        } catch (err) {
-            console.error("Error al cerrar subasta:", err);
-        }
+        } catch (err) { console.error(err); }
     };
 
-    // ============== PUJAR ==============
     const handlePujar = async () => {
         setMsgError("");
         setMsgOk("");
 
-        // Validar que no esté cerrada
         if (subastaCerrada || tiempoFinalizado) {
             setMsgError("Esta subasta ya ha sido finalizada");
             return;
         }
 
         const montoNum = parseFloat(monto);
-        const montoActual = pujaMax
-            ? parseFloat(pujaMax.monto)
-            : parseFloat(subasta.precio_base);
-        const montoMinimoRequerido = montoActual + parseFloat(subasta.incremento_minimo);
+        const montoActual = pujaMax ? parseFloat(pujaMax.monto) : parseFloat(subasta.precio_base);
+        const incremento = parseFloat(subasta.incremento_minimo);
+        const montoMinimoRequerido = montoActual + incremento;
 
         if (!monto || isNaN(montoNum)) {
             setMsgError("Ingresa un monto válido");
@@ -384,59 +341,52 @@ export default function SubastaDetalle() {
 
         setEnviando(true);
         try {
-            await axios.post(`${BASE_URL}/subasta/pujar`, {
+            const res = await axios.post(`${BASE_URL}/subasta/pujar`, {
                 id_subasta: parseInt(id),
                 monto: montoNum,
-                id_usuario: USUARIO_ACTUAL_ID
+                id_usuario: usuarioActualRef.current.id
             });
 
-            setMsgOk("¡Puja enviada correctamente!");
-            setMonto("");
+            if (res.data.success) {
+                setMsgOk("¡Puja enviada correctamente!");
+                setMonto("");
+
+                const client = new Ably.Realtime({ key: ABLY_KEY });
+                client.channels.get(`auction-${id}`).publish("new-bid", {
+                    monto: montoNum,
+                    usuario_nombre: nombreUsuarioSesion,
+                    id_usuario: usuarioActualRef.current.id,
+                    fecha_hora: new Date().toISOString()
+                });
+            }
         } catch (err) {
-            setMsgError(
-                err.response?.data?.error || "Error al procesar puja"
-            );
+            setMsgError(err.response?.data?.error || "Error al procesar puja");
         } finally {
             setEnviando(false);
         }
     };
 
-    // ============== UI ==============
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-zinc-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="flex items-center justify-center min-h-screen bg-zinc-950">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+        </div>
+    );
 
-    if (errorPage || !subasta) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 text-center p-6">
-                <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
-                <p className="text-zinc-400 mb-6">
-                    {errorPage || "No se pudo cargar la subasta"}
-                </p>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="bg-zinc-800 px-6 py-2 rounded-xl text-white hover:bg-zinc-700 transition-colors"
-                >
-                    Volver
-                </button>
-            </div>
-        );
-    }
+    if (errorPage || !subasta) return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 text-center p-6">
+            <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
+            <p className="text-zinc-400 mb-6">{errorPage || "No se pudo cargar la subasta"}</p>
+            <button onClick={() => navigate(-1)} className="bg-zinc-800 px-6 py-2 rounded-xl text-white hover:bg-zinc-700 transition-colors">Volver</button>
+        </div>
+    );
 
     const estaActiva = !subastaCerrada && subasta.estado?.toLowerCase() === "activa";
-    const esVendedor = parseInt(subasta.id_creador) === USUARIO_ACTUAL_ID;
-    const precioReferencia = pujaMax
-        ? parseFloat(pujaMax.monto)
-        : parseFloat(subasta.precio_base);
+    const esVendedor = subasta && parseInt(subasta.id_creador) === usuarioActualRef.current.id;
+    const precioReferencia = pujaMax ? parseFloat(pujaMax.monto) : parseFloat(subasta.precio_base);
     const montoMinimo = precioReferencia + parseFloat(subasta.incremento_minimo);
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white pb-10">
-            {/* Notificación de puja superada */}
             {superado && (
                 <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <AlertTriangle className="w-5 h-5" />
@@ -444,93 +394,48 @@ export default function SubastaDetalle() {
                 </div>
             )}
 
-            {/* Header */}
             <div className="border-b border-zinc-800 px-6 py-4 flex items-center gap-4">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="text-zinc-400 hover:text-white transition-colors"
-                >
-                    <ChevronLeft />
-                </button>
+                <button onClick={() => navigate(-1)} className="text-zinc-400 hover:text-white transition-colors"><ChevronLeft /></button>
                 <h1 className="text-lg font-bold flex items-center gap-2">
                     <Gavel className="w-5 h-5 text-blue-500" /> {subasta.lego_nombre}
                 </h1>
-                <span
-                    className={`ml-auto text-xs font-bold px-3 py-1 rounded-full ${estaActiva
-                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                            : "bg-red-500/20 text-red-400 border border-red-500/30"
-                        }`}
-                >
+                <span className={`ml-auto text-xs font-bold px-3 py-1 rounded-full ${estaActiva ? "bg-green-500/20 text-green-400 border border-green-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30"}`}>
                     {subasta.estado}
                 </span>
             </div>
 
-            {/* Contenido principal */}
             <div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Izquierda: carrusel + descripción */}
                 <div className="space-y-4">
                     <ImageCarousel imagenes={subasta.imagenes} nombre={subasta.lego_nombre} />
-
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
                         <h2 className="text-xl font-bold mb-2">{subasta.lego_nombre}</h2>
                         <p className="text-zinc-400 text-sm">{subasta.lego_descripcion}</p>
                         {subasta.vendedor_nombre && (
-                            <p className="text-zinc-500 text-xs mt-3">
-                                Vendedor:{" "}
-                                <span className="text-zinc-300">
-                                    {subasta.vendedor_nombre}
-                                </span>
-                            </p>
+                            <p className="text-zinc-500 text-xs mt-3">Vendedor: <span className="text-zinc-300">{subasta.vendedor_nombre}</span></p>
                         )}
                     </div>
                 </div>
 
-                {/* Derecha: precio + pujas */}
                 <div className="space-y-4">
-                    {/* Precio actual o ganador */}
                     {subastaCerrada && ganador ? (
-                        <GanadorAnnouncement
-                            ganador={ganador.nombre}
-                            monto={ganador.monto}
-                        />
+                        <GanadorAnnouncement ganador={ganador.nombre} monto={ganador.monto} />
                     ) : (
                         <div className="bg-zinc-900 border border-blue-500/30 rounded-2xl p-6 text-center shadow-[0_0_20px_rgba(59,130,246,0.1)]">
-                            <div className="text-xs text-blue-400 uppercase mb-1 tracking-widest font-bold">
-                                Precio Actual
-                            </div>
-                            <p className="text-5xl font-black text-blue-400">
-                                {formatMonto(precioReferencia)}
-                            </p>
+                            <div className="text-xs text-blue-400 uppercase mb-1 tracking-widest font-bold">Precio Actual</div>
+                            <p className="text-5xl font-black text-blue-400">{formatMonto(precioReferencia)}</p>
                             {pujaMax && (
-                                <p className="text-zinc-500 text-xs mt-2">
-                                    Mejor oferta de{" "}
-                                    <span className="text-zinc-300">
-                                        {pujaMax.usuario_nombre}
-                                    </span>
-                                </p>
+                                <p className="text-zinc-500 text-xs mt-2">Mejor oferta de <span className="text-zinc-300">{pujaMax.usuario_nombre}</span></p>
                             )}
                         </div>
                     )}
 
-                    {/* Controles y countdown */}
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2 text-sm text-zinc-500">
-                                <Clock className="w-4 h-4" />
-                                Termina en:{" "}
-                                <span
-                                    className={`font-mono font-bold ${tiempoFinalizado ? "text-red-400" : "text-white"
-                                        }`}
-                                >
-                                    {countdown}
-                                </span>
+                                <Clock className="w-4 h-4" /> Termina en:
+                                <span className={`font-mono font-bold ${tiempoFinalizado ? "text-red-400" : "text-white"}`}>{countdown}</span>
                             </div>
-                            <div className="text-sm text-zinc-500">
-                                Incremento:{" "}
-                                <span className="text-white font-bold">
-                                    {formatMonto(subasta.incremento_minimo)}
-                                </span>
-                            </div>
+                            <div className="text-sm text-zinc-500">Incremento: <span className="text-white font-bold">{formatMonto(subasta.incremento_minimo)}</span></div>
                         </div>
 
                         {estaActiva && !esVendedor && (
@@ -551,69 +456,24 @@ export default function SubastaDetalle() {
                                 </button>
                             </div>
                         )}
-
-                        {esVendedor && estaActiva && (
-                            <p className="text-zinc-500 text-xs text-center">
-                                Eres el vendedor de esta subasta
-                            </p>
-                        )}
-
-                        {!estaActiva && (
-                            <p className="text-zinc-500 text-xs text-center">
-                                Esta subasta ha finalizado
-                            </p>
-                        )}
-
-                        {msgError && (
-                            <p className="text-red-400 text-xs font-medium flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" /> {msgError}
-                            </p>
-                        )}
-
-                        {msgOk && (
-                            <p className="text-green-400 text-xs font-medium flex items-center gap-1">
-                                <CheckCircle className="w-3 h-3" /> {msgOk}
-                            </p>
-                        )}
+                        {msgError && <p className="text-red-400 text-xs font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {msgError}</p>}
+                        {msgOk && <p className="text-green-400 text-xs font-medium flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {msgOk}</p>}
                     </div>
 
-                    {/* Historial de pujas */}
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
                         <h3 className="text-xs font-bold text-zinc-500 uppercase mb-4 flex items-center gap-2">
                             <History className="w-3 h-3" /> Historial de Pujas
                         </h3>
                         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                            {pujas.length > 0 ? (
-                                pujas.map((p, i) => (
-                                    <div
-                                        key={p.puja_id || i}
-                                        className={`flex justify-between items-center text-sm p-3 rounded-xl ${i === 0
-                                                ? "bg-blue-500/10 border border-blue-500/20"
-                                                : "bg-zinc-800/30"
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <div
-                                                className={`w-2 h-2 rounded-full ${i === 0
-                                                        ? "bg-blue-500 animate-pulse"
-                                                        : "bg-zinc-600"
-                                                    }`}
-                                            />
-                                            <span>{p.usuario_pujador}</span>
-                                        </div>
-                                        <span
-                                            className={`font-bold ${i === 0 ? "text-blue-400" : "text-white"
-                                                }`}
-                                        >
-                                            {formatMonto(p.monto)}
-                                        </span>
+                            {pujas.length > 0 ? pujas.map((p, i) => (
+                                <div key={p.puja_id || i} className={`flex justify-between items-center text-sm p-3 rounded-xl ${i === 0 ? "bg-blue-500/10 border border-blue-500/20" : "bg-zinc-800/30"}`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${i === 0 ? "bg-blue-500 animate-pulse" : "bg-zinc-600"}`} />
+                                        <span>{p.usuario_pujador}</span>
                                     </div>
-                                ))
-                            ) : (
-                                <p className="text-center text-zinc-600 text-sm py-4">
-                                    No hay pujas todavía. ¡Sé el primero!
-                                </p>
-                            )}
+                                    <span className={`font-bold ${i === 0 ? "text-blue-400" : "text-white"}`}>{formatMonto(p.monto)}</span>
+                                </div>
+                            )) : <p className="text-center text-zinc-600 text-sm py-4">No hay pujas todavía.</p>}
                         </div>
                     </div>
                 </div>

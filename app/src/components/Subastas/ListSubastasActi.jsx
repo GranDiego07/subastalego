@@ -45,6 +45,9 @@ export function ListSubastasActi() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {subastas.map((item, index) => {
                     const fullUrl = item.imagen ? `${BASE_URL}${item.imagen}` : null;
+                    
+                    // Intentamos obtener el valor de la puja de cualquiera de los dos nombres posibles
+                    const valorPuja = item.Precio || item.UltimaPuja;
 
                     return (
                         <div
@@ -79,9 +82,17 @@ export function ListSubastasActi() {
                                 </div>
 
                                 <div className="pt-2 flex justify-between items-end">
-                                    <span className="text-2xl font-black text-blue-400">
-                                        ${item.Precio}
-                                    </span>
+                                    {/* Cambiamos la lógica: Si hay pujas Y tenemos un valor, lo mostramos */}
+                                    {item.cantidad_pujas > 0 && valorPuja ? (
+                                        <span className="text-2xl font-black text-blue-400">
+                                            ${valorPuja}
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm font-medium text-zinc-500 italic">
+                                            Sin pujas
+                                        </span>
+                                    )}
+                                    
                                     <span className="text-xs text-zinc-500">
                                         {item.cantidad_pujas} puja{item.cantidad_pujas !== 1 ? "s" : ""}
                                     </span>
@@ -89,18 +100,17 @@ export function ListSubastasActi() {
 
                                 {/* ── Botón Ver Subasta ── */}
                                 <button
-
-                                onClick={() => navigate(`/subasta/detalle/${item.subasta_id}`)}
-                                className="mt-auto w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200"
+                                    onClick={() => navigate(`/subasta/detalle/${item.subasta_id}`)}
+                                    className="mt-auto w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors duration-200"
                                 >
-                                Ver subasta y pujar
-                                <ArrowRight className="w-4 h-4" />
-                            </button>
+                                    Ver subasta y pujar
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
-                        </div>
-            );
+                    );
                 })}
+            </div>
         </div>
-        </div >
     );
 }

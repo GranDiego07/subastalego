@@ -13,6 +13,9 @@ class LegoService {
     sinSubasta() {
         return axios.get(`${BASE_URL}/sinSubasta/`);
     }
+    getByVendedor(vendedorId) {
+        return axios.get(`${BASE_URL}/legosByVendedor/${vendedorId}`);
+    }
     /**
      * Obtener un Lego específico por ID
      * GET /lego/5
@@ -68,7 +71,7 @@ class LegoService {
     }
 
     delete(legoId) {
-        return axios.delete(`${BASE_URL}/${legoId}`); 
+        return axios.delete(`${BASE_URL}/${legoId}`);
     }
 }
 

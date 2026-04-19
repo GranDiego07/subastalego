@@ -113,6 +113,28 @@ class LegoModel
 
         return $vResultado;
     }
+
+    public function legobyVendedor($idUsuario)
+    {
+        $imagenM = new ImageModel();
+        //Consulta SQL
+        $vSQL = "SELECT l.*, u.nombre_completo
+                    FROM lego l, usuarios u
+                    where l.id_vendedor=$idUsuario
+                    order by l.nombre desc";
+        //Ejecutar la consulta
+        $vResultado = $this->enlace->ExecuteSQL($vSQL);
+
+        //Incluir imagenes
+        if (!empty($vResultado) && is_array($vResultado)) {
+            for ($i = 0; $i < count($vResultado); $i++) {
+                $vResultado[$i]->imagen = $imagenM->getImageMovie(($vResultado[$i]->id));
+            }
+        }
+        //Retornar la respuesta
+
+        return $vResultado;
+    }
     public function legoByDetalle($idActor)
     {
         $imagenM = new ImageModel();
