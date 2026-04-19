@@ -155,7 +155,7 @@ class SubastaModel
 
         // Cerrar activas vencidas SIN pujas → Borrador
         $this->enlace->executeSQL_DML("UPDATE subastas 
-        SET id_estado = 4
+        SET id_estado = 5
         WHERE id_estado = 1 
         AND fecha_cierre <= NOW()
         AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = subastas.id) = 0");
@@ -338,7 +338,7 @@ class SubastaModel
     public function registrarPuja($id_subasta, $id_usuario, $monto)
     {
         $vSql = "INSERT INTO pujas (id_subasta, id_usuario, monto, fecha_hora)
-                 VALUES ($id_subasta, $id_usuario, $monto, NOW())";
+                    VALUES ($id_subasta, $id_usuario, $monto, NOW())";
         $this->enlace->executeSQL_DML($vSql);
         return true;
     }
@@ -348,17 +348,21 @@ class SubastaModel
      * Llama a este método en getParaInterfaz y en pujar para cumplir el requerimiento
      * de cierre por consulta/puja (sin cron jobs).
      */
+    // DESPUÉS
     public function verificarCierre($id)
     {
-        // Usamos id_estado = 1 = Activa. Ajusta si tu ID de "Activa" es diferente.
+        // Cierra con pujas → Finalizada (id_estado = 2)
         $vSql = "UPDATE subastas
-                    SET id_estado = (SELECT id FROM estados_subasta WHERE nombre = 'Finalizada' LIMIT 1)
-                    WHERE id = $id
-                    AND fecha_cierre <= NOW()
-                    AND id_estado = 1";
+                SET id_estado = (SELECT id FROM estados_subasta WHERE nombre = 'Finalizada' LIMIT 1)
+                WHERE id = $id
+                AND fecha_cierre <= NOW()
+                AND id_estado = 1
+                AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = $id) > 0";
         $this->enlace->executeSQL_DML($vSql);
+
+        // Sin pujas → Finalizada sin ofertas (id_estado = 5)
         $vSql2 = "UPDATE subastas
-                SET id_estado = 4
+                SET id_estado = 5
                 WHERE id = $id
                 AND fecha_cierre <= NOW()
                 AND id_estado = 1

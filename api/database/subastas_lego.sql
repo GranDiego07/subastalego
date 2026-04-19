@@ -104,7 +104,7 @@ CREATE TABLE `estados_subasta` (
   `nombre` varchar(50) NOT NULL COMMENT 'activa, finalizada, cancelada',
   PRIMARY KEY (`id`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -113,7 +113,7 @@ CREATE TABLE `estados_subasta` (
 
 LOCK TABLES `estados_subasta` WRITE;
 /*!40000 ALTER TABLE `estados_subasta` DISABLE KEYS */;
-INSERT INTO `estados_subasta` VALUES (1,'activa'),(4,'borrador'),(3,'cancelada'),(2,'finalizada');
+INSERT INTO `estados_subasta` VALUES (1,'activa'),(4,'borrador'),(3,'cancelada'),(2,'finalizada'),(5,'finalizada sin ofertas');
 /*!40000 ALTER TABLE `estados_subasta` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -344,4 +344,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-19  0:58:18
+-- Dump completed on 2026-04-19  1:02:40

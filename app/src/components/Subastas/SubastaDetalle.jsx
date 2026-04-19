@@ -126,6 +126,17 @@ function GanadorAnnouncement({ ganador, monto }) {
         </div>
     );
 }
+function SinPujasAnnouncement() {
+    return (
+        <div className="bg-zinc-800/60 border border-zinc-700 rounded-2xl p-6 text-center">
+            <div className="flex justify-center mb-3">
+                <Gavel className="w-8 h-8 text-zinc-500" />
+            </div>
+            <h3 className="text-xl font-bold text-zinc-300 mb-1">Subasta Finalizada</h3>
+            <p className="text-zinc-500 text-sm">Esta subasta cerró sin recibir ninguna oferta.</p>
+        </div>
+    );
+}
 
 export default function SubastaDetalle() {
     const { id } = useParams();
@@ -290,16 +301,18 @@ export default function SubastaDetalle() {
         channel.subscribe("auction-closed", (msg) => {
             const d = msg.data;
             setSubastaCerrada(true);
-            setGanador({ nombre: d.ganador_nombre, monto: d.monto_final });
+            if (d.ganador_nombre) {
+                setGanador({ nombre: d.ganador_nombre, monto: d.monto_final });
+            }
+            // Si no hay ganador_nombre, ganador queda null
             setSubasta((prev) => ({
                 ...prev,
                 estado: "Finalizada",
-                ganador_id: d.ganador_id,
-                ganador_nombre: d.ganador_nombre,
-                monto_final: d.monto_final
+                ganador_id: d.ganador_id || null,
+                ganador_nombre: d.ganador_nombre || null,
+                monto_final: d.monto_final || null
             }));
         });
-
         return () => { channel.unsubscribe(); client.close(); };
     }, [id, ABLY_KEY, !!subasta]);
 
@@ -312,6 +325,7 @@ export default function SubastaDetalle() {
             if (resultado.ganador_nombre) {
                 setGanador({ nombre: resultado.ganador_nombre, monto: resultado.monto_final });
             }
+            // Si no hay ganador, subastaCerrada=true y ganador=null → renderiza SinPujasAnnouncement
         } catch (err) { console.error(err); }
     };
 
@@ -417,8 +431,9 @@ export default function SubastaDetalle() {
                 </div>
 
                 <div className="space-y-4">
-                    {subastaCerrada && ganador ? (
-                        <GanadorAnnouncement ganador={ganador.nombre} monto={ganador.monto} />
+                    {subastaCerrada ? ( ganador
+                        ? <GanadorAnnouncement ganador={ganador.nombre} monto={ganador.monto} />
+                        : <SinPujasAnnouncement />
                     ) : (
                         <div className="bg-zinc-900 border border-blue-500/30 rounded-2xl p-6 text-center shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                             <div className="text-xs text-blue-400 uppercase mb-1 tracking-widest font-bold">Precio Actual</div>
