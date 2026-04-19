@@ -5,5 +5,6 @@ return [
     'DB_PASSWORD' => '',
     'DB_HOST' => 'localhost',
     'DB_DBNAME' => 'subastas_lego',
-    'SECRET_KEY'=>'e0d17975bc9bd57eee132eecb6da6f11048e8a88506cc3bffc7249078cf2a77a'
+    'SECRET_KEY'=>'e0d17975bc9bd57eee132eecb6da6f11048e8a88506cc3bffc7249078cf2a77a',
+    'ABLY_API_KEY' => 'fqH_DA.cmymYw:nSw8u0Itnu2-pxfonc6OdYvTeuJSDjjJgPBDKADTyx0'
 ];

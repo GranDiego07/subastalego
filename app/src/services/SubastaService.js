@@ -89,5 +89,17 @@ class SubastaService {
     getNombreUsuario(id) {
         return axios.get(`${BASE_URL}/getNombreUsuario/${id}`);
     }
+    /**
+ * Cierra una subasta (se llama automáticamente cuando vence el countdown)
+ * POST /subasta/cerrar
+ */
+    cerrar(id) {
+        return axios.post(`${BASE_URL}/cerrar`,
+            JSON.stringify({ id_subasta: id }),
+            {
+                headers: { "Content-Type": "application/json" }
+            }
+        );
+    }
 }
 export default new SubastaService();

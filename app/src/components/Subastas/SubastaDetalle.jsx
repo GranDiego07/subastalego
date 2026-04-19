@@ -1,11 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import * as Ably from "ably";
 import {
     Gavel, Clock, ChevronLeft, AlertTriangle,
     History, CheckCircle, ChevronRight, Trophy
 } from "lucide-react";
+import SubastaService from "../../services/SubastaService";   // ← Importamos el servicio
+
+// ── Auth: igual que en Pagos ───────────────────────────────────────────────
+const urlParams = new URLSearchParams(window.location.search);
+const USUARIO_ID = urlParams.get("uid") ? parseInt(urlParams.get("uid")) : 3;
+const USUARIO_NOMBRE = urlParams.get("nombre") || "Johanna";
+// ─────────────────────────────────────────────────────────────────────────────
 
 const BASE_URL = import.meta.env.VITE_BASE_URL ?? "";
 const ABLY_KEY = import.meta.env.VITE_ABLY_KEY ?? "";
@@ -27,23 +33,34 @@ function useCountdown(fechaCierre, onFinalizado) {
             if (ms <= 0) {
                 setTexto("Finalizada");
                 setFinalizada(true);
-                if (onFinalizado) onFinalizado();
-                return;
+                // Si ya finalizó, no hacemos nada más
+                return true;
             }
 
             const s = Math.floor(ms / 1000);
             const h = Math.floor(s / 3600);
             const m = Math.floor((s % 3600) / 60);
             const sec = s % 60;
-            setTexto(
-                `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
-            );
+            setTexto(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`);
+            return false;
         };
 
-        tick();
-        const interval = setInterval(tick, 1000);
+        // Ejecución inicial
+        const yaTermino = tick();
+        if (yaTermino) {
+            onFinalizado?.();
+            return;
+        }
+
+        const interval = setInterval(() => {
+            if (tick()) {
+                clearInterval(interval); // 👈 CRÍTICO: Detener el reloj
+                onFinalizado?.();        // 👈 Llamar al cierre una sola vez
+            }
+        }, 1000);
+
         return () => clearInterval(interval);
-    }, [fechaCierre, onFinalizado]);
+    }, [fechaCierre]); // Quitamos onFinalizado de aquí para evitar re-ejecuciones innecesarias
 
     return { texto, finalizada };
 }
@@ -126,6 +143,7 @@ function GanadorAnnouncement({ ganador, monto }) {
         </div>
     );
 }
+
 function SinPujasAnnouncement() {
     return (
         <div className="bg-zinc-800/60 border border-zinc-700 rounded-2xl p-6 text-center">
@@ -142,11 +160,6 @@ export default function SubastaDetalle() {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    // Leer uid y nombre directo de la URL (para pruebas de dos usuarios)
-    const urlParams = new URLSearchParams(window.location.search);
-    const testUserId = urlParams.get("uid") ? parseInt(urlParams.get("uid")) : 1;
-    const testNombre = urlParams.get("nombre") || "Diego";
-
     const [subasta, setSubasta] = useState(null);
     const [pujas, setPujas] = useState([]);
     const [pujaMax, setPujaMax] = useState(null);
@@ -160,7 +173,6 @@ export default function SubastaDetalle() {
     const [nombreUsuarioSesion, setNombreUsuarioSesion] = useState("");
     const [usuarioActual, setUsuarioActual] = useState({ id: null, rol: null });
 
-    // *** REF clave: siempre tiene el id actualizado dentro de callbacks de Ably ***
     const usuarioActualRef = useRef({ id: null });
 
     const [superado, setSuperado] = useState(false);
@@ -175,12 +187,13 @@ export default function SubastaDetalle() {
 
     const { texto: countdown, finalizada: tiempoFinalizado } = countdownData;
 
+    // ── Cargar datos usando el servicio ─────────────────────────────────────
     const cargarDatos = async () => {
         try {
             setLoading(true);
             setErrorPage("");
 
-            const response = await axios.get(`${BASE_URL}/subasta/getParaInterfaz`, { params: { id } });
+            const response = await SubastaService.getParaInterfaz(id);   // ← Usamos el servicio
 
             const res = response.data;
             const item = res?.data?.subasta;
@@ -189,17 +202,16 @@ export default function SubastaDetalle() {
 
             if (!item) throw new Error("No se encontraron datos de la subasta");
 
-            // Priorizar uid de la URL, si no usar el del backend
-            const userId = testUserId ?? res?.data?.usuario_actual_id ?? null;
-            const userName = testNombre ?? res?.data?.usuario_actual_nombre ?? "Usuario";
+            // Solo datos de la URL (igual que en Pagos)
+            const userId = USUARIO_ID;
+            const userName = USUARIO_NOMBRE;
 
             setNombreUsuarioSesion(userName);
             setUsuarioActual({ id: userId, rol: res?.data?.usuario_actual_rol });
 
-            // Actualizar el ref también
             usuarioActualRef.current = { id: userId };
 
-            console.log("✅ Usuario cargado:", { id: userId, nombre: userName });
+            console.log("✅ Usuario cargado (desde URL):", { id: userId, nombre: userName });
 
             const ahora = Date.now();
             const fechaCierre = new Date(item.fecha_cierre).getTime();
@@ -247,7 +259,7 @@ export default function SubastaDetalle() {
 
         } catch (err) {
             console.error("Error al cargar:", err);
-            setErrorPage(err.message || "Error al cargar la subasta");
+            setErrorPage(err.response?.data?.message || err.message || "Error al cargar la subasta");
         } finally {
             setLoading(false);
         }
@@ -257,6 +269,7 @@ export default function SubastaDetalle() {
         if (id) cargarDatos();
     }, [id]);
 
+    // Ably realtime (se mantiene igual)
     useEffect(() => {
         if (!id || !ABLY_KEY || !subasta) return;
 
@@ -265,12 +278,9 @@ export default function SubastaDetalle() {
 
         channel.subscribe("new-bid", (msg) => {
             const d = msg.data;
-
-            // Usar el REF en lugar del state para evitar closure stale
             const miId = usuarioActualRef.current.id;
 
             console.log("📨 Nueva puja recibida:", d);
-            console.log("👤 Mi ID (ref):", miId);
 
             setPujaMax((prev) => {
                 if (
@@ -304,7 +314,6 @@ export default function SubastaDetalle() {
             if (d.ganador_nombre) {
                 setGanador({ nombre: d.ganador_nombre, monto: d.monto_final });
             }
-            // Si no hay ganador_nombre, ganador queda null
             setSubasta((prev) => ({
                 ...prev,
                 estado: "Finalizada",
@@ -313,22 +322,57 @@ export default function SubastaDetalle() {
                 monto_final: d.monto_final || null
             }));
         });
+
         return () => { channel.unsubscribe(); client.close(); };
     }, [id, ABLY_KEY, !!subasta]);
 
-    const cerrarSubastaAutomaticamente = async () => {
-        if (subastaCerrada || !subasta) return;
-        try {
-            const response = await axios.post(`${BASE_URL}/subasta/cerrar`, { id_subasta: parseInt(id) });
-            const resultado = response.data;
-            setSubastaCerrada(true);
-            if (resultado.ganador_nombre) {
-                setGanador({ nombre: resultado.ganador_nombre, monto: resultado.monto_final });
-            }
-            // Si no hay ganador, subastaCerrada=true y ganador=null → renderiza SinPujasAnnouncement
-        } catch (err) { console.error(err); }
-    };
+    // ── Cerrar subasta usando el servicio ───────────────────────────────────
+    const enviandoCierre = useRef(false); // Usamos un Ref para control inmediato
 
+    // Dentro de tu componente SubastaDetalle.jsx
+
+    const cerrarSubastaAutomaticamente = async () => {
+        // Si ya se está cerrando o ya está marcada como cerrada, no hacemos nada
+        if (enviandoCierre.current || subastaCerrada) return;
+
+        enviandoCierre.current = true;
+        try {
+            console.log("🚀 Iniciando cierre automático de subasta...");
+            const response = await SubastaService.cerrar(parseInt(id));
+            const resultado = response.data;
+
+            if (resultado.success) {
+                setSubastaCerrada(true);
+
+                // Si el backend nos confirma quién ganó, lo mostramos
+                if (resultado.ganador_nombre) {
+                    setGanador({
+                        nombre: resultado.ganador_nombre,
+                        monto: resultado.monto_final
+                    });
+                } else {
+                    // Caso borde: si no hay ganador en la respuesta pero teníamos una puja máxima en pantalla
+                    if (pujaMax) {
+                        setGanador({
+                            nombre: pujaMax.usuario_nombre,
+                            monto: pujaMax.monto
+                        });
+                    }
+                }
+
+                // Actualizamos el estado general de la subasta en el objeto local
+                setSubasta(prev => ({
+                    ...prev,
+                    estado: "Finalizada"
+                }));
+            }
+        } catch (err) {
+            console.error("❌ Error al cerrar subasta:", err);
+        } finally {
+            enviandoCierre.current = false;
+        }
+    };
+    // ── Pujar usando el servicio ────────────────────────────────────────────
     const handlePujar = async () => {
         setMsgError("");
         setMsgOk("");
@@ -355,7 +399,7 @@ export default function SubastaDetalle() {
 
         setEnviando(true);
         try {
-            const res = await axios.post(`${BASE_URL}/subasta/pujar`, {
+            const res = await SubastaService.pujar({           // ← Usamos el servicio
                 id_subasta: parseInt(id),
                 monto: montoNum,
                 id_usuario: usuarioActualRef.current.id
@@ -365,6 +409,7 @@ export default function SubastaDetalle() {
                 setMsgOk("¡Puja enviada correctamente!");
                 setMonto("");
 
+                // Publicamos en Ably (esto se mantiene manual porque es realtime)
                 const client = new Ably.Realtime({ key: ABLY_KEY });
                 client.channels.get(`auction-${id}`).publish("new-bid", {
                     monto: montoNum,
@@ -374,12 +419,13 @@ export default function SubastaDetalle() {
                 });
             }
         } catch (err) {
-            setMsgError(err.response?.data?.error || "Error al procesar puja");
+            setMsgError(err.response?.data?.message || "Error al procesar puja");
         } finally {
             setEnviando(false);
         }
     };
 
+    // ── Resto del componente (JSX) sin cambios ───────────────────────────────
     if (loading) return (
         <div className="flex items-center justify-center min-h-screen bg-zinc-950">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
@@ -431,7 +477,7 @@ export default function SubastaDetalle() {
                 </div>
 
                 <div className="space-y-4">
-                    {subastaCerrada ? ( ganador
+                    {subastaCerrada ? (ganador
                         ? <GanadorAnnouncement ganador={ganador.nombre} monto={ganador.monto} />
                         : <SinPujasAnnouncement />
                     ) : (

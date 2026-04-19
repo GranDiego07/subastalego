@@ -377,4 +377,57 @@ class SubastaModel
         $vSql = "SELECT nombre_completo FROM usuarios WHERE id = $id";
         $this->enlace->executeSQL_DML($vSql);
     }
+    public function cerrar($id_subasta)
+    {
+        try {
+            // 1. Buscamos al ganador real (la puja más alta)
+            $vSql = "SELECT 
+                    s.id, 
+                    p.id_usuario as ganador_id, 
+                    u.nombre_completo as ganador_nombre, 
+                    p.monto as monto_final
+                FROM subastas s
+                JOIN pujas p ON s.id = p.id_subasta
+                JOIN usuarios u ON p.id_usuario = u.id
+                WHERE s.id = " . intval($id_subasta) . "
+                ORDER BY p.monto DESC, p.fecha_hora ASC 
+                LIMIT 1";
+
+            $resultado = $this->enlace->executeSQL($vSql);
+
+            // 2. Actualizamos el estado de la subasta (ID 2 = Cerrada)
+            $idEstadoCerrada = 2;
+            $updateSql = "UPDATE subastas SET id_estado = $idEstadoCerrada WHERE id = " . intval($id_subasta);
+            $this->enlace->executeSQL_DML($updateSql);
+
+            // 3. Si hubo pujas, registramos la compra en la tabla pagos
+            $ganadorInfo = null;
+            if (is_array($resultado) && !empty($resultado)) {
+                $ganador = $resultado[0];
+                $ganadorInfo = $ganador; // Guardamos para el retorno
+
+                $pagoM = new PagoModel();
+
+                // Evitamos duplicados antes de insertar
+                if (!$pagoM->existePagoParaSubasta($id_subasta)) {
+                    $pagoM->crear((object)[
+                        "id_subasta"     => $id_subasta,
+                        "id_usuario"     => $ganador->ganador_id,
+                        "nombre_usuario" => $ganador->ganador_nombre,
+                        "monto"          => $ganador->monto_final
+                    ]);
+                }
+            }
+
+            // 4. Retornamos éxito con los datos del ganador para el Frontend
+            return [
+                "success" => true,
+                "message" => "Subasta finalizada con éxito",
+                "ganador_nombre" => $ganadorInfo ? $ganadorInfo->ganador_nombre : null,
+                "monto_final" => $ganadorInfo ? $ganadorInfo->monto_final : null
+            ];
+        } catch (Exception $e) {
+            return ["success" => false, "message" => $e->getMessage()];
+        }
+    }
 }

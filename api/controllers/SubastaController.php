@@ -219,7 +219,7 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
     public function pujar()
     {
         try {
-           $request   = new Request();
+            $request   = new Request();
             $response  = new Response();
             $input     = $request->getJSON();
             $Subasta   = new SubastaModel();
@@ -291,11 +291,20 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
      */
     private function publicarAbly($canal, $evento, $data)
     {
-        // Asegúrate de que esta variable esté en tu .env o definida en el servidor
-        $apiKey = $_ENV['ABLY_API_KEY'] ?? getenv('ABLY_API_KEY') ?? 'TU_API_KEY_AQUI';
+        // 1. Cargamos el archivo de configuración manualmente para estar seguros
+        $config = [];
+        $rutaConfig = __DIR__ . '/config.php'; // Si config.php está en la misma carpeta
 
+        if (file_exists($rutaConfig)) {
+            $config = require $rutaConfig;
+        }
+
+        // 2. Buscamos la llave en el config o usamos la que ya tienes
+        $apiKey = $config['ABLY_API_KEY'] ?? 'fqH_DA.cmymYw:nSw8u0Itnu2-pxfonc6OdYvTeuJSDjjJgPBDKADTyx0';
+
+        // 3. Si NO hay llave, simplemente salimos de la función SIN dar error 500
         if (!$apiKey || $apiKey === 'TU_API_KEY_AQUI') {
-            error_log("ERROR: ABLY_API_KEY no configurada en el servidor.");
+            error_log("Aviso: ABLY_API_KEY no configurada. Saltando notificación.");
             return;
         }
 
@@ -311,6 +320,7 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
                 "Content-Type: application/json",
                 "Authorization: Basic " . base64_encode($apiKey),
             ],
+            CURLOPT_TIMEOUT        => 5 // Añadimos un tiempo de espera para que no se quede pegado
         ]);
 
         $res = curl_exec($ch);
@@ -327,6 +337,32 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             $response = new Response();
             $Subasta = new SubastaModel();
             $result = $Subasta->getNombreUsuario($id);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+    /**
+     * POST /subasta/cerrar
+     * Body JSON: { id_subasta: int }
+     */
+    public function cerrar()
+    {
+        try {
+            $request  = new Request();
+            $response = new Response();
+            $input    = $request->getJSON();
+
+            $id_subasta = intval($input->id_subasta ?? 0);
+
+            if ($id_subasta <= 0) {
+                $response->toJSON(["success" => false, "message" => "ID de subasta requerido"], 400);
+                return;
+            }
+
+            $Subasta = new SubastaModel();
+            $result  = $Subasta->cerrar($id_subasta);
+
             $response->toJSON($result);
         } catch (Exception $e) {
             handleException($e);

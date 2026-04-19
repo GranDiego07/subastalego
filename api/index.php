@@ -39,6 +39,7 @@ require_once "models/UsuariosModel.php";
 require_once "models/SubastaModel.php";
 require_once "models/EstadoSubastaModel.php";
 require_once "models/PujasModel.php";
+require_once "models/PagoModel.php";
 
 /***--- Controladores ---*/
 require_once "controllers/CategoriaLegoController.php";
@@ -52,6 +53,7 @@ require_once "controllers/EstadoSubastaController.php";
 require_once "controllers/PujasController.php";
 require_once "controllers/RolController.php";
 require_once "controllers/EstadoUsuarioController.php";
+require_once "controllers/PagoController.php";
 
 
 // Enrutador
