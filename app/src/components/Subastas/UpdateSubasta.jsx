@@ -60,29 +60,29 @@ export function UpdateSubasta() {
                 const res = await SubastaService.getById(id);
                 const subasta = res.data?.data ?? res.data;
 
-                const ahora       = new Date();
+                const ahora = new Date();
                 const fechaInicio = new Date(subasta.fecha_inicio);
-                const cancelada   = subasta.id_estado == 3; // ← verificar si está cancelada
+                const cancelada = subasta.id_estado == 3;
+                const borrador = subasta.id_estado == 4;
 
-                // ✅ Si está cancelada se permite editar aunque la fecha ya pasó
-                if (fechaInicio <= ahora && !cancelada) {
+                if (fechaInicio <= ahora && !cancelada && !borrador) {
                     toast.error("No se puede editar una subasta que ya inició");
                     navigate("/lego/subasta");
                     return;
                 }
 
-                // ✅ Si está cancelada se permite editar aunque tenga pujas (ya no están activas)
-                if (subasta.cantidad_pujas > 0 && !cancelada) {
+                // Bloquear si tiene pujas, salvo que esté cancelada o en borrador
+                if (subasta.cantidad_pujas > 0 && !cancelada && !borrador) {
                     toast.error("No se puede editar una subasta que tiene pujas");
                     navigate("/lego/subasta");
                     return;
                 }
 
                 reset({
-                    precio_base:       subasta.precio_base,
+                    precio_base: subasta.precio_base,
                     incremento_minimo: subasta.incremento_minimo,
-                    fecha_inicio:      subasta.fecha_inicio?.replace(" ", "T").slice(0, 16),
-                    fecha_cierre:      subasta.fecha_cierre?.replace(" ", "T").slice(0, 16),
+                    fecha_inicio: subasta.fecha_inicio?.replace(" ", "T").slice(0, 16),
+                    fecha_cierre: subasta.fecha_cierre?.replace(" ", "T").slice(0, 16),
                 });
             } catch (err) {
                 setError(err.message);
@@ -97,10 +97,10 @@ export function UpdateSubasta() {
         try {
             const payload = {
                 id,
-                precio_base:       dataForm.precio_base,
+                precio_base: dataForm.precio_base,
                 incremento_minimo: dataForm.incremento_minimo,
-                fecha_inicio:      dataForm.fecha_inicio.replace("T", " "),
-                fecha_cierre:      dataForm.fecha_cierre.replace("T", " "),
+                fecha_inicio: dataForm.fecha_inicio.replace("T", " "),
+                fecha_cierre: dataForm.fecha_cierre.replace("T", " "),
             };
 
             const response = await SubastaService.update(payload);
@@ -115,7 +115,7 @@ export function UpdateSubasta() {
     };
 
     if (loading) return <p className="p-10 text-center">Cargando subasta...</p>;
-    if (error)   return <p className="text-red-600 p-4">{error}</p>;
+    if (error) return <p className="text-red-600 p-4">{error}</p>;
 
     return (
         <Card className="p-6 max-w-3xl mx-auto">

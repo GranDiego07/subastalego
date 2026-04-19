@@ -141,12 +141,31 @@ class SubastaModel
     }
     public function allConDetalle()
     {
+        $this->enlace->executeSQL_DML("UPDATE subastas 
+        SET id_estado = 1 
+        WHERE id_estado = 4 
+        AND fecha_inicio <= NOW()");
+
+        // Cerrar activas vencidas CON pujas → Finalizada
+        $this->enlace->executeSQL_DML("UPDATE subastas 
+        SET id_estado = (SELECT id FROM estados_subasta WHERE nombre = 'Finalizada' LIMIT 1)
+        WHERE id_estado = 1 
+        AND fecha_cierre <= NOW()
+        AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = subastas.id) > 0");
+
+        // Cerrar activas vencidas SIN pujas → Borrador
+        $this->enlace->executeSQL_DML("UPDATE subastas 
+        SET id_estado = 4
+        WHERE id_estado = 1 
+        AND fecha_cierre <= NOW()
+        AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = subastas.id) = 0");
+
         $vSql = "SELECT s.id, s.id_estado, l.nombre AS lego_nombre, s.fecha_inicio, s.fecha_cierre, s.precio_base, s.incremento_minimo,
-            (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas, es.nombre AS estado_nombre
-            FROM subastas s
-            INNER JOIN lego l ON s.id_lego = l.id
-            INNER JOIN estados_subasta es ON s.id_estado = es.id
-            ORDER BY l.id DESC;";
+        (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas, es.nombre AS estado_nombre
+        FROM subastas s
+        INNER JOIN lego l ON s.id_lego = l.id
+        INNER JOIN estados_subasta es ON s.id_estado = es.id
+        ORDER BY l.id DESC;";
         return $this->enlace->ExecuteSQL($vSql);
     }
 
@@ -338,6 +357,13 @@ class SubastaModel
                     AND fecha_cierre <= NOW()
                     AND id_estado = 1";
         $this->enlace->executeSQL_DML($vSql);
+        $vSql2 = "UPDATE subastas
+                SET id_estado = 4
+                WHERE id = $id
+                AND fecha_cierre <= NOW()
+                AND id_estado = 1
+                AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = $id) = 0";
+        $this->enlace->executeSQL_DML($vSql2);
     }
     /**
      * Obtiene el nombre completo de un usuario por ID.

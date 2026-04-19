@@ -34,9 +34,9 @@ const formatMoneda = (valor) => {
 
 const estadoBadge = (estado) => {
     const estilos = {
-        activa:     "bg-green-100 text-green-800",
-        cancelada:  "bg-red-100 text-red-800",
-        borrador:   "bg-yellow-100 text-yellow-800",
+        activa: "bg-green-100 text-green-800",
+        cancelada: "bg-red-100 text-red-800",
+        borrador: "bg-yellow-100 text-yellow-800",
         finalizada: "bg-gray-100 text-gray-800",
     };
     const nombre = (estado ?? "—").toLowerCase();
@@ -76,7 +76,12 @@ export default function TableSubastas() {
                 setLoading(false);
             }
         };
+
         fetchData();
+
+        const intervalo = setInterval(fetchData, 60000);
+
+        return () => clearInterval(intervalo);
     }, []);
 
     const handleCancelar = async () => {
@@ -321,7 +326,7 @@ export default function TableSubastas() {
             )}
 
             {/* Modal Eliminar */}
-            {modalEliminar && (
+      {/*       {modalEliminar && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
                         <h3 className="text-lg font-bold mb-2">Eliminar Subasta</h3>
@@ -334,7 +339,7 @@ export default function TableSubastas() {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
 
             {/* Modal Reactivar */}
             {modalReactivar && (
