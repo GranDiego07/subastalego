@@ -36,11 +36,17 @@ export default function UserProvider({ children }) {
         return user;
     }, [user]);
 
+    const rolesMap = {
+        "1": "comprador",
+        "2": "vendedor",
+        "3": "administrador",
+    };
     // Verifica si el rol del usuario autenticado está incluido dentro de los roles permitidos.
     const authorize = useCallback(
         (requiredRoles = []) => {
             if (!user || !user.rol) return false;
-            return requiredRoles.includes(user.rol.name);
+            const roleName = rolesMap[user.rol];
+            return requiredRoles.includes(roleName);
         },
         [user]
     );

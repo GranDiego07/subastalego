@@ -34,7 +34,7 @@ export function Home() {
             Ver Legos en Subasta
           </a> 
           <a
-            href="/user/login"
+            href="/login"
             className="px-6 py-3 bg-slate-700 text-white rounded-lg font-semibold shadow-lg hover::bg-slate-800 transition"
           >
             Iniciar Sesión

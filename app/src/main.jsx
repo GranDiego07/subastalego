@@ -26,6 +26,7 @@ import Login from './components/Usuarios/Login'
 import Register from './components/Usuarios/Register'
 import SubastaDetalle from './components/Subastas/SubastaDetalle'
 import Pagos from './components/Pujas/MisPagos'
+import { RoleRoute } from './components/Auth/RoleRoute'
 
 
 
@@ -35,30 +36,156 @@ const rutas = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
 
+      // — Legos —
+      // Todos los roles pueden ver el listado
       { path: "lego", element: <ListLegos /> },
-      { path: "table", element: <TableLegos /> },
-      { path: "lego/create", element: <CreateLego /> },
-      { path: "lego/update/:id", element: <UpdateLego /> },
-      { path: "lego/detail/:id", element: <DetailLego /> },
-      { path: "usuario", element: <TableUsuarios /> },
-      { path: "usuario/create", element: <CreateUsuario /> },
-      { path: "usuario/update/:id", element: <UpdateUsuarios /> },
-      { path: "usuario/detail/:id", element: <DetailUsuario /> },
-      { path: "login", element: <Login /> },
-      { path: 'create', element: <Register /> },
-      { path: "pujas", element: <TablePujas /> },
-      { path: "lego/subasta", element: <TableSubasta /> },
+
+      // Solo administrador: tabla admin, update, detail
+      {
+        path: "table",
+        element: (
+          <RoleRoute requiredRoles={["administrador", "vendedor"]}>
+            <TableLegos />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "lego/update/:id",
+        element: (
+          <RoleRoute requiredRoles={["administrador", "vendedor"]}>
+            <UpdateLego />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "lego/detail/:id", element: (<DetailLego />),
+      },
+
+      // administrador y vendedor: crear lego
+      {
+        path: "lego/create",
+        element: (
+          <RoleRoute requiredRoles={["administrador", "vendedor"]}>
+            <CreateLego />
+          </RoleRoute>
+        ),
+      },
+
+      // — Usuarios (solo administrador) —
+      {
+        path: "usuario",
+        element: (
+          <RoleRoute requiredRoles={["administrador"]}>
+            <TableUsuarios />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "usuario/create",
+        element: (
+          <RoleRoute requiredRoles={["administrador"]}>
+            <CreateUsuario />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "usuario/update/:id",
+        element: (
+          <RoleRoute requiredRoles={["administrador"]}>
+            <UpdateUsuarios />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "usuario/detail/:id",
+        element: (
+          <RoleRoute requiredRoles={["administrador"]}>
+            <DetailUsuario />
+          </RoleRoute>
+        ),
+      },
+
+      // — Pujas y tabla de subastas (solo administrador) —
+      {
+        path: "pujas",
+        element: (
+          <RoleRoute requiredRoles={["administrador"]}>
+            <TablePujas />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "lego/subasta",
+        element: (
+          <RoleRoute requiredRoles={["administrador"]}>
+            <TableSubasta />
+          </RoleRoute>
+        ),
+      },
+
+      // — Gestión de subastas (administrador y vendedor) —
+      {
+        path: "lego/subasta/create",
+        element: (
+          <RoleRoute requiredRoles={["administrador", "vendedor"]}>
+            <CreateSubasta />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "lego/subasta/update/:id",
+        element: (
+          <RoleRoute requiredRoles={["administrador", "vendedor"]}>
+            <UpdateSubasta />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "lego/subasta/publicar/:id",
+        element: (
+          <RoleRoute requiredRoles={["administrador", "vendedor"]}>
+            <PublicarSubasta />
+          </RoleRoute>
+        ),
+      },
+
+      // — Subastas activas (todos los roles) —
       { path: "subasta/activas", element: <ListSubastasActi /> },
-      { path: "subasta/noactivas", element: <ListSubastasDesa /> },
-      { path: "subasta/detalle/:id", element: <SubastaDetalle /> },
-      { path: "lego/subasta/create", element: <CreateSubasta /> },
-      { path: "lego/subasta/update/:id", element: <UpdateSubasta /> },
-      { path: "lego/subasta/publicar/:id", element: <PublicarSubasta /> },
-      { path: "pagos", element: <Pagos /> }, 
-      { path: "*", element: <PageNotFound /> },  // ← siempre al final
-    ]
-  }
-])
+
+      // — Subastas no activas (solo administrador y vendedor) —
+      {
+        path: "subasta/noactivas",
+        element: (
+          <RoleRoute requiredRoles={["administrador", "vendedor"]}>
+            <ListSubastasDesa />
+          </RoleRoute>
+        ),
+      },
+
+      // — Detalle de subasta (administrador y comprador) —
+      {
+        path: "subasta/detalle/:id", element: (<SubastaDetalle />),
+      },
+
+      // — Pagos (solo administrador) —
+      {
+        path: "pagos",
+        element: (
+          <RoleRoute requiredRoles={["administrador", "comprador"]}>
+            <Pagos />
+          </RoleRoute>
+        ),
+      },
+
+      // — Autenticación (públicas) —
+      { path: "login", element: <Login /> },
+      { path: "create", element: <Register /> },
+
+      // Comodín 404 — siempre al final
+      { path: "*", element: <PageNotFound /> },
+    ],
+  },
+]);
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <UserProvider>

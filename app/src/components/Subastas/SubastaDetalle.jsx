@@ -6,12 +6,8 @@ import {
     History, CheckCircle, ChevronRight, Trophy
 } from "lucide-react";
 import SubastaService from "../../services/SubastaService";   // ← Importamos el servicio
+import { useUser } from "@/hooks/useUser";
 
-// ── Auth: igual que en Pagos ───────────────────────────────────────────────
-const urlParams = new URLSearchParams(window.location.search);
-const USUARIO_ID = urlParams.get("uid") ? parseInt(urlParams.get("uid")) : 3;
-const USUARIO_NOMBRE = urlParams.get("nombre") || "Johanna";
-// ─────────────────────────────────────────────────────────────────────────────
 
 const BASE_URL = import.meta.env.VITE_BASE_URL ?? "";
 const ABLY_KEY = import.meta.env.VITE_ABLY_KEY ?? "";
@@ -165,6 +161,11 @@ export default function SubastaDetalle() {
     const [pujaMax, setPujaMax] = useState(null);
     const [loading, setLoading] = useState(true);
     const [errorPage, setErrorPage] = useState("");
+    const { user } = useUser();
+    console.log("USER:", user)
+    const USUARIO_ID = user?.id;
+    const USUARIO_NOMBRE = user?.nombre || user?.email;
+
 
     const [monto, setMonto] = useState("");
     const [enviando, setEnviando] = useState(false);

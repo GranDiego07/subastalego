@@ -13,8 +13,8 @@ import { Label } from "@/components/ui/label";
 import { CustomInputField } from "../ui/custom/custom-input-field";
 
 const schema = yup.object({
-    email: yup.string().email("Correo invalido").required("El correo es obligatorio"),
-    password: yup.string().required("La contraseña es obligatoria"),
+    correo: yup.string().email("Correo invalido").required("El correo es obligatorio"),
+    contrasena: yup.string().required("La contraseña es obligatoria"), // ✅
 })
 export default function Login() {
     const { saveUser } = useUser();
@@ -29,13 +29,14 @@ export default function Login() {
             const response = await UsuariosService.loginUser(data);
             if (response.data != null && response.data != 'undefined' && response.data.message != 'Usuario no valido') {
                 saveUser(response.data.data);
-                toast.success("Inicio de sesio existoso");
+                toast.success("Inicio de sesión exitoso");
                 navigate("/");
             } else {
                 toast.error("Credenciales inválidas");
             }
         } catch (error) {
-            toast.error("Error al iniciar sesión");
+            const serverMessage = error.response?.data?.message || "Error desconocido";
+            toast.error(`Error: ${serverMessage}`);
             console.error(error);
         }
     };
@@ -50,10 +51,10 @@ export default function Login() {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         <div>
                             <CustomInputField
-                                {...register("email")}
+                                {...register("correo")}
                                 label="Correo electrónico"
                                 placeholder="ejemplo@correo.com"
-                                error={errors.email?.message} />
+                                error={errors.correo?.message} />
                         </div>
                         <div>
                             <Label htmlFor="password" className="text-white">
@@ -63,7 +64,7 @@ export default function Login() {
                                 id="password"
                                 type="password"
                                 placeholder="********"
-                                {...register("password")}
+                                {...register("contrasena")}
                                 className="bg-white text-white placeholder:text-gray-400 border border-gray-300 "
                             />
                             {errors.password && (

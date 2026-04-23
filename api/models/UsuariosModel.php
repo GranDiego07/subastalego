@@ -152,27 +152,23 @@ class UsuariosModel
     }
     public function login($objeto)
     {
-        $vSql = "SELECT * from User where email='$objeto->email'";
-        //Ejecutar la consulta
+        $vSql = "SELECT * FROM usuarios WHERE correo='$objeto->correo'";
         $vResultado = $this->enlace->ExecuteSQL($vSql);
+
         if (is_object($vResultado[0])) {
             $user = $vResultado[0];
-            if (password_verify($objeto->password, $user->password)) {
+            if ($objeto->contrasena == $user->contrasena) { // comparación directa sin hash
                 $usuario = $this->get($user->id);
                 if (!empty($usuario)) {
-                    // Datos para el token JWT
                     $data = [
                         'id' => $usuario->id,
-                        'email' => $usuario->email,
-                        'rol' => $usuario->rol,
-                        'iat' => time(),  // Hora de emisión
-                        'exp' => time() + 3600 // Expiración en 1 hora
+                        'email' => $usuario->correo,
+                        'rol' => $usuario->id_rol,
+                        'iat' => time(),
+                        'exp' => time() + 3600
                     ];
 
-                    // Generar el token JWT
                     $jwt_token = JWT::encode($data, config::get('SECRET_KEY'), 'HS256');
-
-                    // Enviar el token como respuesta
                     return $jwt_token;
                 }
             }

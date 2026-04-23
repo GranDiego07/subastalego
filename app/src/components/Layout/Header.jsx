@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Layers,
   LogIn,
-  UserPlus, 
+  UserPlus,
   LogOut,
   ShoppingCart,
   Menu,
@@ -27,25 +27,34 @@ import {
   MenubarItem,
 } from "@/components/ui/menubar";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { useUser } from "@/hooks/useUser";
 
 
 
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const userEmail = "Usuarios";
+  const { user, isAuthenticated, clearUser, authorize } = useUser();
+  const userEmail = user?.email || "Invitado";
 
   const navItems = [
-    { title: "Legos", href: "/lego", icon: <Blocks className="h-4 w-4" /> },
+    {
+      title: "Legos",
+      href: "/lego",
+      icon: <Blocks className="h-4 w-4" />,
+      show: true,
+    },
     {
       title: "Subastas Activas",
       href: "subasta/activas",
       icon: <AlarmClock className="h-4 w-4" />,
+      show: true,
     },
     {
       title: "Subastas No activas",
       href: "subasta/noactivas",
       icon: <AlarmClockOff className="h-4 w-4" />,
+      show: authorize(["administrador", "vendedor"]),
     },
   ];
 
@@ -54,35 +63,47 @@ export default function Header() {
       title: "Lego",
       href: "table",
       icon: <Blocks className="h-4 w-4" />,
+      show: authorize(["administrador", "vendedor"]),
     },
     {
       title: "Usuarios",
       href: "usuario",
       icon: <CircleUserIcon className="h-4 w-4" />,
+      show: authorize(["administrador"]),
     },
     {
       title: "Pujas",
       href: "pujas",
       icon: <Activity className="h-4 w-4" />,
+      show: authorize(["administrador"]),
     },
     {
       title: "Subastas",
       href: "lego/subasta",
       icon: <KeyboardMusic className="h-4 w-4" />,
+      show: authorize(["administrador", "vendedor"]),
     }
   ];
 
   const userItems = [
-    { title: "Login", href: "login", icon: <LogIn className="h-4 w-4" /> },
+    {
+      title: "Login",
+      href: "login",
+      icon: <LogIn className="h-4 w-4" />,
+      show: !isAuthenticated,
+    },
     {
       title: "Registrarse",
       href: "/create",
       icon: <UserPlus className="h-4 w-4" />,
+      show: !isAuthenticated,
     },
     {
       title: "Logout",
       href: "#login",
       icon: <LogOut className="h-4 w-4" />,
+      show: isAuthenticated,
+      action: clearUser,
     },
   ];
   return (
@@ -109,13 +130,9 @@ export default function Header() {
                 <ChevronDown className="h-3 w-3" />
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">
-                {navItems.map((item) => (
+                {navItems.filter(item => item.show).map((item) => (
                   <MenubarItem key={item.href} asChild>
-                    <Link
-                      to={item.href}
-                      className="flex items-center gap-2 py-2 px-3 rounded-md text-sm hover:bg-accent/10 transition"
-                    >
-
+                    <Link to={item.href} className="flex items-center gap-2 py-2 px-3 rounded-md text-sm hover:bg-accent/10 transition">
                       {item.icon} {item.title}
                     </Link>
                   </MenubarItem>
@@ -130,12 +147,10 @@ export default function Header() {
                 <ChevronDown className="h-3 w-3" />
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">
-                {mantItems.map((item) => (
+                {/* Escritorio - Mantenimientos */}
+                {mantItems.filter(item => item.show).map((item) => (
                   <MenubarItem key={item.href} asChild>
-                    <Link
-                      to={item.href}
-                      className="flex items-center gap-2 py-2 px-3 rounded-md text-sm hover:bg-accent/10 transition"
-                    >
+                    <Link to={item.href} className="flex items-center gap-2 py-2 px-3 rounded-md text-sm hover:bg-accent/10 transition">
                       {item.icon} {item.title}
                     </Link>
                   </MenubarItem>
@@ -150,12 +165,9 @@ export default function Header() {
                 <ChevronDown className="h-3 w-3" />
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">
-                {userItems.map((item) => (
+                {userItems.filter(item => item.show).map((item) => (
                   <MenubarItem key={item.href} asChild>
-                    <Link
-                      to={item.href}
-                      className="flex items-center gap-2 py-2 px-3 rounded-md text-sm hover:bg-accent/10 transition"
-                    >
+                    <Link to={item.href} onClick={() => item.action && item.action()} className="flex items-center gap-2 py-2 px-3 rounded-md text-sm hover:bg-accent/10 transition">
                       {item.icon} {item.title}
                     </Link>
                   </MenubarItem>
@@ -196,13 +208,9 @@ export default function Header() {
                   <h4 className="mb-2 text-lg font-semibold flex items-center gap-2">
                     <Blocks /> Lego
                   </h4>
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 py-2 px-3 rounded-md text-white/90 hover:bg-white/10 transition"
-                    >
+                  {navItems.filter(item => item.show).map((item) => (
+                    <Link key={item.href} to={item.href} onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 py-2 px-3 rounded-md text-white/90 hover:bg-white/10 transition">
                       {item.icon} {item.title}
                     </Link>
                   ))}
@@ -212,13 +220,9 @@ export default function Header() {
                   <h4 className="mb-2 text-lg font-semibold flex items-center gap-2">
                     <Layers /> Mantenimientos
                   </h4>
-                  {mantItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 py-2 px-3 rounded-md text-white/90 hover:bg-white/10 transition"
-                    >
+                  {mantItems.filter(item => item.show).map((item) => (
+                    <Link key={item.href} to={item.href} onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 py-2 px-3 rounded-md text-white/90 hover:bg-white/10 transition">
                       {item.icon} {item.title}
                     </Link>
                   ))}
@@ -228,13 +232,9 @@ export default function Header() {
                   <h4 className="mb-2 text-lg font-semibold flex items-center gap-2">
                     <User /> {userEmail}
                   </h4>
-                  {userItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 py-2 px-3 rounded-md text-white/90 hover:bg-white/10 transition"
-                    >
+                  {userItems.filter(item => item.show).map((item) => (
+                    <Link key={item.href} to={item.href} onClick={() => { setMobileOpen(false); item.action && item.action(); }}
+                      className="flex items-center gap-2 py-2 px-3 rounded-md text-white/90 hover:bg-white/10 transition">
                       {item.icon} {item.title}
                     </Link>
                   ))}
