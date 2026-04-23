@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import PagoService from "@/services/PagoService";
 import {
   Layers,
   LogIn,
@@ -37,6 +38,18 @@ export default function Header() {
   const { user, isAuthenticated, clearUser, authorize } = useUser();
   const userEmail = user?.email || "Invitado";
 
+  const [pagosPendientes, setPagosPendientes] = useState(0);
+
+  // Cargar cantidad de pagos pendientes del usuario logueado
+  useEffect(() => {
+    if (!user?.id || !authorize(["comprador"])) return;
+    PagoService.getPorUsuario(user.id)
+      .then(res => {
+        const data = res.data?.data?.data ?? res.data?.data ?? [];
+        setPagosPendientes(Array.isArray(data) ? data.length : 0);
+      })
+      .catch(() => setPagosPendientes(0));
+  }, [user?.id]);
   const navItems = [
     {
       title: "Legos",
@@ -179,15 +192,19 @@ export default function Header() {
 
         {/* -------- Carrito + Menú móvil -------- */}
         <div className="flex items-center gap-4">
-          <Link to="/pagos" className="relative hover:opacity-80">
-            <ShoppingCart className="h-6 w-6" />
-            <Badge
-              className="absolute -top-2 -right-3 rounded-full px-2 py-0 text-xs font-semibold"
-              variant="secondary"
-            >
-              3
-            </Badge>
-          </Link>
+          {authorize(["comprador"]) && (
+            <Link to="/pagos" className="relative hover:opacity-80">
+              <ShoppingCart className="h-6 w-6" />
+              {pagosPendientes > 0 && (
+                <Badge
+                  className="absolute -top-2 -right-3 rounded-full px-2 py-0 text-xs font-semibold"
+                  variant="secondary"
+                >
+                  {pagosPendientes}
+                </Badge>
+              )}
+            </Link>
+          )}
 
           {/* Menú móvil */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
