@@ -117,7 +117,7 @@ const rutas = createBrowserRouter([
       {
         path: "lego/subasta",
         element: (
-          <RoleRoute requiredRoles={["administrador"]}>
+          <RoleRoute requiredRoles={["administrador","vendedor"]}>
             <TableSubasta />
           </RoleRoute>
         ),

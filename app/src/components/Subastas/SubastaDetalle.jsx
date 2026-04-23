@@ -5,9 +5,8 @@ import {
     Gavel, Clock, ChevronLeft, AlertTriangle,
     History, CheckCircle, ChevronRight, Trophy
 } from "lucide-react";
-import SubastaService from "../../services/SubastaService";   // ← Importamos el servicio
+import SubastaService from "../../services/SubastaService";
 import { useUser } from "@/hooks/useUser";
-
 
 const BASE_URL = import.meta.env.VITE_BASE_URL ?? "";
 const ABLY_KEY = import.meta.env.VITE_ABLY_KEY ?? "";
@@ -25,14 +24,11 @@ function useCountdown(fechaCierre, onFinalizado) {
 
         const tick = () => {
             const ms = new Date(fechaCierre) - Date.now();
-
             if (ms <= 0) {
                 setTexto("Finalizada");
                 setFinalizada(true);
-                // Si ya finalizó, no hacemos nada más
                 return true;
             }
-
             const s = Math.floor(ms / 1000);
             const h = Math.floor(s / 3600);
             const m = Math.floor((s % 3600) / 60);
@@ -41,22 +37,18 @@ function useCountdown(fechaCierre, onFinalizado) {
             return false;
         };
 
-        // Ejecución inicial
         const yaTermino = tick();
-        if (yaTermino) {
-            onFinalizado?.();
-            return;
-        }
+        if (yaTermino) { onFinalizado?.(); return; }
 
         const interval = setInterval(() => {
             if (tick()) {
-                clearInterval(interval); // 👈 CRÍTICO: Detener el reloj
-                onFinalizado?.();        // 👈 Llamar al cierre una sola vez
+                clearInterval(interval);
+                onFinalizado?.();
             }
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [fechaCierre]); // Quitamos onFinalizado de aquí para evitar re-ejecuciones innecesarias
+    }, [fechaCierre]);
 
     return { texto, finalizada };
 }
@@ -83,9 +75,7 @@ function ImageCarousel({ imagenes, nombre }) {
                     src={toSrc(imagenes[idx])}
                     alt={`${nombre} - ${idx + 1}`}
                     className="max-h-full max-w-full object-contain p-4"
-                    onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/400?text=Sin+imagen";
-                    }}
+                    onError={(e) => { e.target.src = "https://via.placeholder.com/400?text=Sin+imagen"; }}
                 />
                 {imagenes.length > 1 && (
                     <>
@@ -101,7 +91,6 @@ function ImageCarousel({ imagenes, nombre }) {
                     </>
                 )}
             </div>
-
             {imagenes.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-1">
                     {imagenes.map((img, i) => (
@@ -153,102 +142,90 @@ function SinPujasAnnouncement() {
 }
 
 export default function SubastaDetalle() {
-    const { id } = useParams();
-    const navigate = useNavigate();
+    const { id }    = useParams();
+    const navigate  = useNavigate();
+    const { user }  = useUser();
 
-    const [subasta, setSubasta] = useState(null);
-    const [pujas, setPujas] = useState([]);
-    const [pujaMax, setPujaMax] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [errorPage, setErrorPage] = useState("");
-    const { user } = useUser();
-    console.log("USER:", user)
-    const USUARIO_ID = user?.id;
-    const USUARIO_NOMBRE = user?.nombre || user?.email;
+    // ── Ref siempre sincronizado con el usuario del contexto ────────────────
+    // Se actualiza CADA VEZ que user cambia, sin depender de cargarDatos.
+    // Al ser un ref, los callbacks de Ably y handlePujar siempre leen el valor fresco.
+    const usuarioRef = useRef({ id: null, nombre: null });
+    useEffect(() => {
+        usuarioRef.current = {
+            id:     user?.id     ?? null,
+            nombre: user?.nombre_completo ?? user?.nombre ?? user?.email ?? "",
+        };
+    }, [user]);
 
-
-    const [monto, setMonto] = useState("");
-    const [enviando, setEnviando] = useState(false);
-    const [msgError, setMsgError] = useState("");
-    const [msgOk, setMsgOk] = useState("");
-    const [nombreUsuarioSesion, setNombreUsuarioSesion] = useState("");
-    const [usuarioActual, setUsuarioActual] = useState({ id: null, rol: null });
-
-    const usuarioActualRef = useRef({ id: null });
-
-    const [superado, setSuperado] = useState(false);
-    const superadoTimer = useRef(null);
-
+    const [subasta,        setSubasta]        = useState(null);
+    const [pujas,          setPujas]          = useState([]);
+    const [pujaMax,        setPujaMax]        = useState(null);
+    const [loading,        setLoading]        = useState(true);
+    const [errorPage,      setErrorPage]      = useState("");
+    const [monto,          setMonto]          = useState("");
+    const [enviando,       setEnviando]       = useState(false);
+    const [msgError,       setMsgError]       = useState("");
+    const [msgOk,          setMsgOk]          = useState("");
+    const [superado,       setSuperado]       = useState(false);
     const [subastaCerrada, setSubastaCerrada] = useState(false);
-    const [ganador, setGanador] = useState(null);
+    const [ganador,        setGanador]        = useState(null);
 
-    const countdownData = useCountdown(subasta?.fecha_cierre, () => {
-        cerrarSubastaAutomaticamente();
-    });
+    const superadoTimer  = useRef(null);
+    const enviandoCierre = useRef(false);
 
-    const { texto: countdown, finalizada: tiempoFinalizado } = countdownData;
+    const { texto: countdown, finalizada: tiempoFinalizado } = useCountdown(
+        subasta?.fecha_cierre,
+        () => cerrarSubastaAutomaticamente()
+    );
 
-    // ── Cargar datos usando el servicio ─────────────────────────────────────
+    // ── Cargar datos de la subasta ──────────────────────────────────────────
     const cargarDatos = async () => {
         try {
             setLoading(true);
             setErrorPage("");
 
-            const response = await SubastaService.getParaInterfaz(id);   // ← Usamos el servicio
-
-            const res = response.data;
-            const item = res?.data?.subasta;
-            const listaPujas = Array.isArray(res?.data?.pujas) ? res.data.pujas : [];
-            const pujaMaxAPI = res?.data?.puja_maxima || null;
+            const response    = await SubastaService.getParaInterfaz(id);
+            const res         = response.data;
+            const item        = res?.data?.subasta;
+            const listaPujas  = Array.isArray(res?.data?.pujas) ? res.data.pujas : [];
+            const pujaMaxAPI  = res?.data?.puja_maxima || null;
 
             if (!item) throw new Error("No se encontraron datos de la subasta");
 
-            // Solo datos de la URL (igual que en Pagos)
-            const userId = USUARIO_ID;
-            const userName = USUARIO_NOMBRE;
-
-            setNombreUsuarioSesion(userName);
-            setUsuarioActual({ id: userId, rol: res?.data?.usuario_actual_rol });
-
-            usuarioActualRef.current = { id: userId };
-
-            console.log("✅ Usuario cargado (desde URL):", { id: userId, nombre: userName });
-
-            const ahora = Date.now();
+            const ahora       = Date.now();
             const fechaCierre = new Date(item.fecha_cierre).getTime();
             const debeCerrada = ahora > fechaCierre;
 
-            const subastaNormalizada = {
-                id: item.id,
-                id_creador: item.id_creador,
-                lego_nombre: item.lego_nombre || "Sin nombre",
-                lego_descripcion: item.lego_descripcion || "Sin descripción",
-                precio_base: parseFloat(item.precio_base) || 0,
+            setSubasta({
+                id:                item.id,
+                id_creador:        item.id_creador,
+                lego_nombre:       item.lego_nombre       || "Sin nombre",
+                lego_descripcion:  item.lego_descripcion  || "Sin descripción",
+                precio_base:       parseFloat(item.precio_base)       || 0,
                 incremento_minimo: parseFloat(item.incremento_minimo) || 0,
-                fecha_cierre: item.fecha_cierre,
-                fecha_inicio: item.fecha_inicio,
-                estado: debeCerrada ? "Finalizada" : item.estado,
-                vendedor_nombre: item.vendedor_nombre,
-                imagenes: Array.isArray(item.imagenes) ? item.imagenes : [],
-                ganador_id: item.ganador_id || null,
-                ganador_nombre: item.ganador_nombre || null,
-                monto_final: item.monto_final || null
-            };
+                fecha_cierre:      item.fecha_cierre,
+                fecha_inicio:      item.fecha_inicio,
+                estado:            debeCerrada ? "Finalizada" : item.estado,
+                vendedor_nombre:   item.vendedor_nombre,
+                imagenes:          Array.isArray(item.imagenes) ? item.imagenes : [],
+                ganador_id:        item.ganador_id    || null,
+                ganador_nombre:    item.ganador_nombre || null,
+                monto_final:       item.monto_final   || null,
+            });
 
-            setSubasta(subastaNormalizada);
             setPujas(listaPujas);
 
             if (pujaMaxAPI) {
                 setPujaMax({
-                    monto: parseFloat(pujaMaxAPI.monto),
+                    monto:          parseFloat(pujaMaxAPI.monto),
                     usuario_nombre: pujaMaxAPI.usuario_nombre,
-                    id_usuario: pujaMaxAPI.id_usuario
+                    id_usuario:     pujaMaxAPI.id_usuario,
                 });
             } else if (listaPujas.length > 0) {
                 setPujaMax({
-                    monto: parseFloat(listaPujas[0].monto),
+                    monto:          parseFloat(listaPujas[0].monto),
                     usuario_nombre: listaPujas[0].usuario_pujador,
-                    id_usuario: listaPujas[0].id_usuario
+                    id_usuario:     listaPujas[0].id_usuario,
                 });
             }
 
@@ -270,26 +247,23 @@ export default function SubastaDetalle() {
         if (id) cargarDatos();
     }, [id]);
 
-    // Ably realtime (se mantiene igual)
+    // ── Ably realtime ───────────────────────────────────────────────────────
     useEffect(() => {
         if (!id || !ABLY_KEY || !subasta) return;
 
-        const client = new Ably.Realtime({ key: ABLY_KEY });
+        const client  = new Ably.Realtime({ key: ABLY_KEY });
         const channel = client.channels.get(`auction-${id}`);
 
         channel.subscribe("new-bid", (msg) => {
-            const d = msg.data;
-            const miId = usuarioActualRef.current.id;
-
-            console.log("📨 Nueva puja recibida:", d);
+            const d    = msg.data;
+            const miId = parseInt(usuarioRef.current.id);
 
             setPujaMax((prev) => {
                 if (
                     prev &&
                     parseInt(prev.id_usuario) === miId &&
-                    parseInt(d.id_usuario) !== miId
+                    parseInt(d.id_usuario)    !== miId
                 ) {
-                    console.log("🔔 ¡Superado!");
                     setSuperado(true);
                     if (superadoTimer.current) clearTimeout(superadoTimer.current);
                     superadoTimer.current = setTimeout(() => setSuperado(false), 5000);
@@ -299,13 +273,13 @@ export default function SubastaDetalle() {
 
             setPujas((prev) => [
                 {
-                    puja_id: Date.now(),
-                    monto: d.monto,
+                    puja_id:         Date.now(),
+                    monto:           d.monto,
                     usuario_pujador: d.usuario_nombre,
-                    fecha_hora: d.fecha_hora,
-                    id_usuario: d.id_usuario
+                    fecha_hora:      d.fecha_hora,
+                    id_usuario:      d.id_usuario,
                 },
-                ...prev
+                ...prev,
             ]);
         });
 
@@ -317,55 +291,31 @@ export default function SubastaDetalle() {
             }
             setSubasta((prev) => ({
                 ...prev,
-                estado: "Finalizada",
-                ganador_id: d.ganador_id || null,
+                estado:         "Finalizada",
+                ganador_id:     d.ganador_id     || null,
                 ganador_nombre: d.ganador_nombre || null,
-                monto_final: d.monto_final || null
+                monto_final:    d.monto_final    || null,
             }));
         });
 
         return () => { channel.unsubscribe(); client.close(); };
     }, [id, ABLY_KEY, !!subasta]);
 
-    // ── Cerrar subasta usando el servicio ───────────────────────────────────
-    const enviandoCierre = useRef(false); // Usamos un Ref para control inmediato
-
-    // Dentro de tu componente SubastaDetalle.jsx
-
+    // ── Cerrar subasta automáticamente ─────────────────────────────────────
     const cerrarSubastaAutomaticamente = async () => {
-        // Si ya se está cerrando o ya está marcada como cerrada, no hacemos nada
         if (enviandoCierre.current || subastaCerrada) return;
-
         enviandoCierre.current = true;
         try {
-            console.log("🚀 Iniciando cierre automático de subasta...");
-            const response = await SubastaService.cerrar(parseInt(id));
+            const response  = await SubastaService.cerrar(parseInt(id));
             const resultado = response.data;
-
             if (resultado.success) {
                 setSubastaCerrada(true);
-
-                // Si el backend nos confirma quién ganó, lo mostramos
                 if (resultado.ganador_nombre) {
-                    setGanador({
-                        nombre: resultado.ganador_nombre,
-                        monto: resultado.monto_final
-                    });
-                } else {
-                    // Caso borde: si no hay ganador en la respuesta pero teníamos una puja máxima en pantalla
-                    if (pujaMax) {
-                        setGanador({
-                            nombre: pujaMax.usuario_nombre,
-                            monto: pujaMax.monto
-                        });
-                    }
+                    setGanador({ nombre: resultado.ganador_nombre, monto: resultado.monto_final });
+                } else if (pujaMax) {
+                    setGanador({ nombre: pujaMax.usuario_nombre, monto: pujaMax.monto });
                 }
-
-                // Actualizamos el estado general de la subasta en el objeto local
-                setSubasta(prev => ({
-                    ...prev,
-                    estado: "Finalizada"
-                }));
+                setSubasta(prev => ({ ...prev, estado: "Finalizada" }));
             }
         } catch (err) {
             console.error("❌ Error al cerrar subasta:", err);
@@ -373,20 +323,26 @@ export default function SubastaDetalle() {
             enviandoCierre.current = false;
         }
     };
-    // ── Pujar usando el servicio ────────────────────────────────────────────
+
+    // ── Pujar ───────────────────────────────────────────────────────────────
     const handlePujar = async () => {
         setMsgError("");
         setMsgOk("");
+
+        // Verificar sesión
+        if (!usuarioRef.current.id) {
+            setMsgError("Debes iniciar sesión para pujar");
+            return;
+        }
 
         if (subastaCerrada || tiempoFinalizado) {
             setMsgError("Esta subasta ya ha sido finalizada");
             return;
         }
 
-        const montoNum = parseFloat(monto);
-        const montoActual = pujaMax ? parseFloat(pujaMax.monto) : parseFloat(subasta.precio_base);
-        const incremento = parseFloat(subasta.incremento_minimo);
-        const montoMinimoRequerido = montoActual + incremento;
+        const montoNum             = parseFloat(monto);
+        const montoActual          = pujaMax ? parseFloat(pujaMax.monto) : parseFloat(subasta.precio_base);
+        const montoMinimoRequerido = montoActual + parseFloat(subasta.incremento_minimo);
 
         if (!monto || isNaN(montoNum)) {
             setMsgError("Ingresa un monto válido");
@@ -400,24 +356,25 @@ export default function SubastaDetalle() {
 
         setEnviando(true);
         try {
-            const res = await SubastaService.pujar({           // ← Usamos el servicio
+            const res = await SubastaService.pujar({
                 id_subasta: parseInt(id),
-                monto: montoNum,
-                id_usuario: usuarioActualRef.current.id
+                monto:      montoNum,
+                id_usuario: usuarioRef.current.id,      // ← siempre del usuario logueado
             });
 
             if (res.data.success) {
                 setMsgOk("¡Puja enviada correctamente!");
                 setMonto("");
 
-                // Publicamos en Ably (esto se mantiene manual porque es realtime)
-                const client = new Ably.Realtime({ key: ABLY_KEY });
-                client.channels.get(`auction-${id}`).publish("new-bid", {
-                    monto: montoNum,
-                    usuario_nombre: nombreUsuarioSesion,
-                    id_usuario: usuarioActualRef.current.id,
-                    fecha_hora: new Date().toISOString()
+                // Publicar en Ably para tiempo real
+                const ablyClient = new Ably.Realtime({ key: ABLY_KEY });
+                ablyClient.channels.get(`auction-${id}`).publish("new-bid", {
+                    monto:          montoNum,
+                    usuario_nombre: usuarioRef.current.nombre,  // ← nombre del logueado
+                    id_usuario:     usuarioRef.current.id,
+                    fecha_hora:     new Date().toISOString(),
                 });
+                setTimeout(() => ablyClient.close(), 2000);
             }
         } catch (err) {
             setMsgError(err.response?.data?.message || "Error al procesar puja");
@@ -426,7 +383,7 @@ export default function SubastaDetalle() {
         }
     };
 
-    // ── Resto del componente (JSX) sin cambios ───────────────────────────────
+    // ── Renders ─────────────────────────────────────────────────────────────
     if (loading) return (
         <div className="flex items-center justify-center min-h-screen bg-zinc-950">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
@@ -437,17 +394,21 @@ export default function SubastaDetalle() {
         <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 text-center p-6">
             <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
             <p className="text-zinc-400 mb-6">{errorPage || "No se pudo cargar la subasta"}</p>
-            <button onClick={() => navigate(-1)} className="bg-zinc-800 px-6 py-2 rounded-xl text-white hover:bg-zinc-700 transition-colors">Volver</button>
+            <button onClick={() => navigate(-1)} className="bg-zinc-800 px-6 py-2 rounded-xl text-white hover:bg-zinc-700 transition-colors">
+                Volver
+            </button>
         </div>
     );
 
-    const estaActiva = !subastaCerrada && subasta.estado?.toLowerCase() === "activa";
-    const esVendedor = subasta && parseInt(subasta.id_creador) === usuarioActualRef.current.id;
+    const estaActiva       = !subastaCerrada && subasta.estado?.toLowerCase() === "activa";
+    const esVendedor       = subasta && parseInt(subasta.id_creador) === parseInt(usuarioRef.current.id);
     const precioReferencia = pujaMax ? parseFloat(pujaMax.monto) : parseFloat(subasta.precio_base);
-    const montoMinimo = precioReferencia + parseFloat(subasta.incremento_minimo);
+    const montoMinimo      = precioReferencia + parseFloat(subasta.incremento_minimo);
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white pb-10">
+
+            {/* Notificación: puja superada */}
             {superado && (
                 <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <AlertTriangle className="w-5 h-5" />
@@ -455,8 +416,11 @@ export default function SubastaDetalle() {
                 </div>
             )}
 
+            {/* Header */}
             <div className="border-b border-zinc-800 px-6 py-4 flex items-center gap-4">
-                <button onClick={() => navigate(-1)} className="text-zinc-400 hover:text-white transition-colors"><ChevronLeft /></button>
+                <button onClick={() => navigate(-1)} className="text-zinc-400 hover:text-white transition-colors">
+                    <ChevronLeft />
+                </button>
                 <h1 className="text-lg font-bold flex items-center gap-2">
                     <Gavel className="w-5 h-5 text-blue-500" /> {subasta.lego_nombre}
                 </h1>
@@ -466,38 +430,58 @@ export default function SubastaDetalle() {
             </div>
 
             <div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                {/* Columna izquierda: imagen + info */}
                 <div className="space-y-4">
                     <ImageCarousel imagenes={subasta.imagenes} nombre={subasta.lego_nombre} />
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
                         <h2 className="text-xl font-bold mb-2">{subasta.lego_nombre}</h2>
                         <p className="text-zinc-400 text-sm">{subasta.lego_descripcion}</p>
                         {subasta.vendedor_nombre && (
-                            <p className="text-zinc-500 text-xs mt-3">Vendedor: <span className="text-zinc-300">{subasta.vendedor_nombre}</span></p>
+                            <p className="text-zinc-500 text-xs mt-3">
+                                Vendedor: <span className="text-zinc-300">{subasta.vendedor_nombre}</span>
+                            </p>
                         )}
                     </div>
                 </div>
 
+                {/* Columna derecha: precio + puja + historial */}
                 <div className="space-y-4">
-                    {subastaCerrada ? (ganador
-                        ? <GanadorAnnouncement ganador={ganador.nombre} monto={ganador.monto} />
-                        : <SinPujasAnnouncement />
+
+                    {/* Precio actual o anuncio de ganador */}
+                    {subastaCerrada ? (
+                        ganador
+                            ? <GanadorAnnouncement ganador={ganador.nombre} monto={ganador.monto} />
+                            : <SinPujasAnnouncement />
                     ) : (
                         <div className="bg-zinc-900 border border-blue-500/30 rounded-2xl p-6 text-center shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                             <div className="text-xs text-blue-400 uppercase mb-1 tracking-widest font-bold">Precio Actual</div>
                             <p className="text-5xl font-black text-blue-400">{formatMonto(precioReferencia)}</p>
                             {pujaMax && (
-                                <p className="text-zinc-500 text-xs mt-2">Mejor oferta de <span className="text-zinc-300">{pujaMax.usuario_nombre}</span></p>
+                                <p className="text-zinc-500 text-xs mt-2">
+                                    Mejor oferta de <span className="text-zinc-300">{pujaMax.usuario_nombre}</span>
+                                    {parseInt(pujaMax.id_usuario) === parseInt(usuarioRef.current.id) && (
+                                        <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                                            Tú lideras
+                                        </span>
+                                    )}
+                                </p>
                             )}
                         </div>
                     )}
 
+                    {/* Countdown + formulario */}
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2 text-sm text-zinc-500">
                                 <Clock className="w-4 h-4" /> Termina en:
-                                <span className={`font-mono font-bold ${tiempoFinalizado ? "text-red-400" : "text-white"}`}>{countdown}</span>
+                                <span className={`font-mono font-bold ${tiempoFinalizado ? "text-red-400" : "text-white"}`}>
+                                    {countdown}
+                                </span>
                             </div>
-                            <div className="text-sm text-zinc-500">Incremento: <span className="text-white font-bold">{formatMonto(subasta.incremento_minimo)}</span></div>
+                            <div className="text-sm text-zinc-500">
+                                Incremento: <span className="text-white font-bold">{formatMonto(subasta.incremento_minimo)}</span>
+                            </div>
                         </div>
 
                         {estaActiva && !esVendedor && (
@@ -518,24 +502,50 @@ export default function SubastaDetalle() {
                                 </button>
                             </div>
                         )}
-                        {msgError && <p className="text-red-400 text-xs font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {msgError}</p>}
-                        {msgOk && <p className="text-green-400 text-xs font-medium flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {msgOk}</p>}
+
+                        {estaActiva && esVendedor && (
+                            <p className="text-zinc-500 text-xs text-center">
+                                Eres el vendedor de esta subasta — no puedes pujar.
+                            </p>
+                        )}
+
+                        {msgError && (
+                            <p className="text-red-400 text-xs font-medium flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" /> {msgError}
+                            </p>
+                        )}
+                        {msgOk && (
+                            <p className="text-green-400 text-xs font-medium flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" /> {msgOk}
+                            </p>
+                        )}
                     </div>
 
+                    {/* Historial de pujas */}
                     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
                         <h3 className="text-xs font-bold text-zinc-500 uppercase mb-4 flex items-center gap-2">
                             <History className="w-3 h-3" /> Historial de Pujas
                         </h3>
                         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                             {pujas.length > 0 ? pujas.map((p, i) => (
-                                <div key={p.puja_id || i} className={`flex justify-between items-center text-sm p-3 rounded-xl ${i === 0 ? "bg-blue-500/10 border border-blue-500/20" : "bg-zinc-800/30"}`}>
+                                <div
+                                    key={p.puja_id || i}
+                                    className={`flex justify-between items-center text-sm p-3 rounded-xl ${i === 0 ? "bg-blue-500/10 border border-blue-500/20" : "bg-zinc-800/30"}`}
+                                >
                                     <div className="flex items-center gap-2">
                                         <div className={`w-2 h-2 rounded-full ${i === 0 ? "bg-blue-500 animate-pulse" : "bg-zinc-600"}`} />
                                         <span>{p.usuario_pujador}</span>
+                                        {parseInt(p.id_usuario) === parseInt(usuarioRef.current.id) && (
+                                            <span className="text-xs text-zinc-500">(tú)</span>
+                                        )}
                                     </div>
-                                    <span className={`font-bold ${i === 0 ? "text-blue-400" : "text-white"}`}>{formatMonto(p.monto)}</span>
+                                    <span className={`font-bold ${i === 0 ? "text-blue-400" : "text-white"}`}>
+                                        {formatMonto(p.monto)}
+                                    </span>
                                 </div>
-                            )) : <p className="text-center text-zinc-600 text-sm py-4">No hay pujas todavía.</p>}
+                            )) : (
+                                <p className="text-center text-zinc-600 text-sm py-4">No hay pujas todavía.</p>
+                            )}
                         </div>
                     </div>
                 </div>

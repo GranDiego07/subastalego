@@ -179,7 +179,7 @@ export default function Header() {
 
         {/* -------- Carrito + Menú móvil -------- */}
         <div className="flex items-center gap-4">
-          <Link to="/cart" className="relative hover:opacity-80">
+          <Link to="/pagos" className="relative hover:opacity-80">
             <ShoppingCart className="h-6 w-6" />
             <Badge
               className="absolute -top-2 -right-3 rounded-full px-2 py-0 text-xs font-semibold"

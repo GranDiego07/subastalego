@@ -4,10 +4,7 @@ class pago  // minúsculas para que el router lo encuentre
 {
     /**
      * POST /pago/crear
-     * Registra el pago de una subasta finalizada.
-     * El usuario ganador lo determina el sistema automáticamente —
-     * no existe campo para seleccionar el usuario desde el cliente.
-     * Body JSON: { id_subasta, id_usuario, nombre_usuario, monto, notas? }
+     * Body JSON: { id_subasta, id_usuario, nombre_usuario, monto }
      */
     public function crear()
     {
@@ -17,9 +14,9 @@ class pago  // minúsculas para que el router lo encuentre
             $input    = $request->getJSON();
 
             if (
-                empty($input->id_subasta)    ||
-                empty($input->id_usuario)    ||
-                empty($input->nombre_usuario)||
+                empty($input->id_subasta)     ||
+                empty($input->id_usuario)     ||
+                empty($input->nombre_usuario) ||
                 empty($input->monto)
             ) {
                 $response->toJSON([
@@ -37,7 +34,6 @@ class pago  // minúsculas para que el router lo encuentre
             $Pago   = new PagoModel();
             $result = $Pago->crear($input);
             $response->toJSON($result);
-
         } catch (Exception $e) {
             handleException($e);
         }
@@ -45,10 +41,9 @@ class pago  // minúsculas para que el router lo encuentre
 
     /**
      * PUT /pago/confirmar/:id
-     * Confirma un pago pendiente.
-     * Body JSON: { id_usuario }  — valida que el usuario sea el dueño del pago.
+     * El router en PUT con param llama a update($id)
      */
-    public function confirmar($id)
+    public function update($id)
     {
         try {
             $request  = new Request();
@@ -75,31 +70,30 @@ class pago  // minúsculas para que el router lo encuentre
 
             $result = $Pago->confirmar(intval($id));
             $response->toJSON($result);
-
         } catch (Exception $e) {
             handleException($e);
         }
     }
 
     /**
-     * GET /pago/usuario?id_usuario=1
-     * Lista todos los pagos de un usuario.
+     * GET /pago/getPorUsuario?id_usuario=X
+     * Retorna los pagos PENDIENTES del usuario
      */
-    public function getPorUsuario()
+    public function getPorUsuario($param = null)
     {
         try {
-            $response   = new Response();
-            $id_usuario = $_GET['id_usuario'] ?? null;
+            $response = new Response();
+            // El router puede pasar el id como parámetro de ruta o viene como ?id_usuario=X
+            $id_usuario = $param ?? $_GET['id_usuario'] ?? null;
 
             if (!$id_usuario) {
-                $response->toJSON(["success" => false, "message" => "Se requiere id_usuario como query param"]);
+                $response->toJSON(["success" => false, "message" => "Se requiere id_usuario"]);
                 return;
             }
 
             $Pago   = new PagoModel();
             $result = $Pago->getPorUsuario(intval($id_usuario));
             $response->toJSON(["success" => true, "data" => $result]);
-
         } catch (Exception $e) {
             handleException($e);
         }
@@ -107,7 +101,6 @@ class pago  // minúsculas para que el router lo encuentre
 
     /**
      * GET /pago/resumen/:id_usuario
-     * Resumen estadístico de pagos de un usuario.
      */
     public function resumen($id_usuario)
     {
@@ -116,7 +109,6 @@ class pago  // minúsculas para que el router lo encuentre
             $Pago     = new PagoModel();
             $result   = $Pago->resumenPorUsuario(intval($id_usuario));
             $response->toJSON(["success" => true, "data" => $result]);
-
         } catch (Exception $e) {
             handleException($e);
         }
@@ -124,7 +116,6 @@ class pago  // minúsculas para que el router lo encuentre
 
     /**
      * GET /pago/:id
-     * Detalle de un pago específico.
      */
     public function getById($id)
     {
@@ -138,8 +129,7 @@ class pago  // minúsculas para que el router lo encuentre
                 return;
             }
 
-            $response->toJSON($result);
-
+            $response->toJSON(["success" => true, "data" => $result]);
         } catch (Exception $e) {
             handleException($e);
         }
