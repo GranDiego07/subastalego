@@ -26,7 +26,7 @@ export default function TableLegos() {
 
     const fetchLegos = async () => {
         try {
-            const response = await LegoService.sinSubasta(user.id);
+            const response = await LegoService.sinSubasta(user.id, user.rol);
             const result = response.data;
             let dataArray = [];
             if (result?.success) {

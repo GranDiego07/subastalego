@@ -25,15 +25,13 @@ class LegoModel
                     inner JOIN categorias c ON l.id_categoria = c.id
                     inner JOIN condiciones_lego cond ON l.id_condicion = cond.id
                     inner jOIN estados_lego e ON l.id_estado = e.id
-                    inner jOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  
+                    inner jOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1
                     ORDER BY l.id DESC;";
         // Ejecutar consulta
         $vResultado = $this->enlace->ExecuteSQL($vSQL);
 
-        // Opcional: mantener el populate de imagen si lo necesitas como objeto
         if (!empty($vResultado) && is_array($vResultado)) {
             for ($i = 0; $i < count($vResultado); $i++) {
-                // Si quieres mantener la estructura anterior de imagen como objeto
                 $vResultado[$i]->imagen = $imagenM->getImagenPrincipal($vResultado[$i]->id);
             }
         }
@@ -41,27 +39,31 @@ class LegoModel
         return $vResultado;
     }
 
-    public function sinSubasta($id)
+    public function sinSubasta($id, $rol)
     {
         $imagenM = new ImageModel();
 
-        // Consulta SQL con JOINs para traer los nombres
+        // Si es administrador (rol 3) trae todos, si no filtra por vendedor
+        if (intval($rol) === 3) {
+            $where = "";
+        } else {
+            $where = "WHERE l.id_vendedor = $id";
+        }
+
         $vSQL = "SELECT l.*,c.nombre AS categoria_nombre,cond.nombre AS condicion_nombre,e.nombre AS estado_nombre,
                         i.url AS imagen_url
                     FROM lego l
                     inner JOIN categorias c ON l.id_categoria = c.id
                     inner JOIN condiciones_lego cond ON l.id_condicion = cond.id
                     inner jOIN estados_lego e ON l.id_estado = e.id
-                    inner jOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  
-                    where l.id_vendedor=$id
+                    inner jOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1
+                    $where
                     ORDER BY l.id DESC;";
-        // Ejecutar consulta
+
         $vResultado = $this->enlace->ExecuteSQL($vSQL);
 
-        // Opcional: mantener el populate de imagen si lo necesitas como objeto
         if (!empty($vResultado) && is_array($vResultado)) {
             for ($i = 0; $i < count($vResultado); $i++) {
-                // Si quieres mantener la estructura anterior de imagen como objeto
                 $vResultado[$i]->imagen = $imagenM->getImagenPrincipal($vResultado[$i]->id);
             }
         }

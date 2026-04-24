@@ -7,11 +7,14 @@ import { ArrowLeft } from "lucide-react";
 import PropTypes from "prop-types";
 
 export function RoleRoute({ children, requiredRoles }) {
-    const { authorize } = useUser();
+    const { authorize, user } = useUser();
     const hasShownToast = useRef(false);
     const navigate = useNavigate();
 
     const isAuthorized = authorize(requiredRoles);
+
+    // Debug temporal — eliminar luego
+    console.log("RoleRoute →", { requiredRoles, userRol: user?.rol, isAuthorized });
 
     useEffect(() => {
         // Solo mostrar el toast una vez por intento

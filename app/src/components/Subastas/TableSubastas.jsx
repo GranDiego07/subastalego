@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Edit, Plus, Trash2, ArrowLeft, Send, X, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import SubastaService from "@/services/SubastaService";
+import { useUser } from "@/hooks/useUser";
 
 const subastaColumns = [
     { key: "nombre", label: "Objeto Subastado" },
@@ -51,6 +52,7 @@ const estadoBadge = (estado) => {
 
 export default function TableSubastas() {
     const navigate = useNavigate();
+    const { user } = useUser();
     const [subastas, setSubastas] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -59,9 +61,10 @@ export default function TableSubastas() {
     const [modalReactivar, setModalReactivar] = useState(null); // ← nuevo
 
     useEffect(() => {
+        if (!user?.id) return;
         const fetchData = async () => {
             try {
-                const response = await SubastaService.allConDetalle();
+                const response = await SubastaService.allConDetalle(user.id, user.rol);
                 const result = response.data;
                 let dataArray = [];
                 if (result?.success) {
@@ -82,7 +85,7 @@ export default function TableSubastas() {
         const intervalo = setInterval(fetchData, 60000);
 
         return () => clearInterval(intervalo);
-    }, []);
+    }, [user]);
 
     const handleCancelar = async () => {
         try {

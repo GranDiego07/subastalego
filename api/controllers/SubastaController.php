@@ -106,12 +106,12 @@ class subasta  // ← Debe estar en minúsculas para que el router la encuentre
             handleException($e);
         }
     }
-    public function allConDetalle()
+    public function allConDetalle($id, $rol)
     {
         try {
             $response = new Response();
             $Subasta = new SubastaModel();
-            $result = $Subasta->allConDetalle();
+            $result = $Subasta->allConDetalle($id, $rol);
             $response->toJSON($result);
         } catch (Exception $e) {
             handleException($e);

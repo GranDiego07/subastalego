@@ -10,8 +10,9 @@ class SubastaService {
     getAll() {
         return axios.get(BASE_URL);
     }
-    allConDetalle() {
-        return axios.get(`${BASE_URL}/allConDetalle`);
+    allConDetalle(id, rol) {
+        if (!id || !rol) return Promise.reject(new Error("id y rol son requeridos"));
+        return axios.get(`${BASE_URL}/allConDetalle/${id}/${rol}`);
     }
     /**
      * Obtener un usuario específico por ID

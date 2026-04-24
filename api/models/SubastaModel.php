@@ -139,7 +139,7 @@ class SubastaModel
 
         return $this->get($objeto->id);
     }
-    public function allConDetalle()
+    public function allConDetalle($id, $rol)
     {
         $this->enlace->executeSQL_DML("UPDATE subastas 
         SET id_estado = 1 
@@ -160,11 +160,15 @@ class SubastaModel
         AND fecha_cierre <= NOW()
         AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = subastas.id) = 0");
 
+        // Admin (rol 3) trae todas, vendedor solo las suyas
+        $where = (intval($rol) === 3) ? "" : "WHERE s.id_creador = $id";
+
         $vSql = "SELECT s.id, s.id_estado, l.nombre AS lego_nombre, s.fecha_inicio, s.fecha_cierre, s.precio_base, s.incremento_minimo,
         (SELECT COUNT(*) FROM pujas WHERE id_subasta = s.id) AS cantidad_pujas, es.nombre AS estado_nombre
         FROM subastas s
         INNER JOIN lego l ON s.id_lego = l.id
         INNER JOIN estados_subasta es ON s.id_estado = es.id
+        $where
         ORDER BY l.id DESC;";
         return $this->enlace->ExecuteSQL($vSql);
     }

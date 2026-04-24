@@ -55,13 +55,13 @@ export default function Header() {
       title: "Legos",
       href: "/lego",
       icon: <Blocks className="h-4 w-4" />,
-      show: true,
+      show: authorize(["administrador", "vendedor","comprador"]),
     },
     {
       title: "Subastas Activas",
       href: "subasta/activas",
       icon: <AlarmClock className="h-4 w-4" />,
-      show: true,
+      show: authorize(["administrador", "vendedor","comprador"]),
     },
     {
       title: "Subastas No activas",
@@ -113,7 +113,7 @@ export default function Header() {
     },
     {
       title: "Logout",
-      href: "#login",
+      href: "/",
       icon: <LogOut className="h-4 w-4" />,
       show: isAuthenticated,
       action: clearUser,
