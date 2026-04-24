@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Edit, Plus, Trash2, ArrowLeft } from "lucide-react";
 import LegoService from "@/services/LegoService";
 import toast from "react-hot-toast";
+import { useUser } from "@/hooks/useUser";
 
 const legoColumns = [
     { key: "nombre", label: "Nombre del Set" },
@@ -16,15 +17,16 @@ const legoColumns = [
 ];
 
 export default function TableLegos() {
+    const { user } = useUser();
     const [legos, setLegos] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => { fetchLegos(); }, []);
+    useEffect(() => { if (user?.id) fetchLegos(); }, [user]);
 
     const fetchLegos = async () => {
         try {
-            const response = await LegoService.sinSubasta();
+            const response = await LegoService.sinSubasta(user.id);
             const result = response.data;
             let dataArray = [];
             if (result?.success) {
@@ -57,7 +59,6 @@ export default function TableLegos() {
             toast.error(msg);
         }
     };
-
 
     if (loading) return <div className="p-10 text-center">Cargando inventario...</div>;
     if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
@@ -102,7 +103,6 @@ export default function TableLegos() {
 
                                     <TableCell>{lego.condicion_nombre || lego.id_condicion || "—"}</TableCell>
 
-                                    {/* Badge de estado */}
                                     <TableCell>
                                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${lego.id_estado === 1
                                             ? "bg-green-100 text-green-800"
@@ -114,7 +114,6 @@ export default function TableLegos() {
 
                                     <TableCell className="flex justify-start items-center gap-1">
 
-                                        {/* Editar */}
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
@@ -128,7 +127,6 @@ export default function TableLegos() {
                                             </Tooltip>
                                         </TooltipProvider>
 
-                                        {/* Eliminar lógico */}
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>

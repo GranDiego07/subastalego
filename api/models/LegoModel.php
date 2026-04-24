@@ -41,7 +41,7 @@ class LegoModel
         return $vResultado;
     }
 
-    public function sinSubasta()
+    public function sinSubasta($id)
     {
         $imagenM = new ImageModel();
 
@@ -53,6 +53,7 @@ class LegoModel
                     inner JOIN condiciones_lego cond ON l.id_condicion = cond.id
                     inner jOIN estados_lego e ON l.id_estado = e.id
                     inner jOIN imagenes i ON i.id_lego = l.id AND i.es_principal = 1  
+                    where l.id_vendedor=$id
                     ORDER BY l.id DESC;";
         // Ejecutar consulta
         $vResultado = $this->enlace->ExecuteSQL($vSQL);

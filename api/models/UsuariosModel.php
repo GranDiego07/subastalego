@@ -163,6 +163,7 @@ class UsuariosModel
                     $data = [
                         'id' => $usuario->id,
                         'email' => $usuario->correo,
+                        'nombre_completo' => $usuario->nombre_completo,
                         'rol' => $usuario->id_rol,
                         'iat' => time(),
                         'exp' => time() + 3600

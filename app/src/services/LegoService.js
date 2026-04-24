@@ -10,8 +10,8 @@ class LegoService {
     getAll() {
         return axios.get(BASE_URL);
     }
-    sinSubasta() {
-        return axios.get(`${BASE_URL}/sinSubasta/`);
+    sinSubasta(id) {
+        return axios.get(`${BASE_URL}/sinSubasta/${id}`);
     }
     getByVendedor(vendedorId) {
         return axios.get(`${BASE_URL}/legosByVendedor/${vendedorId}`);

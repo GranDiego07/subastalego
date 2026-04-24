@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"; // ❌ Eliminar dataForm del import
-import { useForm, Controller, useWatch } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
@@ -10,112 +10,76 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Save, ArrowLeft } from "lucide-react";
+
 import SubastaService from "../../services/SubastaService";
-import EstadoSubastaServicio from "../../services/EstadoSubastaService";
 import LegoService from "@/services/LegoService";
-import UsuariosService from "@/services/UsuariosService";
 import { CustomSelect } from "../ui/custom/custom-select";
+import { useUser } from "@/hooks/useUser";
 
 export function CreateSubasta() {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const { user }  = useUser();
 
-  /* const [dataEstado, setDataEstado] = useState([]); */
-  const [dataLego, setDataLego] = useState([]);
-  const [dataUsuario, setDataUsuario] = useState([]);
-  const [loadingLegos, setLoadingLegos] = useState(false);
-  const [error, setError] = useState("");
+  const [dataLego,     setDataLego]     = useState([]);
+  const [loadingLegos, setLoadingLegos] = useState(true);
+  const [error,        setError]        = useState("");
 
   const subastaSchema = yup.object({
-    id_usuario: yup.number().typeError("Seleccione un usuario").required("El usuario es requerido"),
     id_lego: yup.number().typeError("Seleccione un lego").required("El lego es requerido"),
-    /* id_estado: yup.number().typeError("Seleccione un estado").required("El estado es requerido"), */
     precio_inicial: yup
-      .number()
-      .typeError("Ingrese un precio válido")
+      .number().typeError("Ingrese un precio válido")
       .required("El precio inicial es requerido")
       .moreThan(0, "El precio inicial debe ser mayor a 0"),
     incremento_minimo: yup
-      .number()
-      .typeError("Ingrese un incremento válido")
+      .number().typeError("Ingrese un incremento válido")
       .required("El incremento mínimo es requerido")
       .moreThan(0, "El incremento mínimo debe ser mayor a 0"),
     fecha_inicio: yup.string().required("La fecha de inicio es requerida"),
-    fecha_fin: yup.string().required("La fecha de fin es requerida"),
+    fecha_fin:    yup.string().required("La fecha de fin es requerida"),
   });
 
-  // ✅ defaultValues correctos — valores vacíos iniciales, NO el payload
-  const { control, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { control, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
-      id_usuario: "",
-      id_lego: "",
-      id_estado: 4,
-      precio_inicial: "",
+      id_lego:           "",
+      id_estado:         4,
+      precio_inicial:    "",
       incremento_minimo: "",
-      fecha_inicio: "",
-      fecha_fin: "",
+      fecha_inicio:      "",
+      fecha_fin:         "",
     },
     resolver: yupResolver(subastaSchema),
   });
 
-  const selectedUsuario = useWatch({ control, name: "id_usuario" });
-
+  // Cargar legos del usuario logueado al montar
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [/* estadoRes */, usuarioRes] = await Promise.all([
-          EstadoSubastaServicio.getAll(),
-          UsuariosService.getByRol(),
-        ]);
-        /* setDataEstado(estadoRes.data?.data ?? []); */
-        setDataUsuario(usuarioRes.data?.data ?? []);
-      } catch (err) {
-        if (err.name !== "AbortError") setError(err.message);
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedUsuario) {
-      setDataLego([]);
-      setValue("id_lego", "");
-      return;
-    }
-
+    if (!user?.id) return;
     const fetchLegos = async () => {
       setLoadingLegos(true);
       try {
-        const res = await LegoService.getByVendedor(selectedUsuario);
-        const data = res.data?.data ?? [];
-        const unicos = [...new Map(data.map((item) => [item.id, item])).values()];
+        const res    = await LegoService.getByVendedor(user.id);
+        const data   = res.data?.data ?? [];
+        const unicos = [...new Map(data.map(item => [item.id, item])).values()];
         setDataLego(unicos);
-        setValue("id_lego", "");
       } catch (err) {
         console.error("Error cargando legos:", err);
-        setDataLego([]);
-        toast.error("Error al cargar los legos del vendedor");
+        toast.error("Error al cargar tus legos");
       } finally {
         setLoadingLegos(false);
       }
     };
-
     fetchLegos();
-  }, [selectedUsuario, setValue]);
+  }, [user?.id]);
 
-  // ✅ onSubmit correcto — el payload se construye aquí con dataForm
   const onSubmit = async (dataForm) => {
     try {
       const payload = {
-        id_lego: dataForm.id_lego,
-        id_creador: dataForm.id_usuario,
-        fecha_inicio: dataForm.fecha_inicio.replace("T", " ") + ":00",
-        fecha_cierre: dataForm.fecha_fin.replace("T", " ") + ":00",
-        precio_base: dataForm.precio_inicial,
+        id_lego:           dataForm.id_lego,
+        id_creador:        user.id,               // ← usuario logueado
+        fecha_inicio:      dataForm.fecha_inicio.replace("T", " ") + ":00",
+        fecha_cierre:      dataForm.fecha_fin.replace("T", " ")    + ":00",
+        precio_base:       dataForm.precio_inicial,
         incremento_minimo: dataForm.incremento_minimo,
-        /* id_estado: dataForm.id_estado, */
       };
-
-      console.log("📦 Payload enviado:", JSON.stringify(payload, null, 2));
 
       const response = await SubastaService.create(payload);
       if (response.data) {
@@ -123,7 +87,6 @@ export function CreateSubasta() {
         navigate("/lego/subasta");
       }
     } catch (err) {
-      console.error("❌ Error completo:", JSON.stringify(err.response?.data));
       toast.error(err.response?.data?.message || "Error al crear la subasta");
     }
   };
@@ -138,19 +101,18 @@ export function CreateSubasta() {
 
       <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-6">
 
-        {/* Usuario */}
+        {/* Creador — nombre fijo del usuario logueado, sin combobox */}
         <div>
-          <Label className="block mb-1 text-sm font-medium">Usuario</Label>
-          <Controller name="id_usuario" control={control} render={({ field }) => (
-            <CustomSelect field={field} data={dataUsuario} label="Seleccione un usuario"
-              getOptionLabel={(item) => item.nombre_completo}
-              getOptionValue={(item) => item.id}
-              error={errors.id_usuario?.message} />
-          )} />
-          {errors.id_usuario && <p className="text-sm text-red-500">{errors.id_usuario.message}</p>}
+          <Label className="block mb-1 text-sm font-medium">Creador de la subasta</Label>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-input bg-muted text-sm">
+            <span className="font-medium text-foreground">
+              {user?.nombre_completo ?? user?.email ?? "Usuario actual"}
+            </span>
+            <span className="text-xs text-muted-foreground ml-1">(tú)</span>
+          </div>
         </div>
 
-        {/* Lego */}
+        {/* Lego — solo los del usuario logueado */}
         <div>
           <Label className="block mb-1 text-sm font-medium">Lego</Label>
           <Controller name="id_lego" control={control} render={({ field }) => (
@@ -158,31 +120,18 @@ export function CreateSubasta() {
               field={field}
               data={dataLego}
               label={
-                !selectedUsuario ? "Primero seleccione un usuario"
-                  : loadingLegos ? "Cargando legos..."
-                    : dataLego.length === 0 ? "Sin legos disponibles"
-                      : "Seleccione un lego"
+                loadingLegos          ? "Cargando tus legos..."
+                : dataLego.length === 0 ? "No tienes legos disponibles"
+                : "Seleccione un lego"
               }
               getOptionLabel={(item) => item.nombre}
               getOptionValue={(item) => item.id}
               error={errors.id_lego?.message}
-              disabled={!selectedUsuario || loadingLegos}
+              disabled={loadingLegos}
             />
           )} />
           {errors.id_lego && <p className="text-sm text-red-500">{errors.id_lego.message}</p>}
         </div>
-
-        {/* Estado */}
-        {/* <div>
-          <Label className="block mb-1 text-sm font-medium">Estado</Label>
-          <Controller name="id_estado" control={control} render={({ field }) => (
-            <CustomSelect field={field} data={dataEstado} label="Seleccione un estado"
-              getOptionLabel={(item) => item.nombre}
-              getOptionValue={(item) => item.id}
-              error={errors.id_estado?.message} />
-          )} />
-          {errors.id_estado && <p className="text-sm text-red-500">{errors.id_estado.message}</p>}
-        </div> */}
 
         {/* Precio Inicial */}
         <div>

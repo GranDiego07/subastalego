@@ -18,14 +18,14 @@ class lego
             handleException($e);
         }
     }
-    public function sinSubasta()
+    public function sinSubasta($id)
     {
         try {
             $response = new Response();
             //Instancia modelo
             $legoM = new LegoModel;
             //Método del modelo
-            $result = $legoM->sinSubasta();
+            $result = $legoM->sinSubasta($id);
             //Dar respuesta
             $response->toJSON($result);
         } catch (Exception $e) {
