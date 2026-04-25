@@ -104,7 +104,7 @@ export function CreateLego() {
       reset();
       setFiles([]);
       setFileURLs([]);
-      navigate("/lego/table");
+      navigate("/table");
     } catch (err) {
       console.error(err);
       toast.error("Error al crear lego");

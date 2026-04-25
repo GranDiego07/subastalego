@@ -59,7 +59,7 @@ export function UpdateLego() {
 
         if (data.en_subasta_activa) {
           toast.error("No se puede editar un lego que está en subasta activa");
-          navigate("/lego/table");
+          navigate("/table");
           return;
         }
 
@@ -90,7 +90,7 @@ export function UpdateLego() {
       const response = await LegoService.update(payload);
       if (response.data) {
         toast.success("¡Lego actualizado correctamente!", { duration: 2000 });
-        setTimeout(() => navigate("/lego/table"), 2000);
+        setTimeout(() => navigate("/table"), 2000);
       }
     } catch (err) {
       toast.error(err.response?.data?.message ?? "Error al actualizar el lego");

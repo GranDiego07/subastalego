@@ -157,7 +157,7 @@ CREATE TABLE `imagenes` (
   PRIMARY KEY (`id`),
   KEY `id_lego` (`id_lego`),
   CONSTRAINT `imagenes_ibfk_1` FOREIGN KEY (`id_lego`) REFERENCES `lego` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=104 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -195,7 +195,7 @@ CREATE TABLE `lego` (
   CONSTRAINT `lego_ibfk_1` FOREIGN KEY (`id_condicion`) REFERENCES `condiciones_lego` (`id`),
   CONSTRAINT `lego_ibfk_3` FOREIGN KEY (`id_vendedor`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `lego_ibfk_estado` FOREIGN KEY (`id_estado`) REFERENCES `estados_lego` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -222,10 +222,11 @@ CREATE TABLE `pagos` (
   `nombre_usuario` varchar(255) NOT NULL,
   `monto` decimal(12,2) NOT NULL,
   `fecha_de_pago` datetime NOT NULL,
+  `estado` varchar(20) NOT NULL DEFAULT 'pendiente',
   PRIMARY KEY (`id`),
   KEY `idx_subasta` (`id_subasta`),
   KEY `idx_usuario` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -234,7 +235,7 @@ CREATE TABLE `pagos` (
 
 LOCK TABLES `pagos` WRITE;
 /*!40000 ALTER TABLE `pagos` DISABLE KEYS */;
-INSERT INTO `pagos` VALUES (2,21,3,'Johanna',33.00,'2026-04-19 15:02:00'),(3,29,4,'Natalia',6.00,'2026-04-19 15:55:00');
+INSERT INTO `pagos` VALUES (2,21,3,'Johanna',33.00,'2026-04-19 15:02:00','confirmado'),(3,29,4,'Natalia',6.00,'2026-04-19 15:55:00','confirmado'),(4,31,3,'Johanna',15.00,'2026-04-23 12:24:00','confirmado'),(5,32,3,'Johanna',60.00,'2026-04-24 23:21:01','confirmado'),(6,33,9,'Andres',600.00,'2026-04-24 23:41:00','confirmado');
 /*!40000 ALTER TABLE `pagos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -256,7 +257,7 @@ CREATE TABLE `pujas` (
   KEY `id_usuario` (`id_usuario`),
   CONSTRAINT `pujas_ibfk_1` FOREIGN KEY (`id_subasta`) REFERENCES `subastas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `pujas_ibfk_2` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -265,7 +266,7 @@ CREATE TABLE `pujas` (
 
 LOCK TABLES `pujas` WRITE;
 /*!40000 ALTER TABLE `pujas` DISABLE KEYS */;
-INSERT INTO `pujas` VALUES (1,1,3,870.00,'2026-02-11 15:30:00'),(2,1,4,900.00,'2026-02-12 09:15:00'),(3,2,3,125.00,'2026-01-28 18:45:00'),(4,3,4,195.00,'2026-02-10 14:20:00'),(5,1,3,870.00,'2026-02-11 15:30:00'),(6,1,4,900.00,'2026-02-12 09:15:00'),(7,2,3,125.00,'2026-01-28 18:45:00'),(8,3,4,195.00,'2026-02-10 14:20:00'),(43,21,3,26.00,'2026-04-18 20:02:59'),(45,21,3,28.00,'2026-04-18 20:04:30'),(46,23,3,6.00,'2026-04-18 23:39:44'),(48,23,4,8.00,'2026-04-19 00:53:30'),(49,23,5,9.00,'2026-04-19 00:54:08'),(50,23,5,10.00,'2026-04-19 01:43:36'),(51,23,3,11.00,'2026-04-19 01:43:43'),(53,23,5,12.00,'2026-04-19 01:49:20'),(54,23,4,13.00,'2026-04-19 02:01:34'),(55,23,3,14.00,'2026-04-19 02:01:40'),(56,23,5,15.00,'2026-04-19 12:32:33'),(57,23,4,16.00,'2026-04-19 12:32:48'),(59,29,4,6.00,'2026-04-19 12:39:41'),(60,21,4,29.00,'2026-04-19 13:27:18'),(61,21,3,30.00,'2026-04-19 13:45:21'),(62,21,3,31.00,'2026-04-19 13:51:20'),(63,21,3,32.00,'2026-04-19 13:58:49'),(64,21,3,33.00,'2026-04-19 14:08:37'),(65,23,5,17.00,'2026-04-19 15:08:55'),(66,23,5,18.00,'2026-04-19 15:09:25'),(67,23,4,19.00,'2026-04-19 15:10:39'),(68,23,3,20.00,'2026-04-19 15:11:01'),(69,23,4,21.00,'2026-04-19 15:51:37'),(70,28,3,6.00,'2026-04-19 15:52:25');
+INSERT INTO `pujas` VALUES (1,1,3,870.00,'2026-02-11 15:30:00'),(2,1,4,900.00,'2026-02-12 09:15:00'),(3,2,3,125.00,'2026-01-28 18:45:00'),(4,3,4,195.00,'2026-02-10 14:20:00'),(5,1,3,870.00,'2026-02-11 15:30:00'),(6,1,4,900.00,'2026-02-12 09:15:00'),(7,2,3,125.00,'2026-01-28 18:45:00'),(8,3,4,195.00,'2026-02-10 14:20:00'),(43,21,3,26.00,'2026-04-18 20:02:59'),(45,21,3,28.00,'2026-04-18 20:04:30'),(46,23,3,6.00,'2026-04-18 23:39:44'),(48,23,4,8.00,'2026-04-19 00:53:30'),(51,23,3,11.00,'2026-04-19 01:43:43'),(54,23,4,13.00,'2026-04-19 02:01:34'),(55,23,3,14.00,'2026-04-19 02:01:40'),(57,23,4,16.00,'2026-04-19 12:32:48'),(59,29,4,6.00,'2026-04-19 12:39:41'),(60,21,4,29.00,'2026-04-19 13:27:18'),(61,21,3,30.00,'2026-04-19 13:45:21'),(62,21,3,31.00,'2026-04-19 13:51:20'),(63,21,3,32.00,'2026-04-19 13:58:49'),(64,21,3,33.00,'2026-04-19 14:08:37'),(67,23,4,19.00,'2026-04-19 15:10:39'),(68,23,3,20.00,'2026-04-19 15:11:01'),(69,23,4,21.00,'2026-04-19 15:51:37'),(70,28,3,6.00,'2026-04-19 15:52:25'),(71,31,3,15.00,'2026-04-23 12:23:23'),(72,32,3,60.00,'2026-04-24 23:19:41'),(73,33,3,510.00,'2026-04-24 23:40:43'),(74,33,9,520.00,'2026-04-24 23:40:47'),(75,33,3,540.00,'2026-04-24 23:40:54'),(76,33,9,600.00,'2026-04-24 23:40:59');
 /*!40000 ALTER TABLE `pujas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -318,7 +319,7 @@ CREATE TABLE `subastas` (
   CONSTRAINT `subastas_ibfk_1` FOREIGN KEY (`id_lego`) REFERENCES `lego` (`id`),
   CONSTRAINT `subastas_ibfk_2` FOREIGN KEY (`id_creador`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `subastas_ibfk_3` FOREIGN KEY (`id_estado`) REFERENCES `estados_subasta` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -327,7 +328,7 @@ CREATE TABLE `subastas` (
 
 LOCK TABLES `subastas` WRITE;
 /*!40000 ALTER TABLE `subastas` DISABLE KEYS */;
-INSERT INTO `subastas` VALUES (1,1,2,'2026-02-10 10:00:00','2026-02-20 22:00:00',850.00,20.00,2),(2,2,2,'2026-01-15 14:00:00','2026-02-01 20:00:00',120.00,5.00,2),(3,3,2,'2026-02-05 09:00:00','2026-02-18 21:00:00',180.00,10.00,2),(21,32,5,'2026-04-19 15:01:00','2026-04-19 15:02:00',10.00,1.00,2),(23,1,2,'2026-04-19 20:00:00','2026-04-19 20:17:00',5.00,1.00,1),(25,31,5,'2026-04-19 15:50:00','2026-04-19 15:55:00',50.00,10.00,5),(28,32,5,'2026-04-19 15:50:00','2026-04-19 15:55:00',5.00,1.00,2),(29,3,16,'2026-04-19 15:50:00','2026-04-19 15:55:00',5.00,1.00,2),(30,4,2,'2026-04-19 15:50:00','2026-04-19 15:55:00',5.00,1.00,5);
+INSERT INTO `subastas` VALUES (1,1,2,'2026-02-10 10:00:00','2026-02-20 22:00:00',850.00,20.00,2),(2,2,2,'2026-01-15 14:00:00','2026-02-01 20:00:00',120.00,5.00,2),(3,3,2,'2026-02-05 09:00:00','2026-02-18 21:00:00',180.00,10.00,2),(21,32,5,'2026-04-19 15:01:00','2026-04-19 15:02:00',10.00,1.00,2),(23,1,2,'2026-04-19 20:00:00','2026-04-19 20:17:00',5.00,1.00,2),(25,31,5,'2026-04-19 15:50:00','2026-04-19 15:55:00',50.00,10.00,5),(28,32,5,'2026-04-19 15:50:00','2026-04-19 15:55:00',5.00,1.00,2),(29,3,16,'2026-04-19 15:50:00','2026-04-19 15:55:00',5.00,1.00,2),(30,4,2,'2026-04-19 15:50:00','2026-04-19 15:55:00',5.00,1.00,5),(31,1,2,'2026-04-23 12:23:00','2026-04-23 12:24:00',10.00,5.00,2),(32,1,2,'2026-04-24 23:19:00','2026-04-24 23:21:00',50.00,10.00,2),(33,3,16,'2026-04-24 23:40:00','2026-04-24 23:41:00',500.00,10.00,2);
 /*!40000 ALTER TABLE `subastas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -361,7 +362,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'diego@subastaslego.cr','123456789','Diego',3,1,'2026-02-21 15:12:52'),(2,'pablo@subastaslego.cr','123456789','Pablo',2,1,'2026-02-21 15:12:52'),(3,'johanna@subastaslego.cr','123456789','Johanna',1,1,'2026-02-21 15:12:52'),(4,'natalia@subastaslego.cr','123456789','Natalia',1,1,'2026-02-21 15:12:52'),(5,'elias@subastaslego.cr','123456789','Elias',2,1,'2026-03-22 18:34:17'),(6,'gustavo@subastaslego.cr','123456789','Gustavo',1,1,'2026-03-22 19:53:27'),(8,'salome@subastalego.cr','123456789','Salome',1,1,'2026-04-19 00:00:00'),(9,'andres@subastaslego.cr','123456789','Andres',1,1,'2026-04-19 00:00:00'),(16,'joselyn@subastalego.cr','123456789','Joselyn',2,1,'2026-04-19 00:00:00');
+INSERT INTO `usuarios` VALUES (1,'diego@subastaslego.cr','123456789','Diego',3,1,'2026-02-21 15:12:52'),(2,'pablo@subastaslego.cr','123456789','Pablo',2,1,'2026-02-21 15:12:52'),(3,'johanna@subastaslego.cr','123456789','Johanna',1,1,'2026-02-21 15:12:52'),(4,'natalia@subastaslego.cr','123456789','Natalia',1,1,'2026-02-21 15:12:52'),(5,'elias@subastaslego.cr','123456789','Elias',2,2,'2026-03-22 18:34:17'),(6,'gustavo@subastaslego.cr','123456789','Gustavo',1,1,'2026-03-22 19:53:27'),(8,'salome@subastalego.cr','123456789','Salome',1,1,'2026-04-19 00:00:00'),(9,'andres@subastaslego.cr','123456789','Andres',1,1,'2026-04-19 00:00:00'),(16,'joselyn@subastaslego.cr','123456789','Joselyn',2,1,'2026-04-19 00:00:00');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -374,4 +375,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-19 15:56:46
+-- Dump completed on 2026-04-25  0:12:17
