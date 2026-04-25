@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast"; // ← agregar Toaster
 import { useUser } from "@/hooks/useUser";
 import UsuariosService from "@/services/UsuariosService";
 
@@ -14,8 +14,9 @@ import { CustomInputField } from "../ui/custom/custom-input-field";
 
 const schema = yup.object({
     correo: yup.string().email("Correo invalido").required("El correo es obligatorio"),
-    contrasena: yup.string().required("La contraseña es obligatoria"), // ✅
+    contrasena: yup.string().required("La contraseña es obligatoria"),
 })
+
 export default function Login() {
     const { saveUser } = useUser();
     const navigate = useNavigate();
@@ -27,13 +28,21 @@ export default function Login() {
     const onSubmit = async (data) => {
         try {
             const response = await UsuariosService.loginUser(data);
-            if (response.data != null && response.data != 'undefined' && response.data.message != 'Usuario no valido') {
-                saveUser(response.data.data);
+            const result = response.data;
+
+            if (result?.data?.error) {
+                toast.error(result.data.message);
+                return;
+            }
+
+            if (result?.data) {
+                saveUser(result.data);
                 toast.success("Inicio de sesión exitoso");
                 navigate("/");
             } else {
                 toast.error("Credenciales inválidas");
             }
+
         } catch (error) {
             const serverMessage = error.response?.data?.message || "Error desconocido";
             toast.error(`Error: ${serverMessage}`);
@@ -43,6 +52,7 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex items-center justify-center">
+            <Toaster /> {/* ← agregar aquí */}
             <Card className="w-full max-w-md shadow-lg border border-white/10 bg-white/10 backdrop-blur-lg text-white">
                 <CardHeader>
                     <CardTitle className="text-center text-2xl font-bold">Iniciar Sesión</CardTitle>
@@ -65,10 +75,10 @@ export default function Login() {
                                 type="password"
                                 placeholder="********"
                                 {...register("contrasena")}
-                                className="bg-white text-white placeholder:text-gray-400 border border-gray-300 "
+                                className="bg-white text-white placeholder:text-gray-400 border border-gray-300"
                             />
-                            {errors.password && (
-                                <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+                            {errors.contrasena && (
+                                <p className="text-red-400 text-sm mt-1">{errors.contrasena.message}</p>
                             )}
                         </div>
                         <Button
@@ -86,7 +96,6 @@ export default function Login() {
                             </a>
                         </p>
                     </form>
-
                 </CardContent>
             </Card>
         </div>

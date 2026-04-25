@@ -329,12 +329,6 @@ export default function SubastaDetalle() {
         setMsgError("");
         setMsgOk("");
 
-        // Verificar sesión
-        if (!usuarioRef.current.id) {
-            setMsgError("Debes iniciar sesión para pujar");
-            return;
-        }
-
         if (subastaCerrada || tiempoFinalizado) {
             setMsgError("Esta subasta ya ha sido finalizada");
             return;
@@ -359,7 +353,7 @@ export default function SubastaDetalle() {
             const res = await SubastaService.pujar({
                 id_subasta: parseInt(id),
                 monto:      montoNum,
-                id_usuario: usuarioRef.current.id,      // ← siempre del usuario logueado
+                id_usuario: usuarioRef.current.id,    
             });
 
             if (res.data.success) {
@@ -370,7 +364,7 @@ export default function SubastaDetalle() {
                 const ablyClient = new Ably.Realtime({ key: ABLY_KEY });
                 ablyClient.channels.get(`auction-${id}`).publish("new-bid", {
                     monto:          montoNum,
-                    usuario_nombre: usuarioRef.current.nombre,  // ← nombre del logueado
+                    usuario_nombre: usuarioRef.current.nombre, 
                     id_usuario:     usuarioRef.current.id,
                     fecha_hora:     new Date().toISOString(),
                 });

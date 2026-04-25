@@ -77,10 +77,7 @@ class PagoModel
      */
     public function getPorUsuario($id_usuario)
     {
-        $response   = new Response();
-        $id_usuario = $_GET['id_usuario'] ?? null;
-
-        error_log(">>> getPorUsuario llamado con id_usuario: " . $id_usuario); // ← agrega esto
+        $id_usuario = intval($id_usuario);
 
         $sql = "SELECT 
                         p.id            AS pago_id,

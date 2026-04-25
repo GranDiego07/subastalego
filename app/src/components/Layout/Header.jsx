@@ -55,13 +55,13 @@ export default function Header() {
       title: "Legos",
       href: "/lego",
       icon: <Blocks className="h-4 w-4" />,
-      show: authorize(["administrador", "vendedor","comprador"]),
+      show: authorize(["administrador", "vendedor", "comprador"]),
     },
     {
       title: "Subastas Activas",
       href: "subasta/activas",
       icon: <AlarmClock className="h-4 w-4" />,
-      show: authorize(["administrador", "vendedor","comprador"]),
+      show: authorize(["administrador", "vendedor", "comprador"]),
     },
     {
       title: "Subastas No activas",
@@ -95,7 +95,13 @@ export default function Header() {
       href: "lego/subasta",
       icon: <KeyboardMusic className="h-4 w-4" />,
       show: authorize(["administrador", "vendedor"]),
-    }
+    },
+    {
+      title: "Reportes",
+      href: "reportes",
+      icon: <Activity className="h-4 w-4" />,
+      show: authorize(["administrador"]),
+    },
   ];
 
   const userItems = [
@@ -110,6 +116,18 @@ export default function Header() {
       href: "/create",
       icon: <UserPlus className="h-4 w-4" />,
       show: !isAuthenticated,
+    },
+    {
+      title: "Mi Perfil",
+      href: "/perfil",
+      icon: <User className="h-4 w-4" />,
+      show: isAuthenticated,
+    },
+    {
+      title: "Mis Pujas",
+      href: "/mis-pujas",
+      icon: <ShoppingCart className="h-4 w-4" />,
+      show: authorize(["comprador"]),
     },
     {
       title: "Logout",

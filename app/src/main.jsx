@@ -26,6 +26,9 @@ import Login from './components/Usuarios/Login'
 import Register from './components/Usuarios/Register'
 import SubastaDetalle from './components/Subastas/SubastaDetalle'
 import Pagos from './components/Pujas/MisPagos'
+import MiPerfil from './components/Usuarios/MiPerfil'
+import MisPujas from './components/Pujas/MisPujas'
+import Reportes from './components/Reportes/Reportes'
 import { RoleRoute } from './components/Auth/RoleRoute'
 
 
@@ -173,6 +176,29 @@ const rutas = createBrowserRouter([
         element: (
           <RoleRoute requiredRoles={["administrador", "comprador"]}>
             <Pagos />
+          </RoleRoute>
+        ),
+      },
+
+      // — Mis pujas (comprador) —
+      {
+        path: "mis-pujas",
+        element: (
+          <RoleRoute requiredRoles={["comprador"]}>
+            <MisPujas />
+          </RoleRoute>
+        ),
+      },
+
+      // — Perfil propio —
+      { path: "perfil", element: <MiPerfil /> },
+
+      // — Reportes (solo administrador) —
+      {
+        path: "reportes",
+        element: (
+          <RoleRoute requiredRoles={["administrador"]}>
+            <Reportes />
           </RoleRoute>
         ),
       },

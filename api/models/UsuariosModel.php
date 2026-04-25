@@ -151,30 +151,38 @@ class UsuariosModel
         return $this->get($objeto->id);
     }
     public function login($objeto)
-    {
-        $vSql = "SELECT * FROM usuarios WHERE correo='$objeto->correo'";
-        $vResultado = $this->enlace->ExecuteSQL($vSql);
+{
+    $vSql = "SELECT * FROM usuarios WHERE correo='$objeto->correo'";
+    $vResultado = $this->enlace->ExecuteSQL($vSql);
 
-        if (is_object($vResultado[0])) {
-            $user = $vResultado[0];
-            if ($objeto->contrasena == $user->contrasena) { // comparación directa sin hash
-                $usuario = $this->get($user->id);
-                if (!empty($usuario)) {
-                    $data = [
-                        'id' => $usuario->id,
-                        'email' => $usuario->correo,
-                        'nombre_completo' => $usuario->nombre_completo,
-                        'rol' => $usuario->id_rol,
-                        'iat' => time(),
-                        'exp' => time() + 3600
-                    ];
-
-                    $jwt_token = JWT::encode($data, config::get('SECRET_KEY'), 'HS256');
-                    return $jwt_token;
-                }
-            }
-        } else {
-            return false;
-        }
+    // 1. Primero verificar si el correo existe
+    if (empty($vResultado)) {
+        return ['error' => 'not_found', 'message' => 'El correo o contraseña equivocada.'];
     }
+
+    $user = $vResultado[0];
+
+    // 2. Verificar si está bloqueado
+    if ((int)$user->id_estado === 2) {
+        return ['error' => 'bloqueado', 'message' => 'Tu cuenta está bloqueada. Contacta al administrador.'];
+    }
+
+    // 3. Verificar contraseña
+    if ($objeto->correo !== $user->correo||$objeto->contrasena !== $user->contrasena) {
+        return ['error' => 'wrong_password', 'message' => 'El correo o contraseña equivocada.'];
+    }
+
+    // 4. Todo OK → generar token
+    $usuario = $this->get($user->id);
+    $data = [
+        'id'              => $usuario->id,
+        'email'           => $usuario->correo,
+        'nombre_completo' => $usuario->nombre_completo,
+        'rol'             => $usuario->id_rol,
+        'iat'             => time(),
+        'exp'             => time() + 3600
+    ];
+
+    return JWT::encode($data, config::get('SECRET_KEY'), 'HS256');
+}
 }

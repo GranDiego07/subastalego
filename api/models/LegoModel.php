@@ -237,6 +237,19 @@ class LegoModel
     //
     public function update($objeto)
     {
+        // Verificar si el lego ya tiene una subasta activa
+        $vSql = "SELECT COUNT(*) as total FROM subastas s 
+                 INNER JOIN estados_subasta es ON es.id = s.id_estado 
+                 WHERE s.id_lego = $objeto->id AND es.nombre = 'activa'";
+        $resultado = $this->enlace->ExecuteSQL($vSql);
+
+        if (!empty($resultado) && (int)$resultado[0]->total > 0) {
+            return (object)[
+                "success" => false,
+                "message" => "No se puede editar: el lego tiene una subasta activa en curso"
+            ];
+        }
+
         $sql = "UPDATE lego SET 
                 nombre = '$objeto->nombre',
                 descripcion = '$objeto->descripcion',
@@ -246,7 +259,6 @@ class LegoModel
             WHERE id = $objeto->id";
 
         $this->enlace->executeSQL_DML($sql);
-
 
         return (object)["success" => true, "message" => "Lego actualizado correctamente", "id" => $objeto->id];
     }

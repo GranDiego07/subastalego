@@ -146,6 +146,13 @@ class usuarios
     $usuario = new UsuariosModel();
     $result = $usuario->login($inputJSON);
     
+    // Manejo de usuario bloqueado
+    if (is_array($result) && isset($result['error']) && $result['error'] === 'bloqueado') {
+        http_response_code(403);
+        $response->toJSON(null, $result['message']);
+        return;
+    }
+    
     if (isset($result) && !empty($result) && $result != false) {
         $response->toJSON($result);
     } else {

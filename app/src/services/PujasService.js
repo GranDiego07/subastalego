@@ -29,6 +29,14 @@ class PujasService {
     }
 
     /**
+     * Obtener historial de pujas de un usuario específico
+     * GET /PujasController/getPujasPorUsuario/:id
+     */
+    getPujasPorUsuario(id_usuario) {
+        return axios.get(`${BASE_URL}/getPujasPorUsuario/${id_usuario}`);
+    }
+
+    /**
      * Crear una nueva puja
      * POST /PujasController
      */
