@@ -61,7 +61,7 @@ export default function Register() {
                 reset(),
                     setRolId(1),
                     setValue("rol_id", 1)
-                navigate("/user/login");
+                navigate("/login");
             } else {
                 if (response?.message?.includes("Duplicate entry")) {
                     toast.error("Este correo ya está registrado");
@@ -168,7 +168,7 @@ export default function Register() {
 
                         <p className="text-sm text-center mt-4">
                             ¿Ya tienes cuenta?{" "}
-                            <a href="/user/login" className="text-accent underline hover:text-accent/80">
+                            <a href="/login" className="text-accent underline hover:text-accent/80">
                                 Inicia sesión
                             </a>
                         </p>

@@ -10,7 +10,11 @@ class SubastaModel
     public function all()
     {
         //Consulta sql
-        $vSql = "SELECT * FROM subastas;";
+        $vSql = "SELECT s.*,l.nombre AS lego_nombre,COUNT(p.id) AS total_pujas
+                    FROM subastas s
+                    JOIN lego l ON s.id_lego = l.id
+                    LEFT JOIN pujas p ON p.id_subasta = s.id
+                    GROUP BY s.id, s.id_lego, s.precio_base, s.id_estado, l.nombre;;";
 
         //Ejecutar la consulta
         $vResultado = $this->enlace->ExecuteSQL($vSql);
@@ -355,31 +359,46 @@ class SubastaModel
     // DESPUÉS
     public function verificarCierre($id)
     {
-        // Cierra con pujas → Finalizada (id_estado = 2)
+        // Cierra con pujas → Finalizada
         $vSql = "UPDATE subastas
-                SET id_estado = (SELECT id FROM estados_subasta WHERE nombre = 'Finalizada' LIMIT 1)
-                WHERE id = $id
-                AND fecha_cierre <= NOW()
-                AND id_estado = 1
-                AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = $id) > 0";
-        $this->enlace->executeSQL_DML($vSql);
+            SET id_estado = (SELECT id FROM estados_subasta WHERE nombre = 'Finalizada' LIMIT 1)
+            WHERE id = $id
+            AND fecha_cierre <= NOW()
+            AND id_estado = 1
+            AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = $id) > 0";
 
-        // Sin pujas → Finalizada sin ofertas (id_estado = 5)
+        $afectadas = $this->enlace->executeSQL_DML($vSql); // ← ya retorna affected_rows
+
+        // ← NUEVO: Si se cerró con pujas, crear el pago del ganador
+        if ($afectadas > 0) {
+            $ganadorSql = "SELECT p.id_usuario, p.monto
+                                FROM pujas p
+                                WHERE p.id_subasta = $id
+                                ORDER BY p.monto DESC, p.fecha_hora ASC
+                                LIMIT 1";
+            $resultado = $this->enlace->ExecuteSQL($ganadorSql);
+
+            if (!empty($resultado)) {
+                $ganador = $resultado[0];
+                $pagoM = new PagoModel();
+                if (!$pagoM->existePagoParaSubasta($id)) {
+                    $pagoM->crear((object)[
+                        "id_subasta" => $id,
+                        "id_usuario" => $ganador->id_usuario,
+                        "monto"      => $ganador->monto
+                    ]);
+                }
+            }
+        }
+
+        // Sin pujas → estado 5
         $vSql2 = "UPDATE subastas
-                SET id_estado = 5
-                WHERE id = $id
-                AND fecha_cierre <= NOW()
-                AND id_estado = 1
-                AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = $id) = 0";
+            SET id_estado = 5
+            WHERE id = $id
+            AND fecha_cierre <= NOW()
+            AND id_estado = 1
+            AND (SELECT COUNT(*) FROM pujas WHERE id_subasta = $id) = 0";
         $this->enlace->executeSQL_DML($vSql2);
-    }
-    /**
-     * Obtiene el nombre completo de un usuario por ID.
-     */
-    public function getNombreUsuario($id)
-    {
-        $vSql = "SELECT nombre_completo FROM usuarios WHERE id = $id";
-        $this->enlace->executeSQL_DML($vSql);
     }
     public function cerrar($id_subasta)
     {

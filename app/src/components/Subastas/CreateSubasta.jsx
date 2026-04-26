@@ -58,7 +58,9 @@ export function CreateSubasta() {
       try {
         const res    = await LegoService.getByVendedor(user.id);
         const data   = res.data?.data ?? [];
-        const unicos = [...new Map(data.map(item => [item.id, item])).values()];
+        console.log("Legos del usuario:", data)
+        const disponibles = data.filter(item => Number(item.id_estado) === 1);
+        const unicos = [...new Map(disponibles.map(item => [item.id, item])).values()];
         setDataLego(unicos);
       } catch (err) {
         console.error("Error cargando legos:", err);

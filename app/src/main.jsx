@@ -47,7 +47,7 @@ const rutas = createBrowserRouter([
       {
         path: "table",
         element: (
-          <RoleRoute requiredRoles={["administrador", "vendedor"]}>
+          <RoleRoute requiredRoles={["vendedor"]}>
             <TableLegos />
           </RoleRoute>
         ),

@@ -204,7 +204,7 @@ export default function MisPagos() {
                             Cuando ganes una subasta, tu pago aparecerá aquí para confirmarlo.
                         </p>
                         <button
-                            onClick={() => navigate("/subastas")}
+                            onClick={() => navigate("/")}
                             className="mt-4 bg-blue-600 hover:bg-blue-500 px-6 py-2.5 rounded-xl font-bold text-sm transition-all"
                         >
                             Ver Subastas

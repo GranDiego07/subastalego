@@ -1,32 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import PagoService from "@/services/PagoService";
-import {
-  Layers,
-  LogIn,
-  UserPlus,
-  LogOut,
-  ShoppingCart,
-  Menu,
-  X,
-  ChevronDown,
-  User,
-  Blocks,
-  AlarmClock,
-  AlarmClockOff,
-  CircleUserIcon,
-  Database, Activity,
-  KeyboardMusic,
-} from "lucide-react";
-
+import {Layers,LogIn,UserPlus,LogOut,ShoppingCart,Menu,X,ChevronDown,User,Blocks,AlarmClock,AlarmClockOff,
+  CircleUserIcon,Database, Activity,KeyboardMusic,} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Menubar,
-  MenubarMenu,
-  MenubarTrigger,
-  MenubarContent,
-  MenubarItem,
-} from "@/components/ui/menubar";
+import {Menubar,MenubarMenu,MenubarTrigger,MenubarContent,MenubarItem,} from "@/components/ui/menubar";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { useUser } from "@/hooks/useUser";
 
@@ -76,7 +54,7 @@ export default function Header() {
       title: "Lego",
       href: "table",
       icon: <Blocks className="h-4 w-4" />,
-      show: authorize(["administrador", "vendedor"]),
+      show: authorize(["vendedor"]),
     },
     {
       title: "Usuarios",

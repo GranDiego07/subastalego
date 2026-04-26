@@ -40,4 +40,16 @@ class PujasController
             $response->toJSON(["error" => $e->getMessage()]);
         }
     }
+    public function getPujasPorUsuario($id_usuario)
+{
+    try {
+        $response = new Response();
+        $Pujas = new PujasModel();
+        $result = $Pujas->getPujasPorUsuario($id_usuario);
+        $response->toJSON($result);
+    } catch (Exception $e) {
+        $response = new Response();
+        $response->toJSON(["error" => $e->getMessage()]);
+    }
+}
 }

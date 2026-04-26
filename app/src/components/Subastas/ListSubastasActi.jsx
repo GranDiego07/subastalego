@@ -23,8 +23,8 @@ export function ListSubastasActi() {
                 const data = response.data?.data || response.data || [];
                 setSubastas(data);
             } catch (err) {
-                console.error("Error al cargar Subasta:", err);
-                setError("No se pudo conectar con el servicio de Subasta.");
+                console.error("No hay subastas activas en este momento", err);
+                setError("");
             } finally {
                 setLoading(false);
             }
@@ -33,7 +33,7 @@ export function ListSubastasActi() {
     }, []);
 
     if (loading) return <LoadingGrid type="grid" />;
-    if (error) return <ErrorAlert title="Error al cargar" message={error} />;
+    if (error) return <ErrorAlert title="No hay subastas activas en este momento" message={error} />;
     if (subastas.length === 0) return <EmptyState message="No hay subastas activas en este momento." />;
 
     return (

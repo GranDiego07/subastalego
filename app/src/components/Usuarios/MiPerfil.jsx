@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/hooks/useUser';
 import UsuariosService from '@/services/UsuariosService';
-import { Calendar, Shield, Activity, Gavel, LayoutList, LogOut, Mail } from 'lucide-react';
+import { Calendar, Shield, Activity, Gavel, LayoutList, LogOut, Mail, Pencil, X, Check, Loader2 } from 'lucide-react';
 
 const rolLabel = { 1: 'comprador', 2: 'vendedor', 3: 'administrador' };
 const rolColor = {
@@ -20,9 +20,16 @@ function formatFecha(f) {
 
 export default function MiPerfil() {
     const navigate = useNavigate();
-    const { user, clearUser } = useUser();
+    const { user, clearUser, updateUser } = useUser();
     const [perfil, setPerfil] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // Edit state
+    const [editando, setEditando] = useState(false);
+    const [guardando, setGuardando] = useState(false);
+    const [error, setError] = useState(null);
+    const [exito, setExito] = useState(false);
+    const [form, setForm] = useState({ nombre_completo: '', correo: '' });
 
     useEffect(() => {
         if (!user?.id) return;
@@ -38,6 +45,66 @@ export default function MiPerfil() {
     const handleLogout = () => {
         clearUser();
         navigate('/login');
+    };
+
+    const handleEditClick = () => {
+        const datos = perfil || {};
+        setForm({
+            nombre_completo: datos.nombre_completo || user?.nombre_completo || '',
+            correo: datos.correo || user?.email || '',
+        });
+        setError(null);
+        setExito(false);
+        setEditando(true);
+    };
+
+    const handleCancelar = () => {
+        setEditando(false);
+        setError(null);
+    };
+
+    const handleGuardar = async () => {
+        const nombre = form.nombre_completo.trim();
+        const correo = form.correo.trim();
+
+        if (!nombre) {
+            setError('El nombre no puede estar vacío.');
+            return;
+        }
+        if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+            setError('Por favor ingresa un correo válido.');
+            return;
+        }
+
+        setGuardando(true);
+        setError(null);
+
+        try {
+            await UsuariosService.actualizarUsuario(user.id, {
+                nombre_completo: nombre,
+                correo,
+            });
+
+            // Update local perfil state
+            setPerfil(prev => ({ ...prev, nombre_completo: nombre, correo }));
+
+            // Update user context if hook supports it
+            if (typeof updateUser === 'function') {
+                updateUser({ nombre_completo: nombre, email: correo });
+            }
+
+            setExito(true);
+            setEditando(false);
+            setTimeout(() => setExito(false), 3000);
+        } catch (err) {
+            const msg =
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                'Ocurrió un error al guardar los cambios.';
+            setError(msg);
+        } finally {
+            setGuardando(false);
+        }
     };
 
     if (!user) {
@@ -67,23 +134,31 @@ export default function MiPerfil() {
     const datos = perfil || {};
     const rolId = user?.rol ?? datos.id_rol;
     const estadoActivo = datos.estado_nombre?.toLowerCase() === 'activo' || datos.id_estado === 1;
+    const nombreMostrado = datos.nombre_completo || user?.nombre_completo || '—';
+    const correoMostrado = datos.correo || user?.email || '—';
 
     return (
         <div className="min-h-screen pb-16 text-white">
             <div className="max-w-3xl mx-auto px-4 pt-10 space-y-6">
 
+                {/* Toast de éxito */}
+                {exito && (
+                    <div className="flex items-center gap-2 bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl text-sm font-medium animate-pulse">
+                        <Check className="w-4 h-4" />
+                        Perfil actualizado correctamente.
+                    </div>
+                )}
+
                 {/* Cabecera */}
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center gap-5">
                     <div className="flex-shrink-0 w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-3xl font-black">
-                        {(datos.nombre_completo || user?.nombre_completo || 'U').charAt(0).toUpperCase()}
+                        {nombreMostrado.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 space-y-1">
-                        <h1 className="text-2xl font-bold">
-                            {datos.nombre_completo || user?.nombre_completo || '—'}
-                        </h1>
+                        <h1 className="text-2xl font-bold">{nombreMostrado}</h1>
                         <div className="flex items-center gap-2 text-zinc-400 text-sm">
                             <Mail className="w-3.5 h-3.5" />
-                            {datos.correo || user?.email || '—'}
+                            {correoMostrado}
                         </div>
                         <div className="flex items-center gap-3 mt-2 flex-wrap">
                             <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${rolColor[rolId] ?? 'bg-zinc-700 text-zinc-300 border-zinc-600'}`}>
@@ -101,31 +176,97 @@ export default function MiPerfil() {
 
                 {/* Info básica */}
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
-                    <div className="flex items-center gap-2 text-blue-400 mb-1">
-                        <Shield className="w-4 h-4" />
-                        <h2 className="text-sm font-bold uppercase tracking-wide">Información de cuenta</h2>
+                    <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 text-blue-400">
+                            <Shield className="w-4 h-4" />
+                            <h2 className="text-sm font-bold uppercase tracking-wide">Información de cuenta</h2>
+                        </div>
+                        {!editando && (
+                            <button
+                                onClick={handleEditClick}
+                                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-500 px-3 py-1.5 rounded-lg transition-all"
+                            >
+                                <Pencil className="w-3.5 h-3.5" />
+                                Editar
+                            </button>
+                        )}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <span className="text-zinc-500 text-xs uppercase font-bold block mb-1">ID de usuario</span>
-                            <span className="text-white font-mono">#{datos.id || user?.id}</span>
-                        </div>
-                        <div>
-                            <span className="text-zinc-500 text-xs uppercase font-bold block mb-1">Correo</span>
-                            <span className="text-white">{datos.correo || user?.email || '—'}</span>
-                        </div>
-                        <div>
-                            <span className="text-zinc-500 text-xs uppercase font-bold block mb-1">Rol</span>
-                            <span className="text-white capitalize">{rolLabel[rolId] ?? '—'}</span>
-                        </div>
-                        <div>
-                            <span className="text-zinc-500 text-xs uppercase font-bold block mb-1">Fecha de registro</span>
-                            <div className="flex items-center gap-1.5 text-zinc-300 text-sm">
-                                <Calendar className="w-3.5 h-3.5 text-zinc-500" />
-                                {formatFecha(datos.fecha_registro)}
+
+                    {editando ? (
+                        /* Formulario de edición */
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-zinc-500 text-xs uppercase font-bold block">Nombre completo</label>
+                                <input
+                                    type="text"
+                                    value={form.nombre_completo}
+                                    onChange={e => setForm(f => ({ ...f, nombre_completo: e.target.value }))}
+                                    className="w-full bg-zinc-800 border border-zinc-700 focus:border-blue-500 focus:outline-none text-white rounded-xl px-4 py-2.5 text-sm transition-colors"
+                                    placeholder="Tu nombre completo"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-zinc-500 text-xs uppercase font-bold block">Correo electrónico</label>
+                                <input
+                                    type="email"
+                                    value={form.correo}
+                                    onChange={e => setForm(f => ({ ...f, correo: e.target.value }))}
+                                    className="w-full bg-zinc-800 border border-zinc-700 focus:border-blue-500 focus:outline-none text-white rounded-xl px-4 py-2.5 text-sm transition-colors"
+                                    placeholder="tu@correo.com"
+                                />
+                            </div>
+
+                            {error && (
+                                <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
+                                    {error}
+                                </p>
+                            )}
+
+                            <div className="flex gap-3 pt-1">
+                                <button
+                                    onClick={handleGuardar}
+                                    disabled={guardando}
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+                                >
+                                    {guardando
+                                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                                        : <><Check className="w-4 h-4" /> Guardar cambios</>
+                                    }
+                                </button>
+                                <button
+                                    onClick={handleCancelar}
+                                    disabled={guardando}
+                                    className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+                                >
+                                    <X className="w-4 h-4" />
+                                    Cancelar
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        /* Vista normal */
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <span className="text-zinc-500 text-xs uppercase font-bold block mb-1">ID de usuario</span>
+                                <span className="text-white font-mono">#{datos.id || user?.id}</span>
+                            </div>
+                            <div>
+                                <span className="text-zinc-500 text-xs uppercase font-bold block mb-1">Correo</span>
+                                <span className="text-white">{correoMostrado}</span>
+                            </div>
+                            <div>
+                                <span className="text-zinc-500 text-xs uppercase font-bold block mb-1">Rol</span>
+                                <span className="text-white capitalize">{rolLabel[rolId] ?? '—'}</span>
+                            </div>
+                            <div>
+                                <span className="text-zinc-500 text-xs uppercase font-bold block mb-1">Fecha de registro</span>
+                                <div className="flex items-center gap-1.5 text-zinc-300 text-sm">
+                                    <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                                    {formatFecha(datos.fecha_registro)}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Actividad */}
